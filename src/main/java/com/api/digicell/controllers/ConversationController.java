@@ -1,5 +1,6 @@
 package com.api.digicell.controllers;
 
+import com.api.digicell.dto.ConversationDTO;
 import com.api.digicell.entities.Conversation;
 import com.api.digicell.responses.ApiResponse;
 import com.api.digicell.responses.ResponseUtil;
@@ -72,8 +73,8 @@ public class ConversationController {
      * Create new conversation.
      */
     @PostMapping
-    public ResponseEntity<ApiResponse<Conversation>> create(@Valid @RequestBody Conversation conversation) {
-        Conversation created = conversationService.createConversation(conversation);
+    public ResponseEntity<ApiResponse<Conversation>> create(@Valid @RequestBody ConversationDTO dto) {
+        Conversation created = conversationService.createConversation(dto);
         ApiResponse<Conversation> response = new ApiResponse<>(HttpStatus.CREATED.value(), "Conversation created successfully", created);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
