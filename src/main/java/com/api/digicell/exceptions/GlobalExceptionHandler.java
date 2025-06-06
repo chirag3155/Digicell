@@ -16,9 +16,6 @@ import org.springframework.validation.FieldError;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.persistence.EntityNotFoundException;
 import java.lang.NumberFormatException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Global exception handler for all REST controllers.

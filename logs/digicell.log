@@ -1,0 +1,28 @@
+2025-06-06 17:03:10,358 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
+2025-06-06 17:03:10,461 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplication using Java 17.0.12 with PID 29060 (C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
+2025-06-06 17:03:10,463 DEBUG o.s.b.StartupInfoLogger [main] Running with Spring Boot v3.2.5, Spring v6.1.6
+2025-06-06 17:03:10,464 INFO o.s.b.SpringApplication [main] The following 1 profile is active: "dev"
+2025-06-06 17:03:12,689 INFO o.s.d.r.c.RepositoryConfigurationDelegate [main] Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-06-06 17:03:12,827 INFO o.s.d.r.c.RepositoryConfigurationDelegate [main] Finished Spring Data repository scanning in 119 ms. Found 4 JPA repository interfaces.
+2025-06-06 17:03:14,128 INFO o.s.b.w.e.t.TomcatWebServer [main] Tomcat initialized with port 8083 (http)
+2025-06-06 17:03:14,164 INFO o.a.j.l.DirectJDKLog [main] Initializing ProtocolHandler ["http-nio-8083"]
+2025-06-06 17:03:14,176 INFO o.a.j.l.DirectJDKLog [main] Starting service [Tomcat]
+2025-06-06 17:03:14,178 INFO o.a.j.l.DirectJDKLog [main] Starting Servlet engine: [Apache Tomcat/10.1.20]
+2025-06-06 17:03:14,472 INFO o.a.j.l.DirectJDKLog [main] Initializing Spring embedded WebApplicationContext
+2025-06-06 17:03:14,476 INFO o.s.b.w.s.c.ServletWebServerApplicationContext [main] Root WebApplicationContext: initialization completed in 3902 ms
+2025-06-06 17:03:14,910 INFO c.z.h.HikariDataSource [main] HikariPool-1 - Starting...
+2025-06-06 17:03:16,659 INFO c.z.h.p.HikariPool [main] HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@11df2829
+2025-06-06 17:03:16,678 INFO c.z.h.HikariDataSource [main] HikariPool-1 - Start completed.
+2025-06-06 17:03:17,255 INFO o.h.j.i.u.LogHelper [main] HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-06-06 17:03:17,674 INFO o.h.Version [main] HHH000412: Hibernate ORM core version 6.4.4.Final
+2025-06-06 17:03:17,909 INFO o.h.c.i.RegionFactoryInitiator [main] HHH000026: Second-level cache disabled
+2025-06-06 17:03:19,537 INFO o.s.o.j.p.SpringPersistenceUnitInfo [main] No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-06-06 17:03:19,762 WARN o.h.e.j.d.i.DialectFactoryImpl [main] HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-06-06 17:03:19,768 WARN o.h.e.j.d.i.DialectFactoryImpl [main] HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-06-06 17:03:21,961 INFO o.h.e.t.j.p.i.JtaPlatformInitiator [main] HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-06-06 17:03:22,132 INFO o.s.o.j.AbstractEntityManagerFactoryBean [main] Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-06-06 17:03:23,812 INFO o.s.d.j.r.q.QueryEnhancerFactory [main] Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-06-06 17:03:26,903 WARN o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration [main] spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-06-06 17:03:29,597 INFO o.a.j.l.DirectJDKLog [main] Starting ProtocolHandler ["http-nio-8083"]
+2025-06-06 17:03:29,774 INFO o.s.b.w.e.t.TomcatWebServer [main] Tomcat started on port 8083 (http) with context path ''
+2025-06-06 17:03:29,822 INFO o.s.b.StartupInfoLogger [main] Started DigicellApplication in 20.468 seconds (process running for 21.073)

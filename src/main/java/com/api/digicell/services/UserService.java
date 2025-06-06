@@ -7,7 +7,6 @@ import com.api.digicell.repository.UserRepository;
 import com.api.digicell.repository.ConversationRepository;
 import com.api.digicell.responses.UserDetailsResponse;
 import com.api.digicell.dto.UserConversationDTO;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
