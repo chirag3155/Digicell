@@ -32,6 +32,7 @@ public class AgentService {
 
     /**
      * Create a new agent.
+     * @throws InvalidAgentStatusException if the provided status is invalid
      */
     @Transactional
     public Agent createAgent(AgentCreateDTO createDTO) {
@@ -58,31 +59,41 @@ public class AgentService {
 
     /**
      * Get all agents.
+     * @throws RuntimeException if there's an error fetching agents
      */
     public List<Agent> getAllAgents() {
         logger.info("Fetching all agents");
-        List<Agent> agents = agentRepository.findAll();
-        logger.info("Successfully retrieved {} agents", agents.size());
-        logger.debug("Retrieved agents - count: {}, ids: {}", 
-            agents.size(), agents.stream().map(Agent::getAgentId).collect(Collectors.toList()));
-        return agents;
+        try {
+            List<Agent> agents = agentRepository.findAll();
+            logger.info("Successfully retrieved {} agents", agents.size());
+            logger.debug("Retrieved agents - count: {}, ids: {}", 
+                agents.size(), agents.stream().map(Agent::getAgentId).collect(Collectors.toList()));
+            return agents;
+        } catch (Exception e) {
+            logger.error("Error fetching all agents: {}", e.getMessage());
+            logger.info("Error fetching all agents: {}", e.getMessage());
+            throw new RuntimeException("Failed to fetch agents", e);
+        }
     }
 
     /**
      * Get agent by ID.
+     * @throws ResourceNotFoundException if agent is not found
      */
     public Agent getAgentById(Long id) {
         logger.info("Fetching agent with id: {}", id);
         return agentRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("Agent not found with id: {}", id);
-                    logger.debug("Failed to find agent with id: {}", id);
+                    logger.info("Failed to find agent with id: {}", id);
                     return new ResourceNotFoundException("Agent not found with id: " + id);
                 });
     }
 
     /**
      * Update agent details.
+     * @throws ResourceNotFoundException if agent is not found
+     * @throws InvalidAgentStatusException if the provided status is invalid
      */
     @Transactional
     public Agent updateAgent(Long id, AgentUpdateDTO updateDTO) {
@@ -95,7 +106,7 @@ public class AgentService {
         Agent agent = agentRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("Agent not found with id: {}", id);
-                    logger.debug("Failed to find agent for update with id: {}", id);
+                    logger.info("Failed to find agent for update with id: {}", id);
                     return new ResourceNotFoundException("Agent not found with id: " + id);
                 });
         
@@ -114,6 +125,8 @@ public class AgentService {
 
     /**
      * Update agent status.
+     * @throws ResourceNotFoundException if agent is not found
+     * @throws InvalidAgentStatusException if the provided status is invalid
      */
     @Transactional
     public Agent updateAgentStatus(Long id, AgentStatusDTO statusDTO) {
@@ -125,7 +138,7 @@ public class AgentService {
         Agent agent = agentRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("Agent not found with id: {}", id);
-                    logger.debug("Failed to find agent for status update with id: {}", id);
+                    logger.info("Failed to find agent for status update with id: {}", id);
                     return new ResourceNotFoundException("Agent not found with id: " + id);
                 });
         
@@ -140,6 +153,8 @@ public class AgentService {
 
     /**
      * Delete agent.
+     * @throws ResourceNotFoundException if agent is not found
+     * @throws IllegalStateException if agent has active conversations
      */
     @Transactional
     public void deleteAgent(Long id) {
@@ -147,7 +162,7 @@ public class AgentService {
         Agent agent = agentRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("Agent not found with id: {}", id);
-                    logger.debug("Failed to find agent for deletion with id: {}", id);
+                    logger.info("Failed to find agent for deletion with id: {}", id);
                     return new ResourceNotFoundException("Agent not found with id: " + id);
                 });
         
@@ -155,7 +170,7 @@ public class AgentService {
         List<Conversation> activeConversations = conversationRepository.findByAgent_AgentId(id);
         if (!activeConversations.isEmpty()) {
             logger.error("Cannot delete agent with id: {} as they have {} active conversations", id, activeConversations.size());
-            logger.debug("Active conversations found for agent - id: {}, conversation count: {}", id, activeConversations.size());
+            logger.info("Active conversations found for agent - id: {}, conversation count: {}", id, activeConversations.size());
             throw new IllegalStateException("Cannot delete agent with active conversations");
         }
         
@@ -167,6 +182,7 @@ public class AgentService {
 
     /**
      * Set agent status to AVAILABLE.
+     * @throws ResourceNotFoundException if agent is not found
      */
     @Transactional
     public Agent setAgentAvailable(Long id) {
@@ -174,7 +190,7 @@ public class AgentService {
         Agent agent = agentRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("Agent not found with id: {}", id);
-                    logger.debug("Failed to find agent for setting AVAILABLE status with id: {}", id);
+                    logger.info("Failed to find agent for setting AVAILABLE status with id: {}", id);
                     return new ResourceNotFoundException("Agent not found with id: " + id);
                 });
         
@@ -189,6 +205,8 @@ public class AgentService {
 
     /**
      * Get agent details including conversations.
+     * @throws ResourceNotFoundException if agent is not found
+     * @throws RuntimeException if there's an error fetching details
      */
     @Transactional(readOnly = true)
     public AgentDetailsResponseDTO getAgentDetails(Long agentId) {
@@ -197,8 +215,8 @@ public class AgentService {
             Agent agent = agentRepository.findById(agentId)
                     .orElseThrow(() -> {
                         logger.error("Agent not found with id: {}", agentId);
-                        logger.debug("Failed to find agent for details with id: {}", agentId);
-                        return new IllegalArgumentException("Agent not found with id: " + agentId);
+                        logger.info("Failed to find agent for details with id: {}", agentId);
+                        return new ResourceNotFoundException("Agent not found with id: " + agentId);
                     });
 
             List<Conversation> conversations = conversationRepository.findByAgent_AgentId(agentId);
@@ -229,9 +247,9 @@ public class AgentService {
                 agentId, agent.getName(), agent.getStatus(), conversationDTOs.size());
             return response;
         } catch (Exception e) {
-            logger.error("Error fetching agent details for id {}: {}", agentId, e.getMessage(), e);
-            logger.debug("Error details for agent id {}: {}", agentId, e.getMessage());
-            throw e;
+            logger.error("Error fetching agent details for id {}: {}", agentId, e.getMessage());
+            logger.info("Error details for agent id {}: {}", agentId, e.getMessage());
+            throw new RuntimeException("Failed to fetch agent details", e);
         }
     }
 
@@ -249,7 +267,7 @@ public class AgentService {
             AgentStatus.valueOf(status.name());
         } catch (IllegalArgumentException e) {
             logger.error("Invalid agent status: {}", status);
-            logger.debug("Invalid agent status details - status: {}", status);
+            logger.info("Invalid agent status details - status: {}", status);
             throw new InvalidAgentStatusException(status.name());
         }
     }

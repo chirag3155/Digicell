@@ -6,6 +6,8 @@ import com.api.digicell.dto.AgentStatusDTO;
 import com.api.digicell.dto.AgentUpdateDTO;
 import com.api.digicell.entities.Agent;
 import com.api.digicell.entities.User;
+import com.api.digicell.exceptions.InvalidAgentStatusException;
+import com.api.digicell.exceptions.ResourceNotFoundException;
 import com.api.digicell.responses.ApiResponse;
 import com.api.digicell.services.AgentService;
 import com.api.digicell.services.UserService;
@@ -19,6 +21,7 @@ import org.springframework.validation.annotation.Validated;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import com.api.digicell.responses.ResponseUtil;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -36,64 +39,143 @@ public class AgentController {
      * Create a new agent.
      */
     @PostMapping
+    @Transactional
     public ResponseEntity<ApiResponse<Agent>> createAgent(@Valid @RequestBody AgentCreateDTO createDTO) {
         logger.info("Creating new agent with name: {}", createDTO.getName());
-        Agent agent = agentService.createAgent(createDTO);
-        ApiResponse<Agent> response = new ApiResponse<>(HttpStatus.CREATED.value(), "Agent created successfully", agent);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        try {
+            Agent agent = agentService.createAgent(createDTO);
+            logger.info("Successfully created agent with id: {}", agent.getAgentId());
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(new ApiResponse<>(HttpStatus.CREATED.value(), "Agent created successfully", agent));
+        } catch (InvalidAgentStatusException e) {
+            logger.error("Invalid agent status while creating agent: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
+        } catch (Exception e) {
+            logger.error("Error creating agent: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error creating agent", null));
+        }
     }
 
     /**
      * List all agents.
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Agent>>> listAllAgents() {
-        List<Agent> agents = agentService.getAllAgents();
-        return ResponseUtil.listResponse(agents, "agents");
+    public ResponseEntity<ApiResponse<List<Agent>>> getAllAgents() {
+        logger.info("Fetching all agents");
+        try {
+            List<Agent> agents = agentService.getAllAgents();
+            logger.info("Successfully retrieved {} agents", agents.size());
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agents retrieved successfully", agents));
+        } catch (Exception e) {
+            logger.error("Error fetching agents: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error fetching agents", null));
+        }
     }
 
     /**
      * Get agent by ID.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Agent>> getAgent(@PathVariable @Positive(message = "id must be positive") Long id) {
-        Agent agent = agentService.getAgentById(id);
-        ApiResponse<Agent> response = new ApiResponse<>(HttpStatus.OK.value(), "Agent fetched successfully", agent);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ApiResponse<Agent>> getAgentById(@PathVariable @Positive Long id) {
+        logger.info("Fetching agent with id: {}", id);
+        try {
+            Agent agent = agentService.getAgentById(id);
+            logger.info("Successfully retrieved agent with id: {}", id);
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agent retrieved successfully", agent));
+        } catch (ResourceNotFoundException e) {
+            logger.error("Agent not found with id: {}", id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null));
+        } catch (Exception e) {
+            logger.error("Error fetching agent with id {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error fetching agent", null));
+        }
     }
 
     /**
      * Update agent details.
      */
     @PutMapping("/{id}")
+    @Transactional
     public ResponseEntity<ApiResponse<Agent>> updateAgent(
-            @PathVariable @Positive(message = "id must be positive") Long id,
+            @PathVariable @Positive Long id,
             @Valid @RequestBody AgentUpdateDTO updateDTO) {
-        Agent agent = agentService.updateAgent(id, updateDTO);
-        ApiResponse<Agent> response = new ApiResponse<>(HttpStatus.OK.value(), "Agent updated successfully", agent);
-        return ResponseEntity.ok(response);
+        logger.info("Updating agent with id: {}", id);
+        try {
+            Agent updatedAgent = agentService.updateAgent(id, updateDTO);
+            logger.info("Successfully updated agent with id: {}", id);
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agent updated successfully", updatedAgent));
+        } catch (ResourceNotFoundException e) {
+            logger.error("Agent not found with id: {}", id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null));
+        } catch (InvalidAgentStatusException e) {
+            logger.error("Invalid agent status while updating agent: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
+        } catch (Exception e) {
+            logger.error("Error updating agent with id {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error updating agent", null));
+        }
     }
 
     /**
      * Update agent status.
      */
     @PatchMapping("/{id}/status")
+    @Transactional
     public ResponseEntity<ApiResponse<Agent>> updateAgentStatus(
-            @PathVariable @Positive(message = "id must be positive") Long id,
+            @PathVariable @Positive Long id,
             @Valid @RequestBody AgentStatusDTO statusDTO) {
-        Agent agent = agentService.updateAgentStatus(id, statusDTO);
-        ApiResponse<Agent> response = new ApiResponse<>(HttpStatus.OK.value(), "Agent status updated successfully", agent);
-        return ResponseEntity.ok(response);
+        logger.info("Updating status for agent with id: {}", id);
+        try {
+            Agent updatedAgent = agentService.updateAgentStatus(id, statusDTO);
+            logger.info("Successfully updated agent status to: {} for agent id: {}", statusDTO.getStatus(), id);
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agent status updated successfully", updatedAgent));
+        } catch (ResourceNotFoundException e) {
+            logger.error("Agent not found with id: {}", id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null));
+        } catch (InvalidAgentStatusException e) {
+            logger.error("Invalid agent status while updating status: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
+        } catch (Exception e) {
+            logger.error("Error updating agent status for id {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error updating agent status", null));
+        }
     }
 
     /**
      * Delete agent.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteAgent(@PathVariable @Positive(message = "id must be positive") Long id) {
-        agentService.deleteAgent(id);
-        ApiResponse<Void> response = new ApiResponse<>(HttpStatus.OK.value(), "Agent deleted successfully", null);
-        return ResponseEntity.ok(response);
+    @Transactional
+    public ResponseEntity<ApiResponse<Void>> deleteAgent(@PathVariable @Positive Long id) {
+        logger.info("Deleting agent with id: {}", id);
+        try {
+            agentService.deleteAgent(id);
+            logger.info("Successfully deleted agent with id: {}", id);
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agent deleted successfully", null));
+        } catch (ResourceNotFoundException e) {
+            logger.error("Agent not found with id: {}", id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null));
+        } catch (IllegalStateException e) {
+            logger.error("Cannot delete agent with id {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
+        } catch (Exception e) {
+            logger.error("Error deleting agent with id {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error deleting agent", null));
+        }
     }
 
     /**
@@ -140,14 +222,22 @@ public class AgentController {
      * Set agent status to AVAILABLE.
      */
     @PatchMapping("/{id}/available")
+    @Transactional
     public ResponseEntity<ApiResponse<Agent>> setAgentAvailable(
-            @PathVariable @Positive(message = "id must be positive") Long id) {
-        Agent agent = agentService.setAgentAvailable(id);
-        ApiResponse<Agent> response = new ApiResponse<>(
-            HttpStatus.OK.value(),
-            "Agent status set to AVAILABLE successfully",
-            agent
-        );
-        return ResponseEntity.ok(response);
+            @PathVariable @Positive Long id) {
+        logger.info("Setting agent with id: {} to AVAILABLE", id);
+        try {
+            Agent updatedAgent = agentService.setAgentAvailable(id);
+            logger.info("Successfully set agent status to AVAILABLE for agent id: {}", id);
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agent status set to AVAILABLE", updatedAgent));
+        } catch (ResourceNotFoundException e) {
+            logger.error("Agent not found with id: {}", id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null));
+        } catch (Exception e) {
+            logger.error("Error setting agent status to AVAILABLE for id {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error setting agent status", null));
+        }
     }
 } 

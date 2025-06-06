@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleResourceNotFoundException(ResourceNotFoundException ex) {
         logger.error("Resource not found: {}", ex.getMessage());
-        logger.debug("Resource not found details: {}", ex.getMessage());
+        logger.debug("Resource not found details - cause: {}", ex.getCause());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ApiResponse<>(HttpStatus.NOT_FOUND.value(), ex.getMessage(), null));
     }
@@ -58,34 +58,44 @@ public class GlobalExceptionHandler {
      * Handles validation errors from @Valid - 400 Bad Request
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
-        logger.error("Validation error: {}", errors);
-        logger.debug("Validation error details: {}", errors);
+    public ResponseEntity<ApiResponse<Void>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        logger.error("Validation error: {}", ex.getMessage());
+        logger.debug("Validation error details - cause: {}", ex.getCause());
+        
+        String message = ex.getBindingResult().getAllErrors().stream()
+                .map(error -> {
+                    String fieldName = ((FieldError) error).getField();
+                    // Clean up the field name by removing method name prefix
+                    String cleanFieldName = fieldName.contains(".") ? fieldName.substring(fieldName.lastIndexOf(".") + 1) : fieldName;
+                    return String.format("%s must be positive", cleanFieldName);
+                })
+                .findFirst()
+                .orElse("Validation failed");
+        
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), "Validation failed", errors));
+                .body(new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), message, null));
     }
 
     /**
      * Handles @PathVariable / @RequestParam validation failures - 400 Bad Request
      */
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ApiResponse<Map<String, String>>> handleConstraintViolationException(ConstraintViolationException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getConstraintViolations().forEach(violation -> {
-            String fieldName = violation.getPropertyPath().toString();
-            String errorMessage = violation.getMessage();
-            errors.put(fieldName, errorMessage);
-        });
-        logger.error("Constraint violation: {}", errors);
-        logger.debug("Constraint violation details: {}", errors);
+    public ResponseEntity<ApiResponse<Void>> handleConstraintViolationException(ConstraintViolationException ex) {
+        logger.error("Constraint violation: {}", ex.getMessage());
+        logger.debug("Constraint violation details - cause: {}", ex.getCause());
+        
+        String message = ex.getConstraintViolations().stream()
+                .map(violation -> {
+                    String fieldName = violation.getPropertyPath().toString();
+                    // Clean up the field name by removing method name prefix
+                    String cleanFieldName = fieldName.contains(".") ? fieldName.substring(fieldName.lastIndexOf(".") + 1) : fieldName;
+                    return String.format("%s must be positive", cleanFieldName);
+                })
+                .findFirst()
+                .orElse("Validation failed");
+        
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), "Validation failed", errors));
+                .body(new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), message, null));
     }
 
     /**
@@ -94,7 +104,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
         logger.error("Database constraint violation: {}", ex.getMessage());
-        logger.debug("Database constraint violation details: {}", ex.getMessage());
+        logger.debug("Database constraint violation details - cause: {}", ex.getCause());
+        
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ApiResponse<>(HttpStatus.CONFLICT.value(), "Database constraint violation", null));
     }
@@ -105,7 +116,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(TransactionSystemException.class)
     public ResponseEntity<ApiResponse<Void>> handleTransactionSystemException(TransactionSystemException ex) {
         logger.error("Transaction error: {}", ex.getMessage());
-        logger.debug("Transaction error details: {}", ex.getMessage());
+        logger.debug("Transaction error details - cause: {}", ex.getCause());
+        
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Transaction failed", null));
     }
@@ -114,16 +126,20 @@ public class GlobalExceptionHandler {
      * Handles invalid request body - 400 Bad Request
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadable(
-            HttpMessageNotReadableException ex) {
+    public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
         logger.error("Invalid request body: {}", ex.getMessage());
         logger.debug("Invalid request body details - cause: {}", ex.getCause());
         
-        ApiResponse<Void> response = new ApiResponse<>(
-                HttpStatus.BAD_REQUEST.value(),
-                "Invalid request body",
-                null);
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        String message = ex.getMessage();
+        if (message != null && message.contains("not one of the values accepted for Enum class")) {
+            String enumValues = message.substring(message.indexOf("[") + 1, message.indexOf("]"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), 
+                        String.format("Invalid status value. Accepted values are: %s", enumValues), null));
+        }
+        
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), "Invalid request body", null));
     }
 
     /**
@@ -134,11 +150,8 @@ public class GlobalExceptionHandler {
         logger.error("Type mismatch error: {}", ex.getMessage());
         logger.debug("Type mismatch error details - cause: {}", ex.getCause());
         
-        ApiResponse<Void> response = new ApiResponse<>(
-                HttpStatus.BAD_REQUEST.value(),
-                "Invalid parameter value",
-                null);
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), "Invalid parameter value", null));
     }
 
     /**
@@ -149,11 +162,8 @@ public class GlobalExceptionHandler {
         logger.error("Illegal argument: {}", ex.getMessage());
         logger.debug("Illegal argument details - cause: {}", ex.getCause());
         
-        ApiResponse<Void> response = new ApiResponse<>(
-                HttpStatus.BAD_REQUEST.value(),
-                ex.getMessage(),
-                null);
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), null));
     }
 
     /**
@@ -164,11 +174,8 @@ public class GlobalExceptionHandler {
         logger.error("Illegal state: {}", ex.getMessage());
         logger.debug("Illegal state details - cause: {}", ex.getCause());
         
-        ApiResponse<Void> response = new ApiResponse<>(
-                HttpStatus.BAD_REQUEST.value(),
-                ex.getMessage(),
-                null);
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), null));
     }
 
     /**
@@ -177,7 +184,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidAgentStatusException.class)
     public ResponseEntity<ApiResponse<Void>> handleInvalidAgentStatusException(InvalidAgentStatusException ex) {
         logger.error("Invalid agent status: {}", ex.getMessage());
-        logger.debug("Invalid agent status details: {}", ex.getMessage());
+        logger.debug("Invalid agent status details - cause: {}", ex.getCause());
+        
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), null));
     }
@@ -188,7 +196,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneralException(Exception ex) {
         logger.error("Unexpected error: {}", ex.getMessage());
-        logger.debug("Unexpected error details: {}", ex.getMessage());
+        logger.debug("Unexpected error details - cause: {}", ex.getCause());
+        
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "An unexpected error occurred", null));
     }
