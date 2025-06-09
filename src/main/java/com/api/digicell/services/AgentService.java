@@ -44,6 +44,7 @@ public class AgentService {
         
         Agent agent = new Agent();
         agent.setName(createDTO.getName());
+        agent.setEmail(createDTO.getEmail());
         agent.setStatus(createDTO.getStatus());
         agent.setAvatarUrl(createDTO.getAvatarUrl());
         agent.setLabels(createDTO.getLabels());
@@ -270,5 +271,10 @@ public class AgentService {
             logger.info("Invalid agent status details - status: {}", status);
             throw new InvalidAgentStatusException(status.name());
         }
+    }
+
+    @Transactional
+    public Agent updateAgent(Agent agent) {
+        return agentRepository.save(agent);
     }
 } 

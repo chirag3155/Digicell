@@ -15,13 +15,18 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import java.util.List;
 
+import com.api.digicell.dtos.ChatHistoryDTO;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * CRUD and filter endpoints for Conversation entity.
  */
 @RestController
-@RequestMapping("/api/v1/conversations")
+@RequestMapping("/api/conversations")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Conversation", description = "Conversation management APIs")
 public class ConversationController {
 
     private final ConversationService conversationService;
@@ -38,7 +43,9 @@ public class ConversationController {
      * Get conversation by id.
      */
     @GetMapping("/{conversation_id}")
-    public ResponseEntity<ApiResponse<Conversation>> getById(@PathVariable("conversation_id") @Positive(message = "conversation_id must be positive") Long conversationId) {
+    @Operation(summary = "Get conversation by ID", description = "Retrieves a conversation by its ID")
+    public ResponseEntity<ApiResponse<Conversation>> getById(
+            @PathVariable("conversation_id") @Positive(message = "conversation_id must be positive") Long conversationId) {
         Conversation conv = conversationService.getConversationById(conversationId);
         ApiResponse<Conversation> response = new ApiResponse<>(HttpStatus.OK.value(), "Conversation fetched successfully", conv);
         return ResponseEntity.ok(response);
@@ -56,8 +63,16 @@ public class ConversationController {
      * Filter conversations by user.
      */
     @GetMapping("/user/{user_id}")
-    public ResponseEntity<ApiResponse<List<Conversation>>> getByUser(@PathVariable("user_id") @Positive(message = "user_id must be positive") Long userId) {
-        return ResponseUtil.listResponse(conversationService.getConversationsByUser(userId), "conversations for user");
+    @Operation(summary = "Get chat history by user ID", description = "Retrieves all chat history for a specific user")
+    public ResponseEntity<ApiResponse<List<ChatHistoryDTO>>> getChatHistoryByUser(
+            @PathVariable("user_id") @Positive(message = "user_id must be positive") Long userId) {
+        List<ChatHistoryDTO> chatHistory = conversationService.getChatHistoryByUser(userId);
+        ApiResponse<List<ChatHistoryDTO>> response = new ApiResponse<>(
+            HttpStatus.OK.value(),
+            "Chat history retrieved successfully",
+            chatHistory
+        );
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -99,4 +114,19 @@ public class ConversationController {
         ApiResponse<Void> response = new ApiResponse<>(HttpStatus.OK.value(), "Conversation with ID " + conversationId + " has been deleted", null);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/{conversation_id}/user/{user_id}")
+    @Operation(summary = "Get conversation details", description = "Retrieves detailed chat history for a specific conversation and user")
+    public ResponseEntity<ApiResponse<ChatHistoryDTO>> getConversationDetails(
+            @PathVariable("conversation_id") @Positive(message = "conversation_id must be positive") Long conversationId,
+            @PathVariable("user_id") @Positive(message = "user_id must be positive") Long userId) {
+        ChatHistoryDTO conversation = conversationService.getConversationDetails(conversationId, userId);
+        ApiResponse<ChatHistoryDTO> response = new ApiResponse<>(
+            HttpStatus.OK.value(),
+            "Conversation details retrieved successfully",
+            conversation
+        );
+        return ResponseEntity.ok(response);
+    }
+
 } 

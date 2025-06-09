@@ -1,25 +1,26 @@
 package com.api.digicell.dto;
 
 import com.api.digicell.entities.AgentStatus;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.Email;
+import lombok.*;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class AgentUpdateDTO {
-    @NotBlank(message = "Name is required")
+    
     private String name;
+    
+    @Email(message = "Invalid email format")
+    private String email;
     
     private String avatarUrl;
     
     private List<String> labels;
     
-    @NotNull(message = "Status is required")
     private AgentStatus status;
 } 

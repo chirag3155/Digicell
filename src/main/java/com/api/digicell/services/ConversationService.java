@@ -1,19 +1,23 @@
 package com.api.digicell.services;
 
 import com.api.digicell.dto.ConversationDTO;
+import com.api.digicell.dtos.ChatHistoryDTO;
 import com.api.digicell.entities.Conversation;
 import com.api.digicell.entities.User;
 import com.api.digicell.entities.Agent;
 import com.api.digicell.exceptions.ResourceNotFoundException;
+import com.api.digicell.repository.AgentRepository;
 import com.api.digicell.repository.ConversationRepository;
 import com.api.digicell.repository.UserRepository;
-import com.api.digicell.repository.AgentRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -93,5 +97,42 @@ public class ConversationService {
             throw new ResourceNotFoundException("Conversation not found with id: " + id);
         }
         conversationRepository.deleteById(id);
+    }
+
+    public List<ChatHistoryDTO> getChatHistoryByUser(Long userId) {
+        List<Conversation> conversations = conversationRepository.findByUser_UserId(userId);
+        return conversations.stream()
+                .map(this::convertToChatHistoryDTO)
+                .collect(Collectors.toList());
+    }
+
+    public ChatHistoryDTO getConversationDetails(Long conversationId, Long userId) {
+        Conversation conversation = conversationRepository.findByConversationIdAndUser_UserId(conversationId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
+        return convertToChatHistoryDTO(conversation);
+    }
+
+    private ChatHistoryDTO convertToChatHistoryDTO(Conversation conversation) {
+        ChatHistoryDTO dto = new ChatHistoryDTO();
+        dto.setAgentId(conversation.getAgent().getAgentId());
+        dto.setAgentName(conversation.getAgent().getName());
+        dto.setQuery(conversation.getQuery());
+        
+        // Convert chat history to the new format
+        List<List<ChatHistoryDTO.MessageDTO>> formattedHistory = conversation.getChatHistory().stream()
+            .map(messages -> messages.stream()
+                .map(msg -> {
+                    ChatHistoryDTO.MessageDTO messageDTO = new ChatHistoryDTO.MessageDTO();
+                    // Format timestamp to match "2024-03-20T18:01:00" format
+                    messageDTO.setTimestamp(msg.getTimestamp().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")));
+                    messageDTO.setContent(msg.getContent());
+                    messageDTO.setRole(msg.getRole());
+                    return messageDTO;
+                })
+                .collect(Collectors.toList()))
+            .collect(Collectors.toList());
+        
+        dto.setChatHistory(formattedHistory);
+        return dto;
     }
 } 

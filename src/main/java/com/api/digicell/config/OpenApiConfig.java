@@ -1,53 +1,44 @@
 package com.api.digicell.config;
 
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springdoc.core.models.GroupedOpenApi;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Contact;
-import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.info.License;
-import io.swagger.v3.oas.models.servers.Server;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 
-import java.util.List;
+/*
+ * @Author Digicell Team
+*/
 
-/**
- * Central configuration for Springdoc-OpenAPI (Swagger UI).
- *
- * Once the application is running, the documentation will be available at:
- *   • /swagger-ui/index.html (interactive UI)
- *   • /v3/api-docs          (raw JSON)
- */
 @Configuration
+@OpenAPIDefinition(
+    info = @Info(
+        title = "Digicell: BACKEND API'S",
+        version = "1.0",
+        description = "API Documentation for Digicell Backend Services"
+    )
+)
+@SecurityScheme(
+    name = "bearerAuth",
+    type = SecuritySchemeType.HTTP,
+    bearerFormat = "JWT",
+    scheme = "Bearer",
+    in = SecuritySchemeIn.HEADER
+)
 public class OpenApiConfig {
 
     @Bean
-    public OpenAPI customOpenAPI() {
-        return new OpenAPI()
-                .info(new Info()
-                        .title("Digicell API")
-                        .version("1.0")
-                        .description("API for Digicell Agent Management System")
-                        .contact(new Contact()
-                                .name("Digicell Support")
-                                .email("support@digicell.com")
-                                .url("https://digicell.com/support"))
-                        .license(new License()
-                                .name("Proprietary")
-                                .url("https://digicell.com/license")))
-                .servers(List.of(
-                        new Server()
-                                .url("https://eva-sandbox.bngrenew.com/digicel")
-                                .description("Sandbox Server")
-                ));
-    }
-
-    @Bean
-    public GroupedOpenApi publicApi() {
+    public GroupedOpenApi api() {
         return GroupedOpenApi.builder()
-                .group("public")
-                .packagesToScan("com.api.digicell.controllers")
-                .build();
+            .group("default")
+            .packagesToScan("com.api.digicell.controllers")
+            .build();
     }
 } 

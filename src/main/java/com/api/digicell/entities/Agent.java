@@ -1,6 +1,7 @@
 package com.api.digicell.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -24,6 +25,10 @@ public class Agent {
 
     @Column(nullable = false)
     private String name;
+
+    @Email(message = "Invalid email format")
+    @Column(nullable = false)
+    private String email;
 
     @Column(name = "avatar_url")
     private String avatarUrl;

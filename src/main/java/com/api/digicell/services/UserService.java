@@ -6,7 +6,10 @@ import com.api.digicell.exceptions.ResourceNotFoundException;
 import com.api.digicell.repository.UserRepository;
 import com.api.digicell.repository.ConversationRepository;
 import com.api.digicell.responses.UserDetailsResponse;
+import com.api.digicell.dto.ConvoDto;
 import com.api.digicell.dto.UserConversationDTO;
+import com.api.digicell.dto.UserConvoDto;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -53,9 +56,9 @@ public class UserService {
             List<Conversation> conversations = conversationRepository.findByUser_UserId(userId);
             logger.debug("Found {} conversations for user {}", conversations.size(), userId);
 
-            List<UserConversationDTO> conversationDTOs = conversations.stream()
+            List<UserConvoDto> conversationDTOs = conversations.stream()
                     .map(conv -> {
-                        UserConversationDTO dto = new UserConversationDTO();
+                        UserConvoDto dto = new UserConvoDto();
                         dto.setConversationId(conv.getConversationId());
                         dto.setAgentId(conv.getAgent().getAgentId());
                         dto.setAgentName(conv.getAgent().getName());
@@ -79,7 +82,7 @@ public class UserService {
         }
     }
 
-    public List<UserConversationDTO> getUserConversations(Long userId) {
+    public List<ConvoDto> getUserConversations(Long userId) {
         logger.info("Fetching conversations for user ID: {}", userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
@@ -89,14 +92,13 @@ public class UserService {
 
         return conversations.stream()
                 .map(conv -> {
-                    UserConversationDTO dto = new UserConversationDTO();
+                    ConvoDto dto = new ConvoDto();
                     dto.setConversationId(conv.getConversationId());
                     dto.setAgentId(conv.getAgent().getAgentId());
                     dto.setAgentName(conv.getAgent().getName());
                     dto.setStartTime(conv.getStartTime());
                     dto.setEndTime(conv.getEndTime());
                     dto.setQuery(conv.getQuery());
-                    dto.setChatHistory(conv.getChatHistory());
                     return dto;
                 })
                 .collect(Collectors.toList());

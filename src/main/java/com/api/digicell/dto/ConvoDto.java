@@ -1,12 +1,20 @@
 package com.api.digicell.dto;
 
 import com.api.digicell.entities.ChatMessage;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-public class UserConversationDTO {
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ConvoDto {
+
     private Long conversationId;
     private Long agentId;
     private String agentName;

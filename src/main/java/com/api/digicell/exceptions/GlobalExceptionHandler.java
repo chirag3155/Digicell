@@ -17,6 +17,9 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.persistence.EntityNotFoundException;
 import java.lang.NumberFormatException;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Global exception handler for all REST controllers.
  * Provides consistent error responses and logging across the application.
@@ -55,22 +58,21 @@ public class GlobalExceptionHandler {
      * Handles validation errors from @Valid - 400 Bad Request
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Void>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        logger.error("Validation error: {}", ex.getMessage());
-        logger.debug("Validation error details - cause: {}", ex.getCause());
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
         
-        String message = ex.getBindingResult().getAllErrors().stream()
-                .map(error -> {
-                    String fieldName = ((FieldError) error).getField();
-                    // Clean up the field name by removing method name prefix
-                    String cleanFieldName = fieldName.contains(".") ? fieldName.substring(fieldName.lastIndexOf(".") + 1) : fieldName;
-                    return String.format("%s must be positive", cleanFieldName);
-                })
-                .findFirst()
-                .orElse("Validation failed");
-        
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), message, null));
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(new ApiResponse<>(
+                HttpStatus.BAD_REQUEST.value(),
+                "Validation failed",
+                errors
+            ));
     }
 
     /**

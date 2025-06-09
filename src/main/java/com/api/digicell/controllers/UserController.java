@@ -1,6 +1,8 @@
 package com.api.digicell.controllers;
 
+import com.api.digicell.dto.ConvoDto;
 import com.api.digicell.dto.UserConversationDTO;
+import com.api.digicell.dto.UserConvoDto;
 import com.api.digicell.entities.User;
 import com.api.digicell.services.UserService;
 import com.api.digicell.responses.ApiResponse;
@@ -84,11 +86,11 @@ public class UserController {
     }
 
     @GetMapping("/{user_id}/conversations")
-    public ResponseEntity<ApiResponse<List<UserConversationDTO>>> getUserConversations(
+    public ResponseEntity<ApiResponse<List<ConvoDto>>> getUserConversations(
             @PathVariable("user_id") @Positive(message = "user_id must be positive") Long userId) {
         logger.info("Received request to get conversations for user: {}", userId);
         try {
-            List<UserConversationDTO> conversations = userService.getUserConversations(userId);
+            List<ConvoDto> conversations = userService.getUserConversations(userId);
             logger.debug("Found {} conversations for user: {}", conversations.size(), userId);
             return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "User conversations fetched successfully", conversations));
         } catch (IllegalArgumentException e) {

@@ -22,6 +22,10 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import com.api.digicell.responses.ResponseUtil;
 import org.springframework.transaction.annotation.Transactional;
+import com.api.digicell.mapper.AgentMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.List;
 
@@ -29,15 +33,22 @@ import java.util.List;
 @RequestMapping("/api/v1/agents")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Agent Management", description = "APIs for managing agents")
+@SecurityRequirement(name = "bearerAuth")
 public class AgentController {
 
     private final AgentService agentService;
     private final UserService userService;
+    private final AgentMapper agentMapper;
     private static final Logger logger = LoggerFactory.getLogger(AgentController.class);
 
     /**
      * Create a new agent.
      */
+    @Operation(
+        summary = "Create a new agent",
+        description = "Creates a new agent with the provided information. Email and name are required fields."
+    )
     @PostMapping
     @Transactional
     public ResponseEntity<ApiResponse<Agent>> createAgent(@Valid @RequestBody AgentCreateDTO createDTO) {
@@ -62,6 +73,10 @@ public class AgentController {
      * List all agents.
      */
     @GetMapping
+    @Operation(
+        summary = "Get all agents",
+        description = "Retrieves a list of all agents"
+    )
     public ResponseEntity<ApiResponse<List<Agent>>> getAllAgents() {
         logger.info("Fetching all agents");
         try {
@@ -79,6 +94,10 @@ public class AgentController {
      * Get agent by ID.
      */
     @GetMapping("/{id}")
+    @Operation(
+        summary = "Get agent by ID",
+        description = "Retrieves agent details by their ID"
+    )
     public ResponseEntity<ApiResponse<Agent>> getAgentById(@PathVariable @Positive Long id) {
         logger.info("Fetching agent with id: {}", id);
         try {
@@ -99,6 +118,10 @@ public class AgentController {
     /**
      * Update agent details.
      */
+    @Operation(
+        summary = "Update an existing agent",
+        description = "Updates the details of an existing agent by ID"
+    )
     @PutMapping("/{id}")
     @Transactional
     public ResponseEntity<ApiResponse<Agent>> updateAgent(

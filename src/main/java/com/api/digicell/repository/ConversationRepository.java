@@ -30,4 +30,6 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
     List<Conversation> findByUserAndAgent(User user, Agent agent);
 
     Optional<Conversation> findByUserAndAgentAndEndTimeIsNull(User user, Agent agent);
+
+    Optional<Conversation> findByConversationIdAndUser_UserId(Long conversationId, Long userId);
 } 
