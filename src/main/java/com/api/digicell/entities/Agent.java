@@ -45,4 +45,4 @@ public class Agent {
     @OneToMany(mappedBy = "agent", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Conversation> conversations;
-} 
+}
