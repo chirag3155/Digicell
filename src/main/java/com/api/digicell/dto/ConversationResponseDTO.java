@@ -8,10 +8,11 @@ import java.util.List;
 @Data
 public class ConversationResponseDTO {
     private Long conversationId;
-    private Long userId;
+    private Long clientId;
     private String userName;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-    private String query;
+    private String intent;
+    private String chatSummary;
     private List<List<ChatMessage>> chatHistory;
 } 

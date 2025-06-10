@@ -18,7 +18,8 @@ public class ConvoDto {
     private Long conversationId;
     private Long agentId;
     private String agentName;
-    private String query;
+    private String intent;
+    private String chatSummary;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 

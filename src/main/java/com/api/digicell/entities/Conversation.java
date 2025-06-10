@@ -18,15 +18,15 @@ public class Conversation {
     private Long conversationId;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "client_id", nullable = false)
+    private Client client;
 
     @ManyToOne
     @JoinColumn(name = "agent_id", nullable = false)
     private Agent agent;
 
     @Column(nullable = false)
-    private String query;
+    private String intent;
 
     @CreationTimestamp
     @Column(nullable = false)
@@ -42,6 +42,10 @@ public class Conversation {
     @Convert(converter = ChatHistoryConverter.class)
     @Column(columnDefinition = "json")
     private List<List<ChatMessage>> chatHistory;
+
+
+    @Column(nullable = false)
+    private String chatSummary;
 
   
 } 

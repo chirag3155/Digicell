@@ -9,7 +9,7 @@ public class ChatHistoryDTO {
     private Long conversationId;
     private Long agentId;
     private String agentName;
-    private String query;
+    private String intent;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private List<List<MessageDTO>> chatHistory;

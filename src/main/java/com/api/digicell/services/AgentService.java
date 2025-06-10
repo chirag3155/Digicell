@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -229,11 +228,11 @@ public class AgentService {
                     .map(conv -> {
                         ConversationResponseDTO dto = new ConversationResponseDTO();
                         dto.setConversationId(conv.getConversationId());
-                        dto.setUserId(conv.getUser().getUserId());
-                        dto.setUserName(conv.getUser().getName());
+                        dto.setClientId(conv.getClient().getClientId());
+                        dto.setUserName(conv.getClient().getName());
                         dto.setStartTime(conv.getStartTime());
                         dto.setEndTime(conv.getEndTime());
-                        dto.setQuery(conv.getQuery());
+                        dto.setIntent(conv.getIntent());
                         dto.setChatHistory(conv.getChatHistory());
                         return dto;
                     })

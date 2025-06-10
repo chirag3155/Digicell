@@ -5,7 +5,7 @@
 2. [Authentication](#authentication)
 3. [Base URLs](#base-urls)
 4. [API Endpoints](#api-endpoints)
-   - [User Management](#user-management)
+   - [User Management](#client-management)
    - [Agent Management](#agent-management)
    - [Conversation Management](#conversation-management)
    - [Alias Management](#alias-management)
@@ -14,7 +14,7 @@
 7. [Data Types](#data-types)
 
 ## Introduction
-This document provides comprehensive documentation for the Digicell API, which enables management of users, agents, conversations, and aliases in a customer service platform.
+This document provides comprehensive documentation for the Digicell API, which enables management of clients, agents, conversations, and aliases in a customer service platform.
 
 ## Authentication
 All endpoints require authentication using Bearer token:
@@ -29,11 +29,11 @@ Authorization: Bearer <your_token>
 ## API Endpoints
 
 ### User Management
-Base path: `/api/v1/users`
+Base path: `/api/v1/clients`
 
 #### Get All Users
 ```http
-GET /api/v1/users
+GET /api/v1/clients
 ```
 **Response:**
 ```json
@@ -54,7 +54,7 @@ GET /api/v1/users
 
 #### Get User by ID
 ```http
-GET /api/v1/users/{user_id}
+GET /api/v1/clients/{user_id}
 ```
 **Response:**
 ```json
@@ -73,13 +73,13 @@ GET /api/v1/users/{user_id}
 
 #### Get Users by Assignment Status
 ```http
-GET /api/v1/users/assigned?status=true
+GET /api/v1/clients/assigned?status=true
 ```
 **Response:**
 ```json
 {
     "status": 200,
-    "message": "assigned users",
+    "message": "assigned clients",
     "data": [
         {
             "userId": 1,
@@ -94,7 +94,7 @@ GET /api/v1/users/assigned?status=true
 
 #### Get User Details with Conversations
 ```http
-GET /api/v1/users/{user_id}/details
+GET /api/v1/clients/{user_id}/details
 ```
 **Response:**
 ```json
@@ -102,7 +102,7 @@ GET /api/v1/users/{user_id}/details
     "status": 200,
     "message": "User details fetched successfully",
     "data": {
-        "user": {
+        "client": {
             "userId": 1,
             "name": "John Doe",
             "email": "john@example.com",
@@ -129,7 +129,7 @@ GET /api/v1/users/{user_id}/details
                         {
                             "timestamp": "2024-03-20T18:01:30",
                             "content": "I have a question about my order",
-                            "role": "user"
+                            "role": "client"
                         }
                     ]
                 ]
@@ -141,7 +141,7 @@ GET /api/v1/users/{user_id}/details
 
 #### Get User Conversations
 ```http
-GET /api/v1/users/{user_id}/conversations
+GET /api/v1/clients/{user_id}/conversations
 ```
 **Response:**
 ```json
@@ -329,7 +329,7 @@ GET /api/v1/agents/{agentId}/details
                         {
                             "timestamp": "2024-03-20T18:01:30",
                             "content": "I have a question about my order",
-                            "role": "user"
+                            "role": "client"
                         }
                     ]
                 ]
@@ -341,13 +341,13 @@ GET /api/v1/agents/{agentId}/details
 
 #### Get Users by Agent
 ```http
-GET /api/v1/agents/{agent_id}/users
+GET /api/v1/agents/{agent_id}/clients
 ```
 **Response:**
 ```json
 {
     "status": 200,
-    "message": "users for agent",
+    "message": "clients for agent",
     "data": [
         {
             "userId": 1,
@@ -425,7 +425,7 @@ GET /api/conversations/{conversation_id}
 
 #### Get Chat History by User
 ```http
-GET /api/conversations/user/{user_id}
+GET /api/conversations/client/{user_id}
 ```
 **Response:**
 ```json
@@ -450,7 +450,7 @@ GET /api/conversations/user/{user_id}
                     {
                         "timestamp": "2024-03-20T18:02:00",
                         "content": "I need help with my account",
-                        "role": "user"
+                        "role": "client"
                     }
                 ]
             ]
@@ -515,7 +515,7 @@ PUT /api/conversations/{conversation_id}
             {
                 "timestamp": "2024-03-20T18:02:00",
                 "content": "I need help with my account",
-                "role": "user"
+                "role": "client"
             }
         ]
     ],
@@ -553,13 +553,13 @@ DELETE /api/conversations/{conversation_id}
 
 #### Get Conversations by Agent and User
 ```http
-GET /api/conversations/agent/{agent_id}/user/{user_id}
+GET /api/conversations/agent/{agent_id}/client/{user_id}
 ```
 **Response:**
 ```json
 {
     "status": 200,
-    "message": "conversations for agent and user",
+    "message": "conversations for agent and client",
     "data": [
         {
             "conversationId": 123,
@@ -575,7 +575,7 @@ GET /api/conversations/agent/{agent_id}/user/{user_id}
 
 #### Get Conversation Details
 ```http
-GET /api/conversations/conversation/{conversation_id}/user/{user_id}
+GET /api/conversations/conversation/{conversation_id}/client/{user_id}
 ```
 **Response:**
 ```json
@@ -599,7 +599,7 @@ GET /api/conversations/conversation/{conversation_id}/user/{user_id}
                 {
                     "timestamp": "2024-03-20T18:02:00",
                     "content": "I need help with my account",
-                    "role": "user"
+                    "role": "client"
                 }
             ]
         ]
@@ -768,7 +768,7 @@ Common error codes:
             {
                 "timestamp": "String (ISO-8601)",
                 "content": "String",
-                "role": "String (user/assistant)"
+                "role": "String (client/assistant)"
             }
         ]
     ]

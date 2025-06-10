@@ -204,14 +204,14 @@ This generated password is for development use only. Your security configuration
 2025-06-06 18:37:16,880 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-5] Agent conversations details - id: 10, conversation count: 1, conversation ids: [14]
 2025-06-06 18:37:16,881 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Successfully fetched agent details for id: 10
 2025-06-06 18:37:16,882 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-5] Agent details response - id: 10, name: Judy Agent, status: AVAILABLE, conversation count: 1
-2025-06-06 18:37:33,763 INFO c.a.d.c.UserController [http-nio-8080-exec-1] Received request to get details for user: 1
-2025-06-06 18:37:33,764 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Fetching user details for id: 1
+2025-06-06 18:37:33,763 INFO c.a.d.c.UserController [http-nio-8080-exec-1] Received request to get details for client: 1
+2025-06-06 18:37:33,764 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Fetching client details for id: 1
 2025-06-06 18:37:33,799 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
 2025-06-06 18:37:33,806 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting chat history with 1 sessions to JSON
 2025-06-06 18:37:33,811 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
-2025-06-06 18:37:33,813 DEBUG c.a.d.s.UserService [http-nio-8080-exec-1] Found 1 conversations for user 1
-2025-06-06 18:37:33,819 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Successfully fetched user details for id: 1
-2025-06-06 18:37:33,822 DEBUG c.a.d.c.UserController [http-nio-8080-exec-1] Successfully fetched details for user: 1
+2025-06-06 18:37:33,813 DEBUG c.a.d.s.UserService [http-nio-8080-exec-1] Found 1 conversations for client 1
+2025-06-06 18:37:33,819 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Successfully fetched client details for id: 1
+2025-06-06 18:37:33,822 DEBUG c.a.d.c.UserController [http-nio-8080-exec-1] Successfully fetched details for client: 1
 2025-06-06 18:39:49,890 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
 2025-06-06 18:39:50,037 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplicationTests using Java 17.0.12 with PID 29340 (started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
 2025-06-06 18:39:50,044 DEBUG o.s.b.StartupInfoLogger [main] Running with Spring Boot v3.2.5, Spring v6.1.6

@@ -5,12 +5,12 @@ import com.api.digicell.dto.AgentDetailsResponseDTO;
 import com.api.digicell.dto.AgentStatusDTO;
 import com.api.digicell.dto.AgentUpdateDTO;
 import com.api.digicell.entities.Agent;
-import com.api.digicell.entities.User;
+import com.api.digicell.entities.Client;
 import com.api.digicell.exceptions.InvalidAgentStatusException;
 import com.api.digicell.exceptions.ResourceNotFoundException;
 import com.api.digicell.responses.ApiResponse;
 import com.api.digicell.services.AgentService;
-import com.api.digicell.services.UserService;
+import com.api.digicell.services.ClientService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +38,7 @@ import java.util.List;
 public class AgentController {
 
     private final AgentService agentService;
-    private final UserService userService;
+    private final ClientService clientService;
     private final AgentMapper agentMapper;
     private static final Logger logger = LoggerFactory.getLogger(AgentController.class);
 
@@ -202,12 +202,12 @@ public class AgentController {
     }
 
     /**
-     * List users being handled by a specific agent.
+     * List Clients being handled by a specific agent.
      */
-    @GetMapping("/{agent_id}/users")
-    public ResponseEntity<ApiResponse<List<User>>> listUsersByAgent(@PathVariable("agent_id") @Positive(message = "agent_id must be positive") Long agentId) {
-        List<User> users = userService.getUsersByAgent(agentId);
-        return ResponseUtil.listResponse(users, "users for agent");
+    @GetMapping("/{agent_id}/clients")
+    public ResponseEntity<ApiResponse<List<Client>>> listClientsByAgent(@PathVariable("agent_id") @Positive(message = "agent_id must be positive") Long agentId) {
+        List<Client> clients = clientService.getClientsByAgent(agentId);
+        return ResponseUtil.listResponse(clients, "clients for agent");
     }
 
     /**

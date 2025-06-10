@@ -62,11 +62,11 @@ public class ConversationController {
     /**
      * Filter conversations by user.
      */
-    @GetMapping("/user/{user_id}")
-    @Operation(summary = "Get chat history by user ID", description = "Retrieves all chat history for a specific user")
+    @GetMapping("/client/{client_id}")
+    @Operation(summary = "Get chat history by client ID", description = "Retrieves all chat history for a specific client")
     public ResponseEntity<ApiResponse<List<ChatHistoryDTO>>> getChatHistoryByUser(
-            @PathVariable("user_id") @Positive(message = "user_id must be positive") Long userId) {
-        List<ChatHistoryDTO> chatHistory = conversationService.getChatHistoryByUser(userId);
+            @PathVariable("client_id") @Positive(message = "client_id must be positive") Long clientId) {
+        List<ChatHistoryDTO> chatHistory = conversationService.getChatHistoryByUser(clientId);
         ApiResponse<List<ChatHistoryDTO>> response = new ApiResponse<>(
             HttpStatus.OK.value(),
             "Chat history retrieved successfully",
@@ -76,12 +76,12 @@ public class ConversationController {
     }
 
     /**
-     * Filter conversations by agent and user.
+     * Filter conversations by agent and client.
      */
-    @GetMapping("/agent/{agent_id}/user/{user_id}")
+    @GetMapping("/agent/{agent_id}/client/{client_id}")
     public ResponseEntity<ApiResponse<List<Conversation>>> getByAgentAndUser(@PathVariable("agent_id") @Positive(message = "agent_id must be positive") Long agentId,
-                                                                             @PathVariable("user_id") @Positive(message = "user_id must be positive") Long userId) {
-        return ResponseUtil.listResponse(conversationService.getConversationsByAgentAndUser(agentId, userId), "conversations for agent and user");
+                                                                             @PathVariable("client_id") @Positive(message = "user_id must be positive") Long clientId) {
+        return ResponseUtil.listResponse(conversationService.getConversationsByAgentAndUser(agentId, clientId), "conversations for agent and user");
     }
 
     /**
@@ -115,12 +115,12 @@ public class ConversationController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{conversation_id}/user/{user_id}")
+    @GetMapping("/{conversation_id}/client/{client_id}")
     @Operation(summary = "Get conversation details", description = "Retrieves detailed chat history for a specific conversation and user")
     public ResponseEntity<ApiResponse<ChatHistoryDTO>> getConversationDetails(
             @PathVariable("conversation_id") @Positive(message = "conversation_id must be positive") Long conversationId,
-            @PathVariable("user_id") @Positive(message = "user_id must be positive") Long userId) {
-        ChatHistoryDTO conversation = conversationService.getConversationDetails(conversationId, userId);
+            @PathVariable("client_id") @Positive(message = "user_id must be positive") Long clientId) {
+        ChatHistoryDTO conversation = conversationService.getConversationDetails(conversationId, clientId);
         ApiResponse<ChatHistoryDTO> response = new ApiResponse<>(
             HttpStatus.OK.value(),
             "Conversation details retrieved successfully",

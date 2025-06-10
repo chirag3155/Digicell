@@ -1,18 +1,20 @@
-package com.api.digicell.dtos;
+package com.api.digicell.dto;
 
+import com.api.digicell.entities.ChatMessage;
 import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-public class UserConversationDTO {
+public class ClientConvoDto {
     private Long conversationId;
-    private String agentId;
+    private Long agentId;
     private String agentName;
-    private String query;
+    private String intent;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-    private List<List<ChatMessageDTO>> chatHistory;
+    private String chatSummary;
+    private List<List<ChatMessage>> chatHistory;
 
     @Data
     public static class ChatMessageDTO {
@@ -20,4 +22,5 @@ public class UserConversationDTO {
         private String content;
         private String role;
     }
-}
+
+} 

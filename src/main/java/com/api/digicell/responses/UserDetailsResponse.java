@@ -1,8 +1,7 @@
 package com.api.digicell.responses;
 
-import com.api.digicell.dto.UserConversationDTO;
-import com.api.digicell.dto.UserConvoDto;
-import com.api.digicell.entities.User;
+import com.api.digicell.dto.ClientConvoDto;
+import com.api.digicell.entities.Client;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,6 +14,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDetailsResponse {
-    private User user;
-    private List<UserConvoDto> conversations;
+    private Client client;
+    private List<ClientConvoDto> conversations;
 } 

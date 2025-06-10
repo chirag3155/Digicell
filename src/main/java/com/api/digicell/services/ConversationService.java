@@ -3,12 +3,12 @@ package com.api.digicell.services;
 import com.api.digicell.dto.ConversationDTO;
 import com.api.digicell.dtos.ChatHistoryDTO;
 import com.api.digicell.entities.Conversation;
-import com.api.digicell.entities.User;
+import com.api.digicell.entities.Client;
 import com.api.digicell.entities.Agent;
 import com.api.digicell.exceptions.ResourceNotFoundException;
 import com.api.digicell.repository.AgentRepository;
 import com.api.digicell.repository.ConversationRepository;
-import com.api.digicell.repository.UserRepository;
+import com.api.digicell.repository.ClientRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 public class ConversationService {
 
     private final ConversationRepository conversationRepository;
-    private final UserRepository userRepository;
+    private final ClientRepository clientRepository;
     private final AgentRepository agentRepository;
 
     public List<Conversation> getAllConversations() {
@@ -41,29 +41,29 @@ public class ConversationService {
     }
 
     public List<Conversation> getConversationsByUser(Long userId) {
-        return conversationRepository.findByUser_UserId(userId);
+        return conversationRepository.findByClient_ClientId(userId);
     }
 
     public List<Conversation> getConversationsByAgentAndUser(Long agentId, Long userId) {
-        return conversationRepository.findByAgent_AgentIdAndUser_UserId(agentId, userId);
+        return conversationRepository.findByAgent_AgentIdAndClient_ClientId(agentId, userId);
     }
 
     @Transactional
     public Conversation createConversation(ConversationDTO dto) {
-        User user = userRepository.findById(dto.getUserId())
-            .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + dto.getUserId()));
+        Client client = clientRepository.findById(dto.getClientId())
+            .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + dto.getClientId()));
         
         Agent agent = agentRepository.findById(dto.getAgentId())
             .orElseThrow(() -> new IllegalArgumentException("Agent not found with id: " + dto.getAgentId()));
 
         // Check for existing conversation
-        Conversation existingConversation = conversationRepository.findByUserAndAgentAndEndTimeIsNull(user, agent)
+        Conversation existingConversation = conversationRepository.findByClientAndAgentAndEndTimeIsNull(client, agent)
             .orElse(null); // If no conversation exists, return null
 
 
         if (existingConversation != null) {
             // Update existing conversation
-            existingConversation.setQuery(dto.getQuery());
+            existingConversation.setIntent(dto.getIntent());
             existingConversation.setEndTime(dto.getEndTime());
             if (dto.getChatHistory() != null) {
                 existingConversation.setChatHistory(dto.getChatHistory());
@@ -74,9 +74,9 @@ public class ConversationService {
 
         // Create new conversation if none exists
         Conversation conversation = new Conversation();
-        conversation.setUser(user);
+        conversation.setClient(client);
         conversation.setAgent(agent);
-        conversation.setQuery(dto.getQuery());
+        conversation.setIntent(dto.getIntent());
         conversation.setStartTime(dto.getStartTime());
         conversation.setEndTime(dto.getEndTime());
         conversation.setChatHistory(dto.getChatHistory());
@@ -99,15 +99,15 @@ public class ConversationService {
         conversationRepository.deleteById(id);
     }
 
-    public List<ChatHistoryDTO> getChatHistoryByUser(Long userId) {
-        List<Conversation> conversations = conversationRepository.findByUser_UserId(userId);
+    public List<ChatHistoryDTO> getChatHistoryByUser(Long clientId) {
+        List<Conversation> conversations = conversationRepository.findByClient_ClientId(clientId);
         return conversations.stream()
                 .map(this::convertToChatHistoryDTO)
                 .collect(Collectors.toList());
     }
 
     public ChatHistoryDTO getConversationDetails(Long conversationId, Long userId) {
-        Conversation conversation = conversationRepository.findByConversationIdAndUser_UserId(conversationId, userId)
+        Conversation conversation = conversationRepository.findByConversationIdAndClient_ClientId(conversationId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
         return convertToChatHistoryDTO(conversation);
     }
@@ -116,7 +116,8 @@ public class ConversationService {
         ChatHistoryDTO dto = new ChatHistoryDTO();
         dto.setAgentId(conversation.getAgent().getAgentId());
         dto.setAgentName(conversation.getAgent().getName());
-        dto.setQuery(conversation.getQuery());
+        dto.setIntent(conversation.getIntent());
+        dto.setChatSummary(conversation.getChatSummary());
         
         // Convert chat history to the new format
         List<List<ChatHistoryDTO.MessageDTO>> formattedHistory = conversation.getChatHistory().stream()

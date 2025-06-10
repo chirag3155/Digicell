@@ -16,7 +16,10 @@ public class ChatHistoryDTO {
     private String agentName;
 
     @Schema(description = "User Query")
-    private String query;
+    private String intent;
+
+    @Schema(description = "Chat Summary")
+    private String chatSummary;
 
     @Schema(description = "Chat History - List of message exchanges")
     private List<List<MessageDTO>> chatHistory;

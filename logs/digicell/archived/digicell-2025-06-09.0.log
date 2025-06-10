@@ -424,7 +424,7 @@ Caused by: java.io.IOException: An established connection was aborted by the sof
 2025-06-09 10:55:15,959 INFO o.a.j.l.DirectJDKLog [http-nio-8080-exec-1] Initializing Spring DispatcherServlet 'dispatcherServlet'
 2025-06-09 10:55:15,961 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Initializing Servlet 'dispatcherServlet'
 2025-06-09 10:55:15,964 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Completed initialization in 2 ms
-2025-06-09 11:17:24,380 WARN c.z.h.p.HikariPool$HouseKeeper [HikariPool-1 housekeeper] HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=22m29s117ms758µs400ns).
+2025-06-09 11:17:24,380 WARN c.z.h.p.HikariPool$HouseKeeper [HikariPool-1 housekeeper] HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=22m29s117ms758ï¿½s400ns).
 2025-06-09 11:19:52,158 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
 2025-06-09 11:19:52,199 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplicationTests using Java 17.0.12 with PID 3388 (started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
 2025-06-09 11:19:52,200 DEBUG o.s.b.StartupInfoLogger [main] Running with Spring Boot v3.2.5, Spring v6.1.6
@@ -1325,14 +1325,14 @@ Caused by: org.springframework.data.mapping.PropertyReferenceException: No prope
 2025-06-09 15:45:17,311 INFO o.a.j.l.DirectJDKLog [http-nio-8080-exec-1] Initializing Spring DispatcherServlet 'dispatcherServlet'
 2025-06-09 15:45:17,315 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Initializing Servlet 'dispatcherServlet'
 2025-06-09 15:45:17,322 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Completed initialization in 4 ms
-2025-06-09 15:45:17,564 INFO c.a.d.c.UserController [http-nio-8080-exec-1] Received request to get details for user: 1
-2025-06-09 15:45:17,565 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Fetching user details for id: 1
+2025-06-09 15:45:17,564 INFO c.a.d.c.UserController [http-nio-8080-exec-1] Received request to get details for client: 1
+2025-06-09 15:45:17,565 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Fetching client details for id: 1
 2025-06-09 15:45:18,152 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
 2025-06-09 15:45:18,324 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting chat history with 1 sessions to JSON
 2025-06-09 15:45:18,359 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
-2025-06-09 15:45:18,367 DEBUG c.a.d.s.UserService [http-nio-8080-exec-1] Found 1 conversations for user 1
-2025-06-09 15:45:18,371 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Successfully fetched user details for id: 1
-2025-06-09 15:45:18,375 DEBUG c.a.d.c.UserController [http-nio-8080-exec-1] Successfully fetched details for user: 1
+2025-06-09 15:45:18,367 DEBUG c.a.d.s.UserService [http-nio-8080-exec-1] Found 1 conversations for client 1
+2025-06-09 15:45:18,371 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Successfully fetched client details for id: 1
+2025-06-09 15:45:18,375 DEBUG c.a.d.c.UserController [http-nio-8080-exec-1] Successfully fetched details for client: 1
 2025-06-09 15:54:18,500 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
 2025-06-09 15:54:18,672 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplication using Java 17.0.12 with PID 39684 (C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
 2025-06-09 15:54:18,674 DEBUG o.s.b.StartupInfoLogger [main] Running with Spring Boot v3.2.5, Spring v6.1.6
@@ -1366,64 +1366,64 @@ Caused by: org.springframework.data.mapping.PropertyReferenceException: No prope
 2025-06-09 15:54:52,850 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Initializing Servlet 'dispatcherServlet'
 2025-06-09 15:54:52,855 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Completed initialization in 4 ms
 2025-06-09 15:54:59,693 INFO o.s.a.AbstractOpenApiResource [http-nio-8080-exec-4] Init duration for springdoc-openapi is: 5289 ms
-2025-06-09 15:55:04,646 INFO c.a.d.c.UserController [http-nio-8080-exec-5] Received request to get details for user: 1
-2025-06-09 15:55:04,648 INFO c.a.d.s.UserService [http-nio-8080-exec-5] Fetching user details for id: 1
+2025-06-09 15:55:04,646 INFO c.a.d.c.UserController [http-nio-8080-exec-5] Received request to get details for client: 1
+2025-06-09 15:55:04,648 INFO c.a.d.s.UserService [http-nio-8080-exec-5] Fetching client details for id: 1
 2025-06-09 15:55:05,047 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting JSON to chat history
 2025-06-09 15:55:05,055 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting chat history with 1 sessions to JSON
 2025-06-09 15:55:05,059 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting JSON to chat history
-2025-06-09 15:55:05,065 DEBUG c.a.d.s.UserService [http-nio-8080-exec-5] Found 1 conversations for user 1
-2025-06-09 15:55:05,068 INFO c.a.d.s.UserService [http-nio-8080-exec-5] Successfully fetched user details for id: 1
-2025-06-09 15:55:05,069 DEBUG c.a.d.c.UserController [http-nio-8080-exec-5] Successfully fetched details for user: 1
-2025-06-09 15:55:15,884 INFO c.a.d.c.UserController [http-nio-8080-exec-6] Received request to get details for user: 10
-2025-06-09 15:55:15,886 INFO c.a.d.s.UserService [http-nio-8080-exec-6] Fetching user details for id: 10
+2025-06-09 15:55:05,065 DEBUG c.a.d.s.UserService [http-nio-8080-exec-5] Found 1 conversations for client 1
+2025-06-09 15:55:05,068 INFO c.a.d.s.UserService [http-nio-8080-exec-5] Successfully fetched client details for id: 1
+2025-06-09 15:55:05,069 DEBUG c.a.d.c.UserController [http-nio-8080-exec-5] Successfully fetched details for client: 1
+2025-06-09 15:55:15,884 INFO c.a.d.c.UserController [http-nio-8080-exec-6] Received request to get details for client: 10
+2025-06-09 15:55:15,886 INFO c.a.d.s.UserService [http-nio-8080-exec-6] Fetching client details for id: 10
 2025-06-09 15:55:15,917 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-6] Converting JSON to chat history
 2025-06-09 15:55:15,922 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-6] Converting chat history with 1 sessions to JSON
 2025-06-09 15:55:15,925 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-6] Converting JSON to chat history
 2025-06-09 15:55:15,935 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-6] Converting JSON to chat history
 2025-06-09 15:55:15,938 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-6] Converting chat history with 1 sessions to JSON
 2025-06-09 15:55:15,941 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-6] Converting JSON to chat history
-2025-06-09 15:55:15,949 DEBUG c.a.d.s.UserService [http-nio-8080-exec-6] Found 2 conversations for user 10
-2025-06-09 15:55:15,951 INFO c.a.d.s.UserService [http-nio-8080-exec-6] Successfully fetched user details for id: 10
-2025-06-09 15:55:15,951 DEBUG c.a.d.c.UserController [http-nio-8080-exec-6] Successfully fetched details for user: 10
-2025-06-09 15:56:13,359 INFO c.a.d.c.UserController [http-nio-8080-exec-8] Received request to get details for user: 10
-2025-06-09 15:56:13,362 INFO c.a.d.s.UserService [http-nio-8080-exec-8] Fetching user details for id: 10
+2025-06-09 15:55:15,949 DEBUG c.a.d.s.UserService [http-nio-8080-exec-6] Found 2 conversations for client 10
+2025-06-09 15:55:15,951 INFO c.a.d.s.UserService [http-nio-8080-exec-6] Successfully fetched client details for id: 10
+2025-06-09 15:55:15,951 DEBUG c.a.d.c.UserController [http-nio-8080-exec-6] Successfully fetched details for client: 10
+2025-06-09 15:56:13,359 INFO c.a.d.c.UserController [http-nio-8080-exec-8] Received request to get details for client: 10
+2025-06-09 15:56:13,362 INFO c.a.d.s.UserService [http-nio-8080-exec-8] Fetching client details for id: 10
 2025-06-09 15:56:13,385 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-8] Converting JSON to chat history
 2025-06-09 15:56:13,389 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-8] Converting chat history with 1 sessions to JSON
 2025-06-09 15:56:13,391 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-8] Converting JSON to chat history
 2025-06-09 15:56:13,398 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-8] Converting JSON to chat history
 2025-06-09 15:56:13,400 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-8] Converting chat history with 1 sessions to JSON
 2025-06-09 15:56:13,406 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-8] Converting JSON to chat history
-2025-06-09 15:56:13,409 DEBUG c.a.d.s.UserService [http-nio-8080-exec-8] Found 2 conversations for user 10
-2025-06-09 15:56:13,411 INFO c.a.d.s.UserService [http-nio-8080-exec-8] Successfully fetched user details for id: 10
-2025-06-09 15:56:13,413 DEBUG c.a.d.c.UserController [http-nio-8080-exec-8] Successfully fetched details for user: 10
-2025-06-09 15:56:50,102 INFO c.a.d.c.UserController [http-nio-8080-exec-9] Received request to get conversations for user: 1
-2025-06-09 15:56:50,104 INFO c.a.d.s.UserService [http-nio-8080-exec-9] Fetching conversations for user ID: 1
+2025-06-09 15:56:13,409 DEBUG c.a.d.s.UserService [http-nio-8080-exec-8] Found 2 conversations for client 10
+2025-06-09 15:56:13,411 INFO c.a.d.s.UserService [http-nio-8080-exec-8] Successfully fetched client details for id: 10
+2025-06-09 15:56:13,413 DEBUG c.a.d.c.UserController [http-nio-8080-exec-8] Successfully fetched details for client: 10
+2025-06-09 15:56:50,102 INFO c.a.d.c.UserController [http-nio-8080-exec-9] Received request to get conversations for client: 1
+2025-06-09 15:56:50,104 INFO c.a.d.s.UserService [http-nio-8080-exec-9] Fetching conversations for client ID: 1
 2025-06-09 15:56:50,131 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-9] Converting JSON to chat history
 2025-06-09 15:56:50,133 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-9] Converting chat history with 1 sessions to JSON
 2025-06-09 15:56:50,135 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-9] Converting JSON to chat history
-2025-06-09 15:56:50,137 DEBUG c.a.d.s.UserService [http-nio-8080-exec-9] Found 1 conversations for user 1
-2025-06-09 15:56:50,139 DEBUG c.a.d.c.UserController [http-nio-8080-exec-9] Found 1 conversations for user: 1
-2025-06-09 15:57:04,339 INFO c.a.d.c.UserController [http-nio-8080-exec-10] Received request to get conversations for user: 10
-2025-06-09 15:57:04,341 INFO c.a.d.s.UserService [http-nio-8080-exec-10] Fetching conversations for user ID: 10
+2025-06-09 15:56:50,137 DEBUG c.a.d.s.UserService [http-nio-8080-exec-9] Found 1 conversations for client 1
+2025-06-09 15:56:50,139 DEBUG c.a.d.c.UserController [http-nio-8080-exec-9] Found 1 conversations for client: 1
+2025-06-09 15:57:04,339 INFO c.a.d.c.UserController [http-nio-8080-exec-10] Received request to get conversations for client: 10
+2025-06-09 15:57:04,341 INFO c.a.d.s.UserService [http-nio-8080-exec-10] Fetching conversations for client ID: 10
 2025-06-09 15:57:04,360 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-10] Converting JSON to chat history
 2025-06-09 15:57:04,362 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-10] Converting chat history with 1 sessions to JSON
 2025-06-09 15:57:04,365 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-10] Converting JSON to chat history
 2025-06-09 15:57:04,370 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-10] Converting JSON to chat history
 2025-06-09 15:57:04,372 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-10] Converting chat history with 1 sessions to JSON
 2025-06-09 15:57:04,373 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-10] Converting JSON to chat history
-2025-06-09 15:57:04,374 DEBUG c.a.d.s.UserService [http-nio-8080-exec-10] Found 2 conversations for user 10
-2025-06-09 15:57:04,375 DEBUG c.a.d.c.UserController [http-nio-8080-exec-10] Found 2 conversations for user: 10
-2025-06-09 15:57:12,011 INFO c.a.d.c.UserController [http-nio-8080-exec-1] Received request to get details for user: 10
-2025-06-09 15:57:12,011 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Fetching user details for id: 10
+2025-06-09 15:57:04,374 DEBUG c.a.d.s.UserService [http-nio-8080-exec-10] Found 2 conversations for client 10
+2025-06-09 15:57:04,375 DEBUG c.a.d.c.UserController [http-nio-8080-exec-10] Found 2 conversations for client: 10
+2025-06-09 15:57:12,011 INFO c.a.d.c.UserController [http-nio-8080-exec-1] Received request to get details for client: 10
+2025-06-09 15:57:12,011 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Fetching client details for id: 10
 2025-06-09 15:57:12,037 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
 2025-06-09 15:57:12,039 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting chat history with 1 sessions to JSON
 2025-06-09 15:57:12,042 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
 2025-06-09 15:57:12,047 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
 2025-06-09 15:57:12,050 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting chat history with 1 sessions to JSON
 2025-06-09 15:57:12,051 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
-2025-06-09 15:57:12,054 DEBUG c.a.d.s.UserService [http-nio-8080-exec-1] Found 2 conversations for user 10
-2025-06-09 15:57:12,055 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Successfully fetched user details for id: 10
-2025-06-09 15:57:12,056 DEBUG c.a.d.c.UserController [http-nio-8080-exec-1] Successfully fetched details for user: 10
+2025-06-09 15:57:12,054 DEBUG c.a.d.s.UserService [http-nio-8080-exec-1] Found 2 conversations for client 10
+2025-06-09 15:57:12,055 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Successfully fetched client details for id: 10
+2025-06-09 15:57:12,056 DEBUG c.a.d.c.UserController [http-nio-8080-exec-1] Successfully fetched details for client: 10
 2025-06-09 15:59:28,482 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
 2025-06-09 15:59:28,592 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplication using Java 17.0.12 with PID 9052 (C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
 2025-06-09 15:59:28,595 DEBUG o.s.b.StartupInfoLogger [main] Running with Spring Boot v3.2.5, Spring v6.1.6
@@ -1456,28 +1456,28 @@ Caused by: org.springframework.data.mapping.PropertyReferenceException: No prope
 2025-06-09 16:00:25,439 INFO o.a.j.l.DirectJDKLog [http-nio-8080-exec-2] Initializing Spring DispatcherServlet 'dispatcherServlet'
 2025-06-09 16:00:25,439 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-2] Initializing Servlet 'dispatcherServlet'
 2025-06-09 16:00:25,442 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-2] Completed initialization in 2 ms
-2025-06-09 16:00:25,531 INFO c.a.d.c.UserController [http-nio-8080-exec-2] Received request to get details for user: 10
-2025-06-09 16:00:25,532 INFO c.a.d.s.UserService [http-nio-8080-exec-2] Fetching user details for id: 10
+2025-06-09 16:00:25,531 INFO c.a.d.c.UserController [http-nio-8080-exec-2] Received request to get details for client: 10
+2025-06-09 16:00:25,532 INFO c.a.d.s.UserService [http-nio-8080-exec-2] Fetching client details for id: 10
 2025-06-09 16:00:26,157 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-2] Converting JSON to chat history
 2025-06-09 16:00:26,385 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-2] Converting chat history with 1 sessions to JSON
 2025-06-09 16:00:26,418 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-2] Converting JSON to chat history
 2025-06-09 16:00:26,441 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-2] Converting JSON to chat history
 2025-06-09 16:00:26,447 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-2] Converting chat history with 1 sessions to JSON
 2025-06-09 16:00:26,451 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-2] Converting JSON to chat history
-2025-06-09 16:00:26,471 DEBUG c.a.d.s.UserService [http-nio-8080-exec-2] Found 2 conversations for user 10
-2025-06-09 16:00:26,480 INFO c.a.d.s.UserService [http-nio-8080-exec-2] Successfully fetched user details for id: 10
-2025-06-09 16:00:26,484 DEBUG c.a.d.c.UserController [http-nio-8080-exec-2] Successfully fetched details for user: 10
-2025-06-09 16:04:51,958 INFO c.a.d.c.UserController [http-nio-8080-exec-3] Received request to get details for user: 10
-2025-06-09 16:04:51,959 INFO c.a.d.s.UserService [http-nio-8080-exec-3] Fetching user details for id: 10
+2025-06-09 16:00:26,471 DEBUG c.a.d.s.UserService [http-nio-8080-exec-2] Found 2 conversations for client 10
+2025-06-09 16:00:26,480 INFO c.a.d.s.UserService [http-nio-8080-exec-2] Successfully fetched client details for id: 10
+2025-06-09 16:00:26,484 DEBUG c.a.d.c.UserController [http-nio-8080-exec-2] Successfully fetched details for client: 10
+2025-06-09 16:04:51,958 INFO c.a.d.c.UserController [http-nio-8080-exec-3] Received request to get details for client: 10
+2025-06-09 16:04:51,959 INFO c.a.d.s.UserService [http-nio-8080-exec-3] Fetching client details for id: 10
 2025-06-09 16:04:51,981 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-3] Converting JSON to chat history
 2025-06-09 16:04:51,984 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-3] Converting chat history with 1 sessions to JSON
 2025-06-09 16:04:51,986 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-3] Converting JSON to chat history
 2025-06-09 16:04:51,993 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-3] Converting JSON to chat history
 2025-06-09 16:04:51,996 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-3] Converting chat history with 1 sessions to JSON
 2025-06-09 16:04:51,998 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-3] Converting JSON to chat history
-2025-06-09 16:04:52,002 DEBUG c.a.d.s.UserService [http-nio-8080-exec-3] Found 2 conversations for user 10
-2025-06-09 16:04:52,003 INFO c.a.d.s.UserService [http-nio-8080-exec-3] Successfully fetched user details for id: 10
-2025-06-09 16:04:52,004 DEBUG c.a.d.c.UserController [http-nio-8080-exec-3] Successfully fetched details for user: 10
+2025-06-09 16:04:52,002 DEBUG c.a.d.s.UserService [http-nio-8080-exec-3] Found 2 conversations for client 10
+2025-06-09 16:04:52,003 INFO c.a.d.s.UserService [http-nio-8080-exec-3] Successfully fetched client details for id: 10
+2025-06-09 16:04:52,004 DEBUG c.a.d.c.UserController [http-nio-8080-exec-3] Successfully fetched details for client: 10
 2025-06-09 16:05:25,202 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
 2025-06-09 16:05:25,475 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplication using Java 17.0.12 with PID 20960 (C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
 2025-06-09 16:05:25,481 DEBUG o.s.b.StartupInfoLogger [main] Running with Spring Boot v3.2.5, Spring v6.1.6
@@ -1510,38 +1510,38 @@ Caused by: org.springframework.data.mapping.PropertyReferenceException: No prope
 2025-06-09 16:06:17,351 INFO o.a.j.l.DirectJDKLog [http-nio-8080-exec-1] Initializing Spring DispatcherServlet 'dispatcherServlet'
 2025-06-09 16:06:17,351 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Initializing Servlet 'dispatcherServlet'
 2025-06-09 16:06:17,353 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Completed initialization in 1 ms
-2025-06-09 16:06:17,423 INFO c.a.d.c.UserController [http-nio-8080-exec-1] Received request to get details for user: 10
-2025-06-09 16:06:17,424 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Fetching user details for id: 10
+2025-06-09 16:06:17,423 INFO c.a.d.c.UserController [http-nio-8080-exec-1] Received request to get details for client: 10
+2025-06-09 16:06:17,424 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Fetching client details for id: 10
 2025-06-09 16:06:17,640 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
 2025-06-09 16:06:17,699 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting chat history with 1 sessions to JSON
 2025-06-09 16:06:17,708 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
 2025-06-09 16:06:17,714 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
 2025-06-09 16:06:17,716 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting chat history with 1 sessions to JSON
 2025-06-09 16:06:17,717 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
-2025-06-09 16:06:17,722 DEBUG c.a.d.s.UserService [http-nio-8080-exec-1] Found 2 conversations for user 10
-2025-06-09 16:06:17,723 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Successfully fetched user details for id: 10
-2025-06-09 16:06:17,724 DEBUG c.a.d.c.UserController [http-nio-8080-exec-1] Successfully fetched details for user: 10
-2025-06-09 16:06:25,813 INFO c.a.d.c.UserController [http-nio-8080-exec-3] Received request to get conversations for user: 10
-2025-06-09 16:06:25,817 INFO c.a.d.s.UserService [http-nio-8080-exec-3] Fetching conversations for user ID: 10
+2025-06-09 16:06:17,722 DEBUG c.a.d.s.UserService [http-nio-8080-exec-1] Found 2 conversations for client 10
+2025-06-09 16:06:17,723 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Successfully fetched client details for id: 10
+2025-06-09 16:06:17,724 DEBUG c.a.d.c.UserController [http-nio-8080-exec-1] Successfully fetched details for client: 10
+2025-06-09 16:06:25,813 INFO c.a.d.c.UserController [http-nio-8080-exec-3] Received request to get conversations for client: 10
+2025-06-09 16:06:25,817 INFO c.a.d.s.UserService [http-nio-8080-exec-3] Fetching conversations for client ID: 10
 2025-06-09 16:06:25,863 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-3] Converting JSON to chat history
 2025-06-09 16:06:25,871 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-3] Converting chat history with 1 sessions to JSON
 2025-06-09 16:06:25,873 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-3] Converting JSON to chat history
 2025-06-09 16:06:25,883 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-3] Converting JSON to chat history
 2025-06-09 16:06:25,889 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-3] Converting chat history with 1 sessions to JSON
 2025-06-09 16:06:25,891 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-3] Converting JSON to chat history
-2025-06-09 16:06:25,894 DEBUG c.a.d.s.UserService [http-nio-8080-exec-3] Found 2 conversations for user 10
-2025-06-09 16:06:25,898 DEBUG c.a.d.c.UserController [http-nio-8080-exec-3] Found 2 conversations for user: 10
-2025-06-09 16:06:32,792 INFO c.a.d.c.UserController [http-nio-8080-exec-5] Received request to get details for user: 10
-2025-06-09 16:06:32,793 INFO c.a.d.s.UserService [http-nio-8080-exec-5] Fetching user details for id: 10
+2025-06-09 16:06:25,894 DEBUG c.a.d.s.UserService [http-nio-8080-exec-3] Found 2 conversations for client 10
+2025-06-09 16:06:25,898 DEBUG c.a.d.c.UserController [http-nio-8080-exec-3] Found 2 conversations for client: 10
+2025-06-09 16:06:32,792 INFO c.a.d.c.UserController [http-nio-8080-exec-5] Received request to get details for client: 10
+2025-06-09 16:06:32,793 INFO c.a.d.s.UserService [http-nio-8080-exec-5] Fetching client details for id: 10
 2025-06-09 16:06:32,819 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting JSON to chat history
 2025-06-09 16:06:32,823 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting chat history with 1 sessions to JSON
 2025-06-09 16:06:32,825 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting JSON to chat history
 2025-06-09 16:06:32,834 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting JSON to chat history
 2025-06-09 16:06:32,837 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting chat history with 1 sessions to JSON
 2025-06-09 16:06:32,841 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting JSON to chat history
-2025-06-09 16:06:32,843 DEBUG c.a.d.s.UserService [http-nio-8080-exec-5] Found 2 conversations for user 10
-2025-06-09 16:06:32,844 INFO c.a.d.s.UserService [http-nio-8080-exec-5] Successfully fetched user details for id: 10
-2025-06-09 16:06:32,845 DEBUG c.a.d.c.UserController [http-nio-8080-exec-5] Successfully fetched details for user: 10
+2025-06-09 16:06:32,843 DEBUG c.a.d.s.UserService [http-nio-8080-exec-5] Found 2 conversations for client 10
+2025-06-09 16:06:32,844 INFO c.a.d.s.UserService [http-nio-8080-exec-5] Successfully fetched client details for id: 10
+2025-06-09 16:06:32,845 DEBUG c.a.d.c.UserController [http-nio-8080-exec-5] Successfully fetched details for client: 10
 2025-06-09 16:15:27,035 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
 2025-06-09 16:15:27,264 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplication using Java 17.0.12 with PID 3068 (C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
 2025-06-09 16:15:27,268 DEBUG o.s.b.StartupInfoLogger [main] Running with Spring Boot v3.2.5, Spring v6.1.6
@@ -1574,59 +1574,59 @@ Caused by: org.springframework.data.mapping.PropertyReferenceException: No prope
 2025-06-09 16:15:58,336 INFO o.a.j.l.DirectJDKLog [http-nio-8080-exec-2] Initializing Spring DispatcherServlet 'dispatcherServlet'
 2025-06-09 16:15:58,337 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-2] Initializing Servlet 'dispatcherServlet'
 2025-06-09 16:15:58,340 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-2] Completed initialization in 2 ms
-2025-06-09 16:15:58,468 INFO c.a.d.c.UserController [http-nio-8080-exec-2] Received request to get details for user: 10
-2025-06-09 16:15:58,469 INFO c.a.d.s.UserService [http-nio-8080-exec-2] Fetching user details for id: 10
+2025-06-09 16:15:58,468 INFO c.a.d.c.UserController [http-nio-8080-exec-2] Received request to get details for client: 10
+2025-06-09 16:15:58,469 INFO c.a.d.s.UserService [http-nio-8080-exec-2] Fetching client details for id: 10
 2025-06-09 16:15:58,878 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-2] Converting JSON to chat history
 2025-06-09 16:15:58,990 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-2] Converting chat history with 1 sessions to JSON
 2025-06-09 16:15:59,013 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-2] Converting JSON to chat history
 2025-06-09 16:15:59,027 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-2] Converting JSON to chat history
 2025-06-09 16:15:59,033 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-2] Converting chat history with 1 sessions to JSON
 2025-06-09 16:15:59,036 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-2] Converting JSON to chat history
-2025-06-09 16:15:59,054 DEBUG c.a.d.s.UserService [http-nio-8080-exec-2] Found 2 conversations for user 10
-2025-06-09 16:15:59,059 INFO c.a.d.s.UserService [http-nio-8080-exec-2] Successfully fetched user details for id: 10
-2025-06-09 16:15:59,062 DEBUG c.a.d.c.UserController [http-nio-8080-exec-2] Successfully fetched details for user: 10
-2025-06-09 16:16:05,340 INFO c.a.d.c.UserController [http-nio-8080-exec-1] Received request to get details for user: 10
-2025-06-09 16:16:05,342 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Fetching user details for id: 10
+2025-06-09 16:15:59,054 DEBUG c.a.d.s.UserService [http-nio-8080-exec-2] Found 2 conversations for client 10
+2025-06-09 16:15:59,059 INFO c.a.d.s.UserService [http-nio-8080-exec-2] Successfully fetched client details for id: 10
+2025-06-09 16:15:59,062 DEBUG c.a.d.c.UserController [http-nio-8080-exec-2] Successfully fetched details for client: 10
+2025-06-09 16:16:05,340 INFO c.a.d.c.UserController [http-nio-8080-exec-1] Received request to get details for client: 10
+2025-06-09 16:16:05,342 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Fetching client details for id: 10
 2025-06-09 16:16:05,364 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
 2025-06-09 16:16:05,368 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting chat history with 1 sessions to JSON
 2025-06-09 16:16:05,369 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
 2025-06-09 16:16:05,375 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
 2025-06-09 16:16:05,378 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting chat history with 1 sessions to JSON
 2025-06-09 16:16:05,381 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
-2025-06-09 16:16:05,384 DEBUG c.a.d.s.UserService [http-nio-8080-exec-1] Found 2 conversations for user 10
-2025-06-09 16:16:05,386 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Successfully fetched user details for id: 10
-2025-06-09 16:16:05,387 DEBUG c.a.d.c.UserController [http-nio-8080-exec-1] Successfully fetched details for user: 10
-2025-06-09 16:16:12,686 INFO c.a.d.c.UserController [http-nio-8080-exec-3] Received request to get conversations for user: 10
-2025-06-09 16:16:12,687 INFO c.a.d.s.UserService [http-nio-8080-exec-3] Fetching conversations for user ID: 10
+2025-06-09 16:16:05,384 DEBUG c.a.d.s.UserService [http-nio-8080-exec-1] Found 2 conversations for client 10
+2025-06-09 16:16:05,386 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Successfully fetched client details for id: 10
+2025-06-09 16:16:05,387 DEBUG c.a.d.c.UserController [http-nio-8080-exec-1] Successfully fetched details for client: 10
+2025-06-09 16:16:12,686 INFO c.a.d.c.UserController [http-nio-8080-exec-3] Received request to get conversations for client: 10
+2025-06-09 16:16:12,687 INFO c.a.d.s.UserService [http-nio-8080-exec-3] Fetching conversations for client ID: 10
 2025-06-09 16:16:12,707 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-3] Converting JSON to chat history
 2025-06-09 16:16:12,712 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-3] Converting chat history with 1 sessions to JSON
 2025-06-09 16:16:12,714 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-3] Converting JSON to chat history
 2025-06-09 16:16:12,720 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-3] Converting JSON to chat history
 2025-06-09 16:16:12,722 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-3] Converting chat history with 1 sessions to JSON
 2025-06-09 16:16:12,724 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-3] Converting JSON to chat history
-2025-06-09 16:16:12,727 DEBUG c.a.d.s.UserService [http-nio-8080-exec-3] Found 2 conversations for user 10
-2025-06-09 16:16:12,730 DEBUG c.a.d.c.UserController [http-nio-8080-exec-3] Found 2 conversations for user: 10
-2025-06-09 16:16:39,792 INFO c.a.d.c.UserController [http-nio-8080-exec-4] Received request to get details for user: 10
-2025-06-09 16:16:39,794 INFO c.a.d.s.UserService [http-nio-8080-exec-4] Fetching user details for id: 10
+2025-06-09 16:16:12,727 DEBUG c.a.d.s.UserService [http-nio-8080-exec-3] Found 2 conversations for client 10
+2025-06-09 16:16:12,730 DEBUG c.a.d.c.UserController [http-nio-8080-exec-3] Found 2 conversations for client: 10
+2025-06-09 16:16:39,792 INFO c.a.d.c.UserController [http-nio-8080-exec-4] Received request to get details for client: 10
+2025-06-09 16:16:39,794 INFO c.a.d.s.UserService [http-nio-8080-exec-4] Fetching client details for id: 10
 2025-06-09 16:16:39,812 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-4] Converting JSON to chat history
 2025-06-09 16:16:39,814 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-4] Converting chat history with 1 sessions to JSON
 2025-06-09 16:16:39,816 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-4] Converting JSON to chat history
 2025-06-09 16:16:39,821 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-4] Converting JSON to chat history
 2025-06-09 16:16:39,824 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-4] Converting chat history with 1 sessions to JSON
 2025-06-09 16:16:39,826 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-4] Converting JSON to chat history
-2025-06-09 16:16:39,829 DEBUG c.a.d.s.UserService [http-nio-8080-exec-4] Found 2 conversations for user 10
-2025-06-09 16:16:39,830 INFO c.a.d.s.UserService [http-nio-8080-exec-4] Successfully fetched user details for id: 10
-2025-06-09 16:16:39,831 DEBUG c.a.d.c.UserController [http-nio-8080-exec-4] Successfully fetched details for user: 10
-2025-06-09 16:16:51,653 INFO c.a.d.c.UserController [http-nio-8080-exec-5] Received request to get conversations for user: 10
-2025-06-09 16:16:51,655 INFO c.a.d.s.UserService [http-nio-8080-exec-5] Fetching conversations for user ID: 10
+2025-06-09 16:16:39,829 DEBUG c.a.d.s.UserService [http-nio-8080-exec-4] Found 2 conversations for client 10
+2025-06-09 16:16:39,830 INFO c.a.d.s.UserService [http-nio-8080-exec-4] Successfully fetched client details for id: 10
+2025-06-09 16:16:39,831 DEBUG c.a.d.c.UserController [http-nio-8080-exec-4] Successfully fetched details for client: 10
+2025-06-09 16:16:51,653 INFO c.a.d.c.UserController [http-nio-8080-exec-5] Received request to get conversations for client: 10
+2025-06-09 16:16:51,655 INFO c.a.d.s.UserService [http-nio-8080-exec-5] Fetching conversations for client ID: 10
 2025-06-09 16:16:51,672 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting JSON to chat history
 2025-06-09 16:16:51,674 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting chat history with 1 sessions to JSON
 2025-06-09 16:16:51,677 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting JSON to chat history
 2025-06-09 16:16:51,684 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting JSON to chat history
 2025-06-09 16:16:51,687 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting chat history with 1 sessions to JSON
 2025-06-09 16:16:51,688 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting JSON to chat history
-2025-06-09 16:16:51,690 DEBUG c.a.d.s.UserService [http-nio-8080-exec-5] Found 2 conversations for user 10
-2025-06-09 16:16:51,692 DEBUG c.a.d.c.UserController [http-nio-8080-exec-5] Found 2 conversations for user: 10
+2025-06-09 16:16:51,690 DEBUG c.a.d.s.UserService [http-nio-8080-exec-5] Found 2 conversations for client 10
+2025-06-09 16:16:51,692 DEBUG c.a.d.c.UserController [http-nio-8080-exec-5] Found 2 conversations for client: 10
 2025-06-09 16:21:41,740 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
 2025-06-09 16:21:41,917 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplication using Java 17.0.12 with PID 38796 (C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
 2025-06-09 16:21:41,920 DEBUG o.s.b.StartupInfoLogger [main] Running with Spring Boot v3.2.5, Spring v6.1.6
@@ -1708,44 +1708,44 @@ Identify and stop the process that's listening on port 8080 or configure this ap
 2025-06-09 16:22:52,210 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Initializing Servlet 'dispatcherServlet'
 2025-06-09 16:22:52,213 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Completed initialization in 2 ms
 2025-06-09 16:22:56,122 INFO o.s.a.AbstractOpenApiResource [http-nio-8080-exec-4] Init duration for springdoc-openapi is: 3400 ms
-2025-06-09 16:23:00,431 INFO c.a.d.c.UserController [http-nio-8080-exec-5] Received request to get conversations for user: 1
-2025-06-09 16:23:00,436 INFO c.a.d.s.UserService [http-nio-8080-exec-5] Fetching conversations for user ID: 1
+2025-06-09 16:23:00,431 INFO c.a.d.c.UserController [http-nio-8080-exec-5] Received request to get conversations for client: 1
+2025-06-09 16:23:00,436 INFO c.a.d.s.UserService [http-nio-8080-exec-5] Fetching conversations for client ID: 1
 2025-06-09 16:23:01,047 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting JSON to chat history
 2025-06-09 16:23:01,058 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting chat history with 1 sessions to JSON
 2025-06-09 16:23:01,065 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting JSON to chat history
-2025-06-09 16:23:01,070 DEBUG c.a.d.s.UserService [http-nio-8080-exec-5] Found 1 conversations for user 1
-2025-06-09 16:23:01,076 DEBUG c.a.d.c.UserController [http-nio-8080-exec-5] Found 1 conversations for user: 1
-2025-06-09 16:23:06,297 INFO c.a.d.c.UserController [http-nio-8080-exec-9] Received request to get conversations for user: 10
-2025-06-09 16:23:06,298 INFO c.a.d.s.UserService [http-nio-8080-exec-9] Fetching conversations for user ID: 10
+2025-06-09 16:23:01,070 DEBUG c.a.d.s.UserService [http-nio-8080-exec-5] Found 1 conversations for client 1
+2025-06-09 16:23:01,076 DEBUG c.a.d.c.UserController [http-nio-8080-exec-5] Found 1 conversations for client: 1
+2025-06-09 16:23:06,297 INFO c.a.d.c.UserController [http-nio-8080-exec-9] Received request to get conversations for client: 10
+2025-06-09 16:23:06,298 INFO c.a.d.s.UserService [http-nio-8080-exec-9] Fetching conversations for client ID: 10
 2025-06-09 16:23:06,314 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-9] Converting JSON to chat history
 2025-06-09 16:23:06,317 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-9] Converting chat history with 1 sessions to JSON
 2025-06-09 16:23:06,319 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-9] Converting JSON to chat history
 2025-06-09 16:23:06,325 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-9] Converting JSON to chat history
 2025-06-09 16:23:06,327 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-9] Converting chat history with 1 sessions to JSON
 2025-06-09 16:23:06,329 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-9] Converting JSON to chat history
-2025-06-09 16:23:06,336 DEBUG c.a.d.s.UserService [http-nio-8080-exec-9] Found 2 conversations for user 10
-2025-06-09 16:23:06,337 DEBUG c.a.d.c.UserController [http-nio-8080-exec-9] Found 2 conversations for user: 10
-2025-06-09 16:23:21,084 INFO c.a.d.c.UserController [http-nio-8080-exec-8] Received request to get details for user: 10
-2025-06-09 16:23:21,085 INFO c.a.d.s.UserService [http-nio-8080-exec-8] Fetching user details for id: 10
+2025-06-09 16:23:06,336 DEBUG c.a.d.s.UserService [http-nio-8080-exec-9] Found 2 conversations for client 10
+2025-06-09 16:23:06,337 DEBUG c.a.d.c.UserController [http-nio-8080-exec-9] Found 2 conversations for client: 10
+2025-06-09 16:23:21,084 INFO c.a.d.c.UserController [http-nio-8080-exec-8] Received request to get details for client: 10
+2025-06-09 16:23:21,085 INFO c.a.d.s.UserService [http-nio-8080-exec-8] Fetching client details for id: 10
 2025-06-09 16:23:21,107 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-8] Converting JSON to chat history
 2025-06-09 16:23:21,110 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-8] Converting chat history with 1 sessions to JSON
 2025-06-09 16:23:21,113 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-8] Converting JSON to chat history
 2025-06-09 16:23:21,119 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-8] Converting JSON to chat history
 2025-06-09 16:23:21,122 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-8] Converting chat history with 1 sessions to JSON
 2025-06-09 16:23:21,126 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-8] Converting JSON to chat history
-2025-06-09 16:23:21,128 DEBUG c.a.d.s.UserService [http-nio-8080-exec-8] Found 2 conversations for user 10
-2025-06-09 16:23:21,130 INFO c.a.d.s.UserService [http-nio-8080-exec-8] Successfully fetched user details for id: 10
-2025-06-09 16:23:21,131 DEBUG c.a.d.c.UserController [http-nio-8080-exec-8] Successfully fetched details for user: 10
-2025-06-09 16:24:28,646 INFO c.a.d.c.UserController [http-nio-8080-exec-1] Received request to get conversations for user: 10
-2025-06-09 16:24:28,653 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Fetching conversations for user ID: 10
+2025-06-09 16:23:21,128 DEBUG c.a.d.s.UserService [http-nio-8080-exec-8] Found 2 conversations for client 10
+2025-06-09 16:23:21,130 INFO c.a.d.s.UserService [http-nio-8080-exec-8] Successfully fetched client details for id: 10
+2025-06-09 16:23:21,131 DEBUG c.a.d.c.UserController [http-nio-8080-exec-8] Successfully fetched details for client: 10
+2025-06-09 16:24:28,646 INFO c.a.d.c.UserController [http-nio-8080-exec-1] Received request to get conversations for client: 10
+2025-06-09 16:24:28,653 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Fetching conversations for client ID: 10
 2025-06-09 16:24:28,673 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
 2025-06-09 16:24:28,674 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting chat history with 1 sessions to JSON
 2025-06-09 16:24:28,676 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
 2025-06-09 16:24:28,680 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
 2025-06-09 16:24:28,682 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting chat history with 1 sessions to JSON
 2025-06-09 16:24:28,683 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
-2025-06-09 16:24:28,685 DEBUG c.a.d.s.UserService [http-nio-8080-exec-1] Found 2 conversations for user 10
-2025-06-09 16:24:28,686 DEBUG c.a.d.c.UserController [http-nio-8080-exec-1] Found 2 conversations for user: 10
+2025-06-09 16:24:28,685 DEBUG c.a.d.s.UserService [http-nio-8080-exec-1] Found 2 conversations for client 10
+2025-06-09 16:24:28,686 DEBUG c.a.d.c.UserController [http-nio-8080-exec-1] Found 2 conversations for client: 10
 2025-06-09 16:26:15,650 INFO c.a.d.c.AgentController [http-nio-8080-exec-4] Received request to get details for agent: 1
 2025-06-09 16:26:15,657 INFO c.a.d.s.AgentService [http-nio-8080-exec-4] Fetching agent details for id: 1
 2025-06-09 16:26:15,672 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-4] Converting JSON to chat history
@@ -1790,14 +1790,14 @@ Identify and stop the process that's listening on port 8080 or configure this ap
 2025-06-09 16:55:39,251 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-6] Agent conversations details - id: 1, conversation count: 1, conversation ids: [12]
 2025-06-09 16:55:39,255 INFO c.a.d.s.AgentService [http-nio-8080-exec-6] Successfully fetched agent details for id: 1
 2025-06-09 16:55:39,257 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-6] Agent details response - id: 1, name: Alice, status: LOGOUT, conversation count: 1
-2025-06-09 17:02:15,083 INFO c.a.d.c.UserController [http-nio-8080-exec-9] Received request to get details for user: 1
-2025-06-09 17:02:15,085 INFO c.a.d.s.UserService [http-nio-8080-exec-9] Fetching user details for id: 1
+2025-06-09 17:02:15,083 INFO c.a.d.c.UserController [http-nio-8080-exec-9] Received request to get details for client: 1
+2025-06-09 17:02:15,085 INFO c.a.d.s.UserService [http-nio-8080-exec-9] Fetching client details for id: 1
 2025-06-09 17:02:15,110 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-9] Converting JSON to chat history
 2025-06-09 17:02:15,112 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-9] Converting chat history with 1 sessions to JSON
 2025-06-09 17:02:15,114 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-9] Converting JSON to chat history
-2025-06-09 17:02:15,117 DEBUG c.a.d.s.UserService [http-nio-8080-exec-9] Found 1 conversations for user 1
-2025-06-09 17:02:15,118 INFO c.a.d.s.UserService [http-nio-8080-exec-9] Successfully fetched user details for id: 1
-2025-06-09 17:02:15,120 DEBUG c.a.d.c.UserController [http-nio-8080-exec-9] Successfully fetched details for user: 1
+2025-06-09 17:02:15,117 DEBUG c.a.d.s.UserService [http-nio-8080-exec-9] Found 1 conversations for client 1
+2025-06-09 17:02:15,118 INFO c.a.d.s.UserService [http-nio-8080-exec-9] Successfully fetched client details for id: 1
+2025-06-09 17:02:15,120 DEBUG c.a.d.c.UserController [http-nio-8080-exec-9] Successfully fetched details for client: 1
 2025-06-09 17:05:10,978 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-10] Converting JSON to chat history
 2025-06-09 17:05:10,981 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-10] Converting chat history with 1 sessions to JSON
 2025-06-09 17:05:10,984 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-10] Converting JSON to chat history
