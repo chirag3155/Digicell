@@ -2,6 +2,7 @@ package com.api.digicell.dtos;
 
 import com.api.digicell.entities.ChatMessage;
 import io.swagger.v3.oas.annotations.media.Schema;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.util.List;
@@ -27,6 +28,7 @@ public class ChatHistoryDTO {
     @Data
     public static class MessageDTO {
         @Schema(description = "Timestamp of the message")
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
         private String timestamp;
 
         @Schema(description = "Content of the message")

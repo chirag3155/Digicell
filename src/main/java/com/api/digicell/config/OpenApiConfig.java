@@ -25,7 +25,7 @@ import io.swagger.v3.oas.annotations.security.SecurityScheme;
         description = "API Documentation for Digicell Backend Services"
     )
 )
-@SecurityScheme(
+@SecurityScheme(    
     name = "bearerAuth",
     type = SecuritySchemeType.HTTP,
     bearerFormat = "JWT",

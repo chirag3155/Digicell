@@ -15,6 +15,9 @@ import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import jakarta.validation.constraints.NotBlank;
 import com.api.digicell.responses.ResponseUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.List;
 
@@ -32,6 +35,8 @@ import java.util.List;
 @RequestMapping("/api/v1/aliases")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Alias Management", description = "APIs for managing aliases and their values")
+@SecurityRequirement(name = "bearerAuth")
 public class AliasController {
     private static final Logger logger = LoggerFactory.getLogger(AliasController.class);
     private final AliasService aliasService;
@@ -39,8 +44,15 @@ public class AliasController {
     /**
      * Create a new alias.
      */
+    @Operation(
+        summary = "Create a new alias",
+        description = "Creates a new alias with the provided key and value",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @PostMapping
-    public ResponseEntity<ApiResponse<AliasResponseDTO>> createAlias(@Valid @RequestBody AliasCreateDTO createDTO) {
+    public ResponseEntity<ApiResponse<AliasResponseDTO>> createAlias(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @Valid @RequestBody AliasCreateDTO createDTO) {
         logger.info("Received request to create new alias");
         logger.debug("Create alias request details - key: {}, value: {}", createDTO.getKey(), createDTO.getValue());
         
@@ -55,8 +67,14 @@ public class AliasController {
     /**
      * Retrieve all aliases.
      */
+    @Operation(
+        summary = "Get all aliases",
+        description = "Retrieves a list of all aliases in the system",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @GetMapping
-    public ResponseEntity<ApiResponse<List<AliasResponseDTO>>> listAliases() {
+    public ResponseEntity<ApiResponse<List<AliasResponseDTO>>> listAliases(
+            @RequestHeader(name = "Authorization", required = false) String authToken) {
         logger.info("Received request to fetch all aliases");
         List<AliasResponseDTO> aliases = aliasService.getAllAliases();
         logger.info("Successfully retrieved {} aliases", aliases.size());
@@ -69,8 +87,14 @@ public class AliasController {
     /**
      * Fetch alias by key.
      */
+    @Operation(
+        summary = "Get alias by key",
+        description = "Retrieves an alias by its unique key",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @GetMapping("/{key}")
     public ResponseEntity<ApiResponse<AliasResponseDTO>> getAlias(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
             @PathVariable @NotBlank(message = "key must not be blank") String key) {
         logger.info("Received request to fetch alias with key: {}", key);
         AliasResponseDTO alias = aliasService.getAliasByKey(key);
@@ -83,8 +107,14 @@ public class AliasController {
     /**
      * Update alias by key.
      */
+    @Operation(
+        summary = "Update an alias",
+        description = "Updates the value of an existing alias by its key",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @PutMapping("/{key}")
     public ResponseEntity<ApiResponse<AliasResponseDTO>> updateAlias(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
             @PathVariable @NotBlank(message = "key must not be blank") String key,
             @Valid @RequestBody AliasUpdateDTO updateDTO) {
         logger.info("Received request to update alias with key: {}", key);
@@ -100,8 +130,14 @@ public class AliasController {
     /**
      * Delete alias by key.
      */
+    @Operation(
+        summary = "Delete an alias",
+        description = "Deletes an alias by its key",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @DeleteMapping("/{key}")
     public ResponseEntity<ApiResponse<Void>> deleteAlias(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
             @PathVariable @NotBlank(message = "key must not be blank") String key) {
         logger.info("Received request to delete alias with key: {}", key);
         aliasService.deleteAlias(key);

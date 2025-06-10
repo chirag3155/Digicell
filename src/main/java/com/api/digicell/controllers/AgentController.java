@@ -47,11 +47,14 @@ public class AgentController {
      */
     @Operation(
         summary = "Create a new agent",
-        description = "Creates a new agent with the provided information. Email and name are required fields."
+        description = "Creates a new agent with the provided information. Email and name are required fields.",
+        security = { @SecurityRequirement(name = "bearerAuth") }
     )
     @PostMapping
     @Transactional
-    public ResponseEntity<ApiResponse<Agent>> createAgent(@Valid @RequestBody AgentCreateDTO createDTO) {
+    public ResponseEntity<ApiResponse<Agent>> createAgent(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @Valid @RequestBody AgentCreateDTO createDTO) {
         logger.info("Creating new agent with name: {}", createDTO.getName());
         try {
             Agent agent = agentService.createAgent(createDTO);
@@ -72,12 +75,14 @@ public class AgentController {
     /**
      * List all agents.
      */
-    @GetMapping
     @Operation(
         summary = "Get all agents",
-        description = "Retrieves a list of all agents"
+        description = "Retrieves a list of all agents",
+        security = { @SecurityRequirement(name = "bearerAuth") }
     )
-    public ResponseEntity<ApiResponse<List<Agent>>> getAllAgents() {
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<Agent>>> getAllAgents(
+            @RequestHeader(name = "Authorization", required = false) String authToken) {
         logger.info("Fetching all agents");
         try {
             List<Agent> agents = agentService.getAllAgents();
@@ -93,12 +98,15 @@ public class AgentController {
     /**
      * Get agent by ID.
      */
-    @GetMapping("/{id}")
     @Operation(
         summary = "Get agent by ID",
-        description = "Retrieves agent details by their ID"
+        description = "Retrieves agent details by their ID",
+        security = { @SecurityRequirement(name = "bearerAuth") }
     )
-    public ResponseEntity<ApiResponse<Agent>> getAgentById(@PathVariable @Positive Long id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<Agent>> getAgentById(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @PathVariable @Positive Long id) {
         logger.info("Fetching agent with id: {}", id);
         try {
             Agent agent = agentService.getAgentById(id);
@@ -120,11 +128,13 @@ public class AgentController {
      */
     @Operation(
         summary = "Update an existing agent",
-        description = "Updates the details of an existing agent by ID"
+        description = "Updates the details of an existing agent by ID",
+        security = { @SecurityRequirement(name = "bearerAuth") }
     )
     @PutMapping("/{id}")
     @Transactional
     public ResponseEntity<ApiResponse<Agent>> updateAgent(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
             @PathVariable @Positive Long id,
             @Valid @RequestBody AgentUpdateDTO updateDTO) {
         logger.info("Updating agent with id: {}", id);
@@ -150,9 +160,15 @@ public class AgentController {
     /**
      * Update agent status.
      */
+    @Operation(
+        summary = "Update agent status",
+        description = "Updates the status of an existing agent",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @PatchMapping("/{id}/status")
     @Transactional
     public ResponseEntity<ApiResponse<Agent>> updateAgentStatus(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
             @PathVariable @Positive Long id,
             @Valid @RequestBody AgentStatusDTO statusDTO) {
         logger.info("Updating status for agent with id: {}", id);
@@ -178,9 +194,16 @@ public class AgentController {
     /**
      * Delete agent.
      */
+    @Operation(
+        summary = "Delete an agent",
+        description = "Deletes an agent by their ID",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @DeleteMapping("/{id}")
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> deleteAgent(@PathVariable @Positive Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteAgent(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @PathVariable @Positive Long id) {
         logger.info("Deleting agent with id: {}", id);
         try {
             agentService.deleteAgent(id);
@@ -204,8 +227,15 @@ public class AgentController {
     /**
      * List Clients being handled by a specific agent.
      */
+    @Operation(
+        summary = "List clients by agent",
+        description = "Retrieves a list of clients being handled by a specific agent",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @GetMapping("/{agent_id}/clients")
-    public ResponseEntity<ApiResponse<List<Client>>> listClientsByAgent(@PathVariable("agent_id") @Positive(message = "agent_id must be positive") Long agentId) {
+    public ResponseEntity<ApiResponse<List<Client>>> listClientsByAgent(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @PathVariable("agent_id") @Positive(message = "agent_id must be positive") Long agentId) {
         List<Client> clients = clientService.getClientsByAgent(agentId);
         return ResponseUtil.listResponse(clients, "clients for agent");
     }
@@ -213,8 +243,14 @@ public class AgentController {
     /**
      * Fetch agent details including all conversations.
      */
+    @Operation(
+        summary = "Get agent details",
+        description = "Fetches detailed information about an agent including all conversations",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @GetMapping("/{agentId}/details")
     public ResponseEntity<ApiResponse<AgentDetailsResponseDTO>> getAgentDetails(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
             @PathVariable @Positive(message = "agentId must be positive") Long agentId) {
         logger.info("Received request to get details for agent: {}", agentId);
         try {
@@ -244,9 +280,15 @@ public class AgentController {
     /**
      * Set agent status to AVAILABLE.
      */
+    @Operation(
+        summary = "Set agent as available",
+        description = "Sets the status of an agent to AVAILABLE",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @PatchMapping("/{id}/available")
     @Transactional
     public ResponseEntity<ApiResponse<Agent>> setAgentAvailable(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
             @PathVariable @Positive Long id) {
         logger.info("Setting agent with id: {} to AVAILABLE", id);
         try {

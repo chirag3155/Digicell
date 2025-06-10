@@ -14,6 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.annotation.Validated;
 import jakarta.validation.constraints.Positive;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.List;
 
@@ -21,6 +24,8 @@ import java.util.List;
 @RequestMapping("/api/v1/clients")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Client Management", description = "APIs for managing clients and their details")
+@SecurityRequirement(name = "bearerAuth")
 public class ClientController {
     private static final Logger logger = LoggerFactory.getLogger(ClientController.class);
     private final ClientService clientService;
@@ -28,8 +33,14 @@ public class ClientController {
     /**
      * List all clients.
      */
+    @Operation(
+        summary = "Get all clients",
+        description = "Retrieves a list of all clients in the system",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Client>>> listAllClients() {
+    public ResponseEntity<ApiResponse<List<Client>>> listAllClients(
+            @RequestHeader(name = "Authorization", required = false) String authToken) {
         logger.info("Received request to list all clients");
         try {
             List<Client> clients = clientService.getAllClients();
@@ -45,8 +56,15 @@ public class ClientController {
     /**
      * Get client by id.
      */
+    @Operation(
+        summary = "Get client by ID",
+        description = "Retrieves client details by their unique ID",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @GetMapping("/{client_id}")
-    public ResponseEntity<ApiResponse<Client>> getClientById(@PathVariable("client_id") @Positive(message = "client_id must be positive") Long clientId) {
+    public ResponseEntity<ApiResponse<Client>> getClientById(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @PathVariable("client_id") @Positive(message = "client_id must be positive") Long clientId) {
         Client client = clientService.getClientById(clientId);
         ApiResponse<Client> response = new ApiResponse<>(HttpStatus.OK.value(), "Client fetched successfully", client);
         return ResponseEntity.ok(response);
@@ -55,8 +73,15 @@ public class ClientController {
     /**
      * Get clients filtered by assignment status.
      */
+    @Operation(
+        summary = "Get clients by assignment status",
+        description = "Retrieves a list of clients filtered by their assignment status (assigned/unassigned)",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @GetMapping("/assigned")
-    public ResponseEntity<ApiResponse<List<Client>>> listClientsByAssignment(@RequestParam("status") boolean status) {
+    public ResponseEntity<ApiResponse<List<Client>>> listClientsByAssignment(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @RequestParam("status") boolean status) {
         List<Client> clients = clientService.getClientsByAssignmentStatus(status);
         return ResponseUtil.listResponse(clients, status? "assigned clients" : "unassigned clients");
     }
@@ -64,8 +89,14 @@ public class ClientController {
     /**
      * Fetch a client along with all conversation details.
      */
+    @Operation(
+        summary = "Get client details",
+        description = "Retrieves detailed information about a client including their profile and related data",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @GetMapping("/{client_id}/details")
     public ResponseEntity<ApiResponse<ClientDetailsResponse>> getClientDetails(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
             @PathVariable("client_id") @Positive(message = "client_id must be positive") Long clientId) {
         logger.info("Received request to get details for client: {}", clientId);
         try {
@@ -83,8 +114,14 @@ public class ClientController {
         }
     }
 
+    @Operation(
+        summary = "Get client conversations",
+        description = "Retrieves all conversations associated with a specific client",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @GetMapping("/{client_id}/conversations")
     public ResponseEntity<ApiResponse<List<ConvoDto>>> getClientConversations(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
             @PathVariable("client_id") @Positive(message = "client_id must be positive") Long clientId) {
         logger.info("Received request to get conversations for client: {}", clientId);
         try {
