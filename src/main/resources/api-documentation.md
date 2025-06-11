@@ -6,7 +6,7 @@
 3. [Base URLs](#base-urls)
 4. [API Endpoints](#api-endpoints)
    - [User Management](#client-management)
-   - [Agent Management](#agent-management)
+   - [Agent Management](#userAccount-management)
    - [Conversation Management](#conversation-management)
    - [Alias Management](#alias-management)
 5. [Response Format](#response-format)
@@ -14,7 +14,7 @@
 7. [Data Types](#data-types)
 
 ## Introduction
-This document provides comprehensive documentation for the Digicell API, which enables management of clients, agents, conversations, and aliases in a customer service platform.
+This document provides comprehensive documentation for the Digicell API, which enables management of clients, userAccounts, conversations, and aliases in a customer service platform.
 
 ## Authentication
 All endpoints require authentication using Bearer token:
@@ -124,7 +124,7 @@ GET /api/v1/clients/{user_id}/details
                         {
                             "timestamp": "2024-03-20T18:01:00",
                             "content": "Hello, how can I help you?",
-                            "role": "agent"
+                            "role": "userAccount"
                         },
                         {
                             "timestamp": "2024-03-20T18:01:30",
@@ -162,17 +162,17 @@ GET /api/v1/clients/{user_id}/conversations
 ```
 
 ### Agent Management
-Base path: `/api/v1/agents`
+Base path: `/api/v1/userAccounts`
 
 #### Create Agent
 ```http
-POST /api/v1/agents
+POST /api/v1/userAccounts
 ```
 **Request Body:**
 ```json
 {
     "name": "Agent Smith",
-    "email": "agent.smith@example.com",
+    "email": "userAccount.smith@example.com",
     "status": "AVAILABLE"
 }
 ```
@@ -184,7 +184,7 @@ POST /api/v1/agents
     "data": {
         "agentId": 1,
         "name": "Agent Smith",
-        "email": "agent.smith@example.com",
+        "email": "userAccount.smith@example.com",
         "status": "AVAILABLE"
     }
 }
@@ -192,7 +192,7 @@ POST /api/v1/agents
 
 #### Get All Agents
 ```http
-GET /api/v1/agents
+GET /api/v1/userAccounts
 ```
 **Response:**
 ```json
@@ -203,7 +203,7 @@ GET /api/v1/agents
         {
             "agentId": 1,
             "name": "Agent Smith",
-            "email": "agent.smith@example.com",
+            "email": "userAccount.smith@example.com",
             "status": "AVAILABLE"
         }
     ]
@@ -212,7 +212,7 @@ GET /api/v1/agents
 
 #### Get Agent by ID
 ```http
-GET /api/v1/agents/{id}
+GET /api/v1/userAccounts/{id}
 ```
 **Response:**
 ```json
@@ -222,7 +222,7 @@ GET /api/v1/agents/{id}
     "data": {
         "agentId": 1,
         "name": "Agent Smith",
-        "email": "agent.smith@example.com",
+        "email": "userAccount.smith@example.com",
         "status": "AVAILABLE"
     }
 }
@@ -230,13 +230,13 @@ GET /api/v1/agents/{id}
 
 #### Update Agent
 ```http
-PUT /api/v1/agents/{id}
+PUT /api/v1/userAccounts/{id}
 ```
 **Request Body:**
 ```json
 {
     "name": "Agent Smith Updated",
-    "email": "agent.smith.updated@example.com",
+    "email": "userAccount.smith.updated@example.com",
     "status": "BUSY"
 }
 ```
@@ -248,7 +248,7 @@ PUT /api/v1/agents/{id}
     "data": {
         "agentId": 1,
         "name": "Agent Smith Updated",
-        "email": "agent.smith.updated@example.com",
+        "email": "userAccount.smith.updated@example.com",
         "status": "BUSY"
     }
 }
@@ -256,7 +256,7 @@ PUT /api/v1/agents/{id}
 
 #### Update Agent Status
 ```http
-PATCH /api/v1/agents/{id}/status
+PATCH /api/v1/userAccounts/{id}/status
 ```
 **Request Body:**
 ```json
@@ -272,7 +272,7 @@ PATCH /api/v1/agents/{id}/status
     "data": {
         "agentId": 1,
         "name": "Agent Smith",
-        "email": "agent.smith@example.com",
+        "email": "userAccount.smith@example.com",
         "status": "AVAILABLE"
     }
 }
@@ -280,7 +280,7 @@ PATCH /api/v1/agents/{id}/status
 
 #### Delete Agent
 ```http
-DELETE /api/v1/agents/{id}
+DELETE /api/v1/userAccounts/{id}
 ```
 **Response:**
 ```json
@@ -293,7 +293,7 @@ DELETE /api/v1/agents/{id}
 
 #### Get Agent Details
 ```http
-GET /api/v1/agents/{agentId}/details
+GET /api/v1/userAccounts/{agentId}/details
 ```
 **Response:**
 ```json
@@ -301,10 +301,10 @@ GET /api/v1/agents/{agentId}/details
     "status": 200,
     "message": "Agent details fetched successfully",
     "data": {
-        "agent": {
+        "userAccount": {
             "agentId": 1,
             "name": "Agent Smith",
-            "email": "agent.smith@example.com",
+            "email": "userAccount.smith@example.com",
             "status": "AVAILABLE",
             "avatarUrl": "https://example.com/avatar.jpg",
             "labels": ["support", "sales"],
@@ -324,7 +324,7 @@ GET /api/v1/agents/{agentId}/details
                         {
                             "timestamp": "2024-03-20T18:01:00",
                             "content": "Hello, how can I help you?",
-                            "role": "agent"
+                            "role": "userAccount"
                         },
                         {
                             "timestamp": "2024-03-20T18:01:30",
@@ -341,13 +341,13 @@ GET /api/v1/agents/{agentId}/details
 
 #### Get Users by Agent
 ```http
-GET /api/v1/agents/{agent_id}/clients
+GET /api/v1/userAccounts/{agent_id}/clients
 ```
 **Response:**
 ```json
 {
     "status": 200,
-    "message": "clients for agent",
+    "message": "clients for userAccount",
     "data": [
         {
             "userId": 1,
@@ -362,7 +362,7 @@ GET /api/v1/agents/{agent_id}/clients
 
 #### Set Agent Available
 ```http
-PATCH /api/v1/agents/{id}/available
+PATCH /api/v1/userAccounts/{id}/available
 ```
 **Response:**
 ```json
@@ -372,7 +372,7 @@ PATCH /api/v1/agents/{id}/available
     "data": {
         "agentId": 1,
         "name": "Agent Smith",
-        "email": "agent.smith@example.com",
+        "email": "userAccount.smith@example.com",
         "status": "AVAILABLE"
     }
 }
@@ -553,13 +553,13 @@ DELETE /api/conversations/{conversation_id}
 
 #### Get Conversations by Agent and User
 ```http
-GET /api/conversations/agent/{agent_id}/client/{user_id}
+GET /api/conversations/userAccount/{agent_id}/client/{user_id}
 ```
 **Response:**
 ```json
 {
     "status": 200,
-    "message": "conversations for agent and client",
+    "message": "conversations for userAccount and client",
     "data": [
         {
             "conversationId": 123,

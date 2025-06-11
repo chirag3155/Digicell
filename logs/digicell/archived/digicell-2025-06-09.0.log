@@ -89,16 +89,16 @@
 2025-06-09 10:22:55,200 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Initializing Servlet 'dispatcherServlet'
 2025-06-09 10:22:55,202 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Completed initialization in 1 ms
 2025-06-09 10:22:56,353 INFO o.s.a.AbstractOpenApiResource [http-nio-8080-exec-4] Init duration for springdoc-openapi is: 850 ms
-2025-06-09 10:23:04,448 INFO c.a.d.c.AgentController [http-nio-8080-exec-5] Fetching all agents
-2025-06-09 10:23:04,449 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Fetching all agents
-2025-06-09 10:23:04,781 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Successfully retrieved 10 agents
-2025-06-09 10:23:04,784 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-5] Retrieved agents - count: 10, ids: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-2025-06-09 10:23:04,785 INFO c.a.d.c.AgentController [http-nio-8080-exec-5] Successfully retrieved 10 agents
-2025-06-09 10:23:41,232 INFO c.a.d.c.AgentController [http-nio-8080-exec-10] Fetching all agents
-2025-06-09 10:23:41,234 INFO c.a.d.s.AgentService [http-nio-8080-exec-10] Fetching all agents
-2025-06-09 10:23:41,249 INFO c.a.d.s.AgentService [http-nio-8080-exec-10] Successfully retrieved 10 agents
-2025-06-09 10:23:41,250 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-10] Retrieved agents - count: 10, ids: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-2025-06-09 10:23:41,251 INFO c.a.d.c.AgentController [http-nio-8080-exec-10] Successfully retrieved 10 agents
+2025-06-09 10:23:04,448 INFO c.a.d.c.AgentController [http-nio-8080-exec-5] Fetching all userAccounts
+2025-06-09 10:23:04,449 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Fetching all userAccounts
+2025-06-09 10:23:04,781 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Successfully retrieved 10 userAccounts
+2025-06-09 10:23:04,784 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-5] Retrieved userAccounts - count: 10, ids: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+2025-06-09 10:23:04,785 INFO c.a.d.c.AgentController [http-nio-8080-exec-5] Successfully retrieved 10 userAccounts
+2025-06-09 10:23:41,232 INFO c.a.d.c.AgentController [http-nio-8080-exec-10] Fetching all userAccounts
+2025-06-09 10:23:41,234 INFO c.a.d.s.AgentService [http-nio-8080-exec-10] Fetching all userAccounts
+2025-06-09 10:23:41,249 INFO c.a.d.s.AgentService [http-nio-8080-exec-10] Successfully retrieved 10 userAccounts
+2025-06-09 10:23:41,250 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-10] Retrieved userAccounts - count: 10, ids: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+2025-06-09 10:23:41,251 INFO c.a.d.c.AgentController [http-nio-8080-exec-10] Successfully retrieved 10 userAccounts
 2025-06-09 10:33:14,681 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
 2025-06-09 10:33:14,811 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplication using Java 17.0.12 with PID 33312 (C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
 2025-06-09 10:33:14,813 DEBUG o.s.b.StartupInfoLogger [main] Running with Spring Boot v3.2.5, Spring v6.1.6
@@ -251,11 +251,11 @@ Caused by: java.io.IOException: An established connection was aborted by the sof
 2025-06-09 10:36:54,117 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Initializing Servlet 'dispatcherServlet'
 2025-06-09 10:36:54,120 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Completed initialization in 1 ms
 2025-06-09 10:36:56,285 INFO o.s.a.AbstractOpenApiResource [http-nio-8080-exec-4] Init duration for springdoc-openapi is: 1889 ms
-2025-06-09 10:37:04,064 INFO c.a.d.c.AgentController [http-nio-8080-exec-5] Fetching all agents
-2025-06-09 10:37:04,066 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Fetching all agents
-2025-06-09 10:37:04,347 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Successfully retrieved 10 agents
-2025-06-09 10:37:04,349 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-5] Retrieved agents - count: 10, ids: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-2025-06-09 10:37:04,350 INFO c.a.d.c.AgentController [http-nio-8080-exec-5] Successfully retrieved 10 agents
+2025-06-09 10:37:04,064 INFO c.a.d.c.AgentController [http-nio-8080-exec-5] Fetching all userAccounts
+2025-06-09 10:37:04,066 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Fetching all userAccounts
+2025-06-09 10:37:04,347 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Successfully retrieved 10 userAccounts
+2025-06-09 10:37:04,349 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-5] Retrieved userAccounts - count: 10, ids: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+2025-06-09 10:37:04,350 INFO c.a.d.c.AgentController [http-nio-8080-exec-5] Successfully retrieved 10 userAccounts
 2025-06-09 10:40:11,603 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
 2025-06-09 10:40:11,809 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplication using Java 17.0.12 with PID 568 (C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
 2025-06-09 10:40:11,812 DEBUG o.s.b.StartupInfoLogger [main] Running with Spring Boot v3.2.5, Spring v6.1.6
@@ -388,9 +388,9 @@ Caused by: java.io.IOException: An established connection was aborted by the sof
 2025-06-09 10:52:30,828 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Initializing Servlet 'dispatcherServlet'
 2025-06-09 10:52:30,831 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Completed initialization in 1 ms
 2025-06-09 10:52:34,061 INFO o.s.a.AbstractOpenApiResource [http-nio-8080-exec-4] Init duration for springdoc-openapi is: 2518 ms
-2025-06-09 10:52:43,787 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-5] Validation error: Validation failed for argument [0] in public org.springframework.http.ResponseEntity<com.api.digicell.responses.ApiResponse<com.api.digicell.entities.Agent>> com.api.digicell.controllers.AgentController.createAgent(com.api.digicell.dto.AgentCreateDTO): [Field error in object 'agentCreateDTO' on field 'email': rejected value [string]; codes [Email.agentCreateDTO.email,Email.email,Email.java.lang.String,Email]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [agentCreateDTO.email,email]; arguments []; default message [email],[Ljakarta.validation.constraints.Pattern$Flag;@122ca545,.*]; default message [Invalid email format]] 
+2025-06-09 10:52:43,787 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-5] Validation error: Validation failed for argument [0] in public org.springframework.http.ResponseEntity<com.api.digicell.responses.ApiResponse<com.api.digicell.entities.UserAccount>> com.api.digicell.controllers.UserAccountController.createAgent(com.api.digicell.dto.UserAccountCreateDTO): [Field error in object 'agentCreateDTO' on field 'email': rejected value [string]; codes [Email.agentCreateDTO.email,Email.email,Email.java.lang.String,Email]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [agentCreateDTO.email,email]; arguments []; default message [email],[Ljakarta.validation.constraints.Pattern$Flag;@122ca545,.*]; default message [Invalid email format]]
 2025-06-09 10:52:43,790 DEBUG c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-5] Validation error details - cause: {}
-2025-06-09 10:52:54,932 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-6] Validation error: Validation failed for argument [0] in public org.springframework.http.ResponseEntity<com.api.digicell.responses.ApiResponse<com.api.digicell.entities.Agent>> com.api.digicell.controllers.AgentController.createAgent(com.api.digicell.dto.AgentCreateDTO): [Field error in object 'agentCreateDTO' on field 'email': rejected value [chirag]; codes [Email.agentCreateDTO.email,Email.email,Email.java.lang.String,Email]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [agentCreateDTO.email,email]; arguments []; default message [email],[Ljakarta.validation.constraints.Pattern$Flag;@122ca545,.*]; default message [Invalid email format]] 
+2025-06-09 10:52:54,932 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-6] Validation error: Validation failed for argument [0] in public org.springframework.http.ResponseEntity<com.api.digicell.responses.ApiResponse<com.api.digicell.entities.UserAccount>> com.api.digicell.controllers.UserAccountController.createAgent(com.api.digicell.dto.UserAccountCreateDTO): [Field error in object 'agentCreateDTO' on field 'email': rejected value [chirag]; codes [Email.agentCreateDTO.email,Email.email,Email.java.lang.String,Email]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [agentCreateDTO.email,email]; arguments []; default message [email],[Ljakarta.validation.constraints.Pattern$Flag;@122ca545,.*]; default message [Invalid email format]]
 2025-06-09 10:52:54,935 DEBUG c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-6] Validation error details - cause: {}
 2025-06-09 10:54:46,736 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
 2025-06-09 10:54:46,822 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplication using Java 17.0.12 with PID 8788 (C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
@@ -706,7 +706,7 @@ Caused by: java.io.IOException: An established connection was aborted by the sof
 2025-06-09 12:38:35,496 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Initializing Servlet 'dispatcherServlet'
 2025-06-09 12:38:35,619 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Completed initialization in 12 ms
 2025-06-09 12:38:43,495 INFO o.s.a.AbstractOpenApiResource [http-nio-8080-exec-3] Init duration for springdoc-openapi is: 6576 ms
-2025-06-09 12:39:01,110 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-6] Unexpected error: No static resource digicel/api/v1/agents/1/details.
+2025-06-09 12:39:01,110 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-6] Unexpected error: No static resource digicel/api/v1/userAccounts/1/details.
 2025-06-09 12:39:01,116 DEBUG c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-6] Unexpected error details - cause: {}
 2025-06-09 12:54:42,454 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
 2025-06-09 12:54:42,614 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplication using Java 17.0.12 with PID 11744 (C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
@@ -743,11 +743,11 @@ Caused by: java.io.IOException: An established connection was aborted by the sof
 2025-06-09 12:55:43,872 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Initializing Servlet 'dispatcherServlet'
 2025-06-09 12:55:43,879 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Completed initialization in 5 ms
 2025-06-09 12:55:47,432 INFO o.s.a.AbstractOpenApiResource [http-nio-8080-exec-4] Init duration for springdoc-openapi is: 2486 ms
-2025-06-09 12:55:54,931 INFO c.a.d.c.AgentController [http-nio-8080-exec-5] Fetching all agents
-2025-06-09 12:55:54,933 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Fetching all agents
-2025-06-09 12:55:55,117 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Successfully retrieved 10 agents
-2025-06-09 12:55:55,118 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-5] Retrieved agents - count: 10, ids: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-2025-06-09 12:55:55,119 INFO c.a.d.c.AgentController [http-nio-8080-exec-5] Successfully retrieved 10 agents
+2025-06-09 12:55:54,931 INFO c.a.d.c.AgentController [http-nio-8080-exec-5] Fetching all userAccounts
+2025-06-09 12:55:54,933 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Fetching all userAccounts
+2025-06-09 12:55:55,117 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Successfully retrieved 10 userAccounts
+2025-06-09 12:55:55,118 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-5] Retrieved userAccounts - count: 10, ids: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+2025-06-09 12:55:55,119 INFO c.a.d.c.AgentController [http-nio-8080-exec-5] Successfully retrieved 10 userAccounts
 2025-06-09 12:56:21,874 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
 2025-06-09 12:56:22,181 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplication using Java 17.0.12 with PID 39104 (C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
 2025-06-09 12:56:22,185 DEBUG o.s.b.StartupInfoLogger [main] Running with Spring Boot v3.2.5, Spring v6.1.6
@@ -1284,14 +1284,14 @@ Caused by: org.springframework.data.mapping.PropertyReferenceException: No prope
 2025-06-09 15:37:19,844 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-2] Converting JSON to chat history
 2025-06-09 15:37:20,021 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-2] Converting chat history with 1 sessions to JSON
 2025-06-09 15:37:20,049 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-2] Converting JSON to chat history
-2025-06-09 15:37:36,900 INFO c.a.d.c.AgentController [http-nio-8080-exec-4] Received request to get details for agent: 1
-2025-06-09 15:37:36,926 INFO c.a.d.s.AgentService [http-nio-8080-exec-4] Fetching agent details for id: 1
+2025-06-09 15:37:36,900 INFO c.a.d.c.AgentController [http-nio-8080-exec-4] Received request to get details for userAccount: 1
+2025-06-09 15:37:36,926 INFO c.a.d.s.AgentService [http-nio-8080-exec-4] Fetching userAccount details for id: 1
 2025-06-09 15:37:36,983 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-4] Converting JSON to chat history
 2025-06-09 15:37:36,988 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-4] Converting chat history with 1 sessions to JSON
 2025-06-09 15:37:36,992 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-4] Converting JSON to chat history
-2025-06-09 15:37:36,997 INFO c.a.d.s.AgentService [http-nio-8080-exec-4] Found 1 conversations for agent 1
+2025-06-09 15:37:36,997 INFO c.a.d.s.AgentService [http-nio-8080-exec-4] Found 1 conversations for userAccount 1
 2025-06-09 15:37:37,001 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-4] Agent conversations details - id: 1, conversation count: 1, conversation ids: [12]
-2025-06-09 15:37:37,004 INFO c.a.d.s.AgentService [http-nio-8080-exec-4] Successfully fetched agent details for id: 1
+2025-06-09 15:37:37,004 INFO c.a.d.s.AgentService [http-nio-8080-exec-4] Successfully fetched userAccount details for id: 1
 2025-06-09 15:37:37,006 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-4] Agent details response - id: 1, name: Alice, status: LOGOUT, conversation count: 1
 2025-06-09 15:43:59,939 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
 2025-06-09 15:44:00,055 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplication using Java 17.0.12 with PID 40552 (C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
@@ -1746,49 +1746,49 @@ Identify and stop the process that's listening on port 8080 or configure this ap
 2025-06-09 16:24:28,683 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
 2025-06-09 16:24:28,685 DEBUG c.a.d.s.UserService [http-nio-8080-exec-1] Found 2 conversations for client 10
 2025-06-09 16:24:28,686 DEBUG c.a.d.c.UserController [http-nio-8080-exec-1] Found 2 conversations for client: 10
-2025-06-09 16:26:15,650 INFO c.a.d.c.AgentController [http-nio-8080-exec-4] Received request to get details for agent: 1
-2025-06-09 16:26:15,657 INFO c.a.d.s.AgentService [http-nio-8080-exec-4] Fetching agent details for id: 1
+2025-06-09 16:26:15,650 INFO c.a.d.c.AgentController [http-nio-8080-exec-4] Received request to get details for userAccount: 1
+2025-06-09 16:26:15,657 INFO c.a.d.s.AgentService [http-nio-8080-exec-4] Fetching userAccount details for id: 1
 2025-06-09 16:26:15,672 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-4] Converting JSON to chat history
 2025-06-09 16:26:15,674 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-4] Converting chat history with 1 sessions to JSON
 2025-06-09 16:26:15,676 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-4] Converting JSON to chat history
-2025-06-09 16:26:15,679 INFO c.a.d.s.AgentService [http-nio-8080-exec-4] Found 1 conversations for agent 1
+2025-06-09 16:26:15,679 INFO c.a.d.s.AgentService [http-nio-8080-exec-4] Found 1 conversations for userAccount 1
 2025-06-09 16:26:15,681 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-4] Agent conversations details - id: 1, conversation count: 1, conversation ids: [12]
-2025-06-09 16:26:15,683 INFO c.a.d.s.AgentService [http-nio-8080-exec-4] Successfully fetched agent details for id: 1
+2025-06-09 16:26:15,683 INFO c.a.d.s.AgentService [http-nio-8080-exec-4] Successfully fetched userAccount details for id: 1
 2025-06-09 16:26:15,685 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-4] Agent details response - id: 1, name: Alice, status: LOGOUT, conversation count: 1
-2025-06-09 16:26:31,364 INFO c.a.d.c.AgentController [http-nio-8080-exec-5] Received request to get details for agent: 10
-2025-06-09 16:26:31,367 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Fetching agent details for id: 10
+2025-06-09 16:26:31,364 INFO c.a.d.c.AgentController [http-nio-8080-exec-5] Received request to get details for userAccount: 10
+2025-06-09 16:26:31,367 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Fetching userAccount details for id: 10
 2025-06-09 16:26:31,379 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting JSON to chat history
 2025-06-09 16:26:31,381 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting chat history with 1 sessions to JSON
 2025-06-09 16:26:31,383 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting JSON to chat history
-2025-06-09 16:26:31,386 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Found 1 conversations for agent 10
+2025-06-09 16:26:31,386 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Found 1 conversations for userAccount 10
 2025-06-09 16:26:31,388 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-5] Agent conversations details - id: 10, conversation count: 1, conversation ids: [14]
-2025-06-09 16:26:31,390 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Successfully fetched agent details for id: 10
+2025-06-09 16:26:31,390 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Successfully fetched userAccount details for id: 10
 2025-06-09 16:26:31,391 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-5] Agent details response - id: 10, name: Judy Agent, status: AVAILABLE, conversation count: 1
-2025-06-09 16:26:53,207 INFO c.a.d.c.AgentController [http-nio-8080-exec-6] Received request to get details for agent: 8
-2025-06-09 16:26:53,210 INFO c.a.d.s.AgentService [http-nio-8080-exec-6] Fetching agent details for id: 8
+2025-06-09 16:26:53,207 INFO c.a.d.c.AgentController [http-nio-8080-exec-6] Received request to get details for userAccount: 8
+2025-06-09 16:26:53,210 INFO c.a.d.s.AgentService [http-nio-8080-exec-6] Fetching userAccount details for id: 8
 2025-06-09 16:26:53,223 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-6] Converting JSON to chat history
 2025-06-09 16:26:53,225 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-6] Converting chat history with 1 sessions to JSON
 2025-06-09 16:26:53,228 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-6] Converting JSON to chat history
 2025-06-09 16:26:53,234 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-6] Converting JSON to chat history
 2025-06-09 16:26:53,236 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-6] Converting chat history with 1 sessions to JSON
 2025-06-09 16:26:53,238 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-6] Converting JSON to chat history
-2025-06-09 16:26:53,241 INFO c.a.d.s.AgentService [http-nio-8080-exec-6] Found 2 conversations for agent 8
+2025-06-09 16:26:53,241 INFO c.a.d.s.AgentService [http-nio-8080-exec-6] Found 2 conversations for userAccount 8
 2025-06-09 16:26:53,242 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-6] Agent conversations details - id: 8, conversation count: 2, conversation ids: [9, 11]
-2025-06-09 16:26:53,244 INFO c.a.d.s.AgentService [http-nio-8080-exec-6] Successfully fetched agent details for id: 8
+2025-06-09 16:26:53,244 INFO c.a.d.s.AgentService [http-nio-8080-exec-6] Successfully fetched userAccount details for id: 8
 2025-06-09 16:26:53,245 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-6] Agent details response - id: 8, name: Heidi Agent, status: AVAILABLE, conversation count: 2
 2025-06-09 16:27:14,718 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-7] Resource not found: Conversation not found with id: 1
 2025-06-09 16:27:14,720 DEBUG c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-7] Resource not found details - cause: {}
 2025-06-09 16:27:22,146 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-9] Converting JSON to chat history
 2025-06-09 16:27:22,150 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-9] Converting chat history with 1 sessions to JSON
 2025-06-09 16:27:22,152 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-9] Converting JSON to chat history
-2025-06-09 16:55:39,177 INFO c.a.d.c.AgentController [http-nio-8080-exec-6] Received request to get details for agent: 1
-2025-06-09 16:55:39,185 INFO c.a.d.s.AgentService [http-nio-8080-exec-6] Fetching agent details for id: 1
+2025-06-09 16:55:39,177 INFO c.a.d.c.AgentController [http-nio-8080-exec-6] Received request to get details for userAccount: 1
+2025-06-09 16:55:39,185 INFO c.a.d.s.AgentService [http-nio-8080-exec-6] Fetching userAccount details for id: 1
 2025-06-09 16:55:39,236 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-6] Converting JSON to chat history
 2025-06-09 16:55:39,241 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-6] Converting chat history with 1 sessions to JSON
 2025-06-09 16:55:39,244 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-6] Converting JSON to chat history
-2025-06-09 16:55:39,249 INFO c.a.d.s.AgentService [http-nio-8080-exec-6] Found 1 conversations for agent 1
+2025-06-09 16:55:39,249 INFO c.a.d.s.AgentService [http-nio-8080-exec-6] Found 1 conversations for userAccount 1
 2025-06-09 16:55:39,251 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-6] Agent conversations details - id: 1, conversation count: 1, conversation ids: [12]
-2025-06-09 16:55:39,255 INFO c.a.d.s.AgentService [http-nio-8080-exec-6] Successfully fetched agent details for id: 1
+2025-06-09 16:55:39,255 INFO c.a.d.s.AgentService [http-nio-8080-exec-6] Successfully fetched userAccount details for id: 1
 2025-06-09 16:55:39,257 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-6] Agent details response - id: 1, name: Alice, status: LOGOUT, conversation count: 1
 2025-06-09 17:02:15,083 INFO c.a.d.c.UserController [http-nio-8080-exec-9] Received request to get details for client: 1
 2025-06-09 17:02:15,085 INFO c.a.d.s.UserService [http-nio-8080-exec-9] Fetching client details for id: 1

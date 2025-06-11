@@ -1,15 +1,15 @@
 package com.api.digicell.controllers;
 
-import com.api.digicell.dto.AgentCreateDTO;
-import com.api.digicell.dto.AgentDetailsResponseDTO;
-import com.api.digicell.dto.AgentStatusDTO;
-import com.api.digicell.dto.AgentUpdateDTO;
-import com.api.digicell.entities.Agent;
+import com.api.digicell.dto.UserAccountCreateDTO;
+import com.api.digicell.dto.UserAccountDetailsResponseDTO;
+import com.api.digicell.dto.UserAccountStatusDTO;
+import com.api.digicell.dto.UserAccountUpdateDTO;
+import com.api.digicell.entities.UserAccount;
 import com.api.digicell.entities.Client;
 import com.api.digicell.exceptions.InvalidAgentStatusException;
 import com.api.digicell.exceptions.ResourceNotFoundException;
 import com.api.digicell.responses.ApiResponse;
-import com.api.digicell.services.AgentService;
+import com.api.digicell.services.UserAccountService;
 import com.api.digicell.services.ClientService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -35,12 +35,12 @@ import java.util.List;
 @Validated
 @Tag(name = "Agent Management", description = "APIs for managing agents")
 @SecurityRequirement(name = "bearerAuth")
-public class AgentController {
+public class UserAccountController {
 
-    private final AgentService agentService;
+    private final UserAccountService userAccountService;
     private final ClientService clientService;
     private final AgentMapper agentMapper;
-    private static final Logger logger = LoggerFactory.getLogger(AgentController.class);
+    private static final Logger logger = LoggerFactory.getLogger(UserAccountController.class);
 
     /**
      * Create a new agent.
@@ -52,15 +52,15 @@ public class AgentController {
     )
     @PostMapping
     @Transactional
-    public ResponseEntity<ApiResponse<Agent>> createAgent(
+    public ResponseEntity<ApiResponse<UserAccount>> createAgent(
             @RequestHeader(name = "Authorization", required = false) String authToken,
-            @Valid @RequestBody AgentCreateDTO createDTO) {
+            @Valid @RequestBody UserAccountCreateDTO createDTO) {
         logger.info("Creating new agent with name: {}", createDTO.getName());
         try {
-            Agent agent = agentService.createAgent(createDTO);
-            logger.info("Successfully created agent with id: {}", agent.getAgentId());
+            UserAccount userAccount = userAccountService.createAgent(createDTO);
+            logger.info("Successfully created agent with id: {}", userAccount.getUserId());
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(new ApiResponse<>(HttpStatus.CREATED.value(), "Agent created successfully", agent));
+                    .body(new ApiResponse<>(HttpStatus.CREATED.value(), "Agent created successfully", userAccount));
         } catch (InvalidAgentStatusException e) {
             logger.error("Invalid agent status while creating agent: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -81,13 +81,13 @@ public class AgentController {
         security = { @SecurityRequirement(name = "bearerAuth") }
     )
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Agent>>> getAllAgents(
+    public ResponseEntity<ApiResponse<List<UserAccount>>> getAllAgents(
             @RequestHeader(name = "Authorization", required = false) String authToken) {
         logger.info("Fetching all agents");
         try {
-            List<Agent> agents = agentService.getAllAgents();
-            logger.info("Successfully retrieved {} agents", agents.size());
-            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agents retrieved successfully", agents));
+            List<UserAccount> userAccounts = userAccountService.getAllAgents();
+            logger.info("Successfully retrieved {} agents", userAccounts.size());
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agents retrieved successfully", userAccounts));
         } catch (Exception e) {
             logger.error("Error fetching agents: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -104,14 +104,14 @@ public class AgentController {
         security = { @SecurityRequirement(name = "bearerAuth") }
     )
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Agent>> getAgentById(
+    public ResponseEntity<ApiResponse<UserAccount>> getAgentById(
             @RequestHeader(name = "Authorization", required = false) String authToken,
             @PathVariable @Positive Long id) {
         logger.info("Fetching agent with id: {}", id);
         try {
-            Agent agent = agentService.getAgentById(id);
+            UserAccount userAccount = userAccountService.getAgentById(id);
             logger.info("Successfully retrieved agent with id: {}", id);
-            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agent retrieved successfully", agent));
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agent retrieved successfully", userAccount));
         } catch (ResourceNotFoundException e) {
             logger.error("Agent not found with id: {}", id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -133,15 +133,15 @@ public class AgentController {
     )
     @PutMapping("/{id}")
     @Transactional
-    public ResponseEntity<ApiResponse<Agent>> updateAgent(
+    public ResponseEntity<ApiResponse<UserAccount>> updateAgent(
             @RequestHeader(name = "Authorization", required = false) String authToken,
             @PathVariable @Positive Long id,
-            @Valid @RequestBody AgentUpdateDTO updateDTO) {
+            @Valid @RequestBody UserAccountUpdateDTO updateDTO) {
         logger.info("Updating agent with id: {}", id);
         try {
-            Agent updatedAgent = agentService.updateAgent(id, updateDTO);
+            UserAccount updatedUserAccount = userAccountService.updateAgent(id, updateDTO);
             logger.info("Successfully updated agent with id: {}", id);
-            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agent updated successfully", updatedAgent));
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agent updated successfully", updatedUserAccount));
         } catch (ResourceNotFoundException e) {
             logger.error("Agent not found with id: {}", id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -167,15 +167,15 @@ public class AgentController {
     )
     @PatchMapping("/{id}/status")
     @Transactional
-    public ResponseEntity<ApiResponse<Agent>> updateAgentStatus(
+    public ResponseEntity<ApiResponse<UserAccount>> updateAgentStatus(
             @RequestHeader(name = "Authorization", required = false) String authToken,
             @PathVariable @Positive Long id,
-            @Valid @RequestBody AgentStatusDTO statusDTO) {
+            @Valid @RequestBody UserAccountStatusDTO statusDTO) {
         logger.info("Updating status for agent with id: {}", id);
         try {
-            Agent updatedAgent = agentService.updateAgentStatus(id, statusDTO);
+            UserAccount updatedUserAccount = userAccountService.updateAgentStatus(id, statusDTO);
             logger.info("Successfully updated agent status to: {} for agent id: {}", statusDTO.getStatus(), id);
-            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agent status updated successfully", updatedAgent));
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agent status updated successfully", updatedUserAccount));
         } catch (ResourceNotFoundException e) {
             logger.error("Agent not found with id: {}", id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -206,7 +206,7 @@ public class AgentController {
             @PathVariable @Positive Long id) {
         logger.info("Deleting agent with id: {}", id);
         try {
-            agentService.deleteAgent(id);
+            userAccountService.deleteAgent(id);
             logger.info("Successfully deleted agent with id: {}", id);
             return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agent deleted successfully", null));
         } catch (ResourceNotFoundException e) {
@@ -249,12 +249,12 @@ public class AgentController {
         security = { @SecurityRequirement(name = "bearerAuth") }
     )
     @GetMapping("/{agentId}/details")
-    public ResponseEntity<ApiResponse<AgentDetailsResponseDTO>> getAgentDetails(
+    public ResponseEntity<ApiResponse<UserAccountDetailsResponseDTO>> getAgentDetails(
             @RequestHeader(name = "Authorization", required = false) String authToken,
             @PathVariable @Positive(message = "agentId must be positive") Long agentId) {
         logger.info("Received request to get details for agent: {}", agentId);
         try {
-            AgentDetailsResponseDTO response = agentService.getAgentDetails(agentId);
+            UserAccountDetailsResponseDTO response = userAccountService.getAgentDetails(agentId);
             return ResponseEntity.ok(new ApiResponse<>(
                 HttpStatus.OK.value(),
                 "Agent details fetched successfully",
@@ -287,14 +287,14 @@ public class AgentController {
     )
     @PatchMapping("/{id}/available")
     @Transactional
-    public ResponseEntity<ApiResponse<Agent>> setAgentAvailable(
+    public ResponseEntity<ApiResponse<UserAccount>> setAgentAvailable(
             @RequestHeader(name = "Authorization", required = false) String authToken,
             @PathVariable @Positive Long id) {
         logger.info("Setting agent with id: {} to AVAILABLE", id);
         try {
-            Agent updatedAgent = agentService.setAgentAvailable(id);
+            UserAccount updatedUserAccount = userAccountService.setAgentAvailable(id);
             logger.info("Successfully set agent status to AVAILABLE for agent id: {}", id);
-            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agent status set to AVAILABLE", updatedAgent));
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agent status set to AVAILABLE", updatedUserAccount));
         } catch (ResourceNotFoundException e) {
             logger.error("Agent not found with id: {}", id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

@@ -8,8 +8,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 @Data
 public class ClientConversationDTO {
     private Long conversationId;
-    private String agentId;
-    private String agentName;
+    private String userId;
+    private String userName;
     private String query;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")

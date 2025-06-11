@@ -186,23 +186,23 @@ This generated password is for development use only. Your security configuration
 2025-06-06 18:36:41,486 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Initializing Servlet 'dispatcherServlet'
 2025-06-06 18:36:41,491 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Completed initialization in 5 ms
 2025-06-06 18:36:45,074 INFO o.s.a.AbstractOpenApiResource [http-nio-8080-exec-4] Init duration for springdoc-openapi is: 2667 ms
-2025-06-06 18:36:50,559 INFO c.a.d.c.AgentController [http-nio-8080-exec-7] Received request to get details for agent: 1
-2025-06-06 18:36:50,585 INFO c.a.d.s.AgentService [http-nio-8080-exec-7] Fetching agent details for id: 1
+2025-06-06 18:36:50,559 INFO c.a.d.c.AgentController [http-nio-8080-exec-7] Received request to get details for userAccount: 1
+2025-06-06 18:36:50,585 INFO c.a.d.s.AgentService [http-nio-8080-exec-7] Fetching userAccount details for id: 1
 2025-06-06 18:36:51,035 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-7] Converting JSON to chat history
 2025-06-06 18:36:51,044 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-7] Converting chat history with 1 sessions to JSON
 2025-06-06 18:36:51,051 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-7] Converting JSON to chat history
-2025-06-06 18:36:51,060 INFO c.a.d.s.AgentService [http-nio-8080-exec-7] Found 1 conversations for agent 1
+2025-06-06 18:36:51,060 INFO c.a.d.s.AgentService [http-nio-8080-exec-7] Found 1 conversations for userAccount 1
 2025-06-06 18:36:51,063 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-7] Agent conversations details - id: 1, conversation count: 1, conversation ids: [12]
-2025-06-06 18:36:51,066 INFO c.a.d.s.AgentService [http-nio-8080-exec-7] Successfully fetched agent details for id: 1
+2025-06-06 18:36:51,066 INFO c.a.d.s.AgentService [http-nio-8080-exec-7] Successfully fetched userAccount details for id: 1
 2025-06-06 18:36:51,069 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-7] Agent details response - id: 1, name: Alice, status: LOGOUT, conversation count: 1
-2025-06-06 18:37:16,848 INFO c.a.d.c.AgentController [http-nio-8080-exec-5] Received request to get details for agent: 10
-2025-06-06 18:37:16,854 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Fetching agent details for id: 10
+2025-06-06 18:37:16,848 INFO c.a.d.c.AgentController [http-nio-8080-exec-5] Received request to get details for userAccount: 10
+2025-06-06 18:37:16,854 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Fetching userAccount details for id: 10
 2025-06-06 18:37:16,870 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting JSON to chat history
 2025-06-06 18:37:16,873 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting chat history with 1 sessions to JSON
 2025-06-06 18:37:16,875 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting JSON to chat history
-2025-06-06 18:37:16,878 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Found 1 conversations for agent 10
+2025-06-06 18:37:16,878 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Found 1 conversations for userAccount 10
 2025-06-06 18:37:16,880 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-5] Agent conversations details - id: 10, conversation count: 1, conversation ids: [14]
-2025-06-06 18:37:16,881 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Successfully fetched agent details for id: 10
+2025-06-06 18:37:16,881 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Successfully fetched userAccount details for id: 10
 2025-06-06 18:37:16,882 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-5] Agent details response - id: 10, name: Judy Agent, status: AVAILABLE, conversation count: 1
 2025-06-06 18:37:33,763 INFO c.a.d.c.UserController [http-nio-8080-exec-1] Received request to get details for client: 1
 2025-06-06 18:37:33,764 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Fetching client details for id: 1

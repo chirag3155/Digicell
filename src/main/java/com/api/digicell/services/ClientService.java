@@ -59,8 +59,8 @@ public class ClientService {
                     .map(conv -> {
                         ClientConvoDto dto = new ClientConvoDto();
                         dto.setConversationId(conv.getConversationId());
-                        dto.setAgentId(conv.getAgent().getAgentId());
-                        dto.setAgentName(conv.getAgent().getName());
+                        dto.setAgentId(conv.getUserAccount().getAgentId());
+                        dto.setAgentName(conv.getUserAccount().getName());
                         dto.setStartTime(conv.getStartTime());
                         dto.setEndTime(conv.getEndTime());
                         dto.setIntent(conv.getIntent());
@@ -94,8 +94,8 @@ public class ClientService {
                 .map(conv -> {
                     ConvoDto dto = new ConvoDto();
                     dto.setConversationId(conv.getConversationId());
-                    dto.setAgentId(conv.getAgent().getAgentId());
-                    dto.setAgentName(conv.getAgent().getName());
+                    dto.setAgentId(conv.getUserAccount().getAgentId());
+                    dto.setAgentName(conv.getUserAccount().getName());
                     dto.setStartTime(conv.getStartTime());
                     dto.setEndTime(conv.getEndTime());
                     dto.setIntent(conv.getIntent());

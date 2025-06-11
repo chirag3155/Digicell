@@ -1,6 +1,6 @@
 package com.api.digicell.dto;
 
-import com.api.digicell.entities.AgentStatus;
+import com.api.digicell.entities.UserAccountStatus;
 import jakarta.validation.constraints.Email;
 import lombok.*;
 
@@ -11,7 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AgentUpdateDTO {
+public class UserAccountUpdateDTO {
     
     private String name;
     
@@ -22,5 +22,5 @@ public class AgentUpdateDTO {
     
     private List<String> labels;
     
-    private AgentStatus status;
+    private UserAccountStatus status;
 } 

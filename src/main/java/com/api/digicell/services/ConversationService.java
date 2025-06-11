@@ -4,7 +4,7 @@ import com.api.digicell.dto.ConversationDTO;
 import com.api.digicell.dtos.ChatHistoryDTO;
 import com.api.digicell.entities.Conversation;
 import com.api.digicell.entities.Client;
-import com.api.digicell.entities.Agent;
+import com.api.digicell.entities.UserAccount;
 import com.api.digicell.exceptions.ResourceNotFoundException;
 import com.api.digicell.repository.AgentRepository;
 import com.api.digicell.repository.ConversationRepository;
@@ -53,11 +53,11 @@ public class ConversationService {
         Client client = clientRepository.findById(dto.getClientId())
             .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + dto.getClientId()));
         
-        Agent agent = agentRepository.findById(dto.getAgentId())
+        UserAccount userAccount = agentRepository.findById(dto.getAgentId())
             .orElseThrow(() -> new IllegalArgumentException("Agent not found with id: " + dto.getAgentId()));
 
         // Check for existing conversation
-        Conversation existingConversation = conversationRepository.findByClientAndAgentAndEndTimeIsNull(client, agent)
+        Conversation existingConversation = conversationRepository.findByClientAndAgentAndEndTimeIsNull(client, userAccount)
             .orElse(null); // If no conversation exists, return null
 
 
@@ -75,7 +75,7 @@ public class ConversationService {
         // Create new conversation if none exists
         Conversation conversation = new Conversation();
         conversation.setClient(client);
-        conversation.setAgent(agent);
+        conversation.setUserAccount(userAccount);
         conversation.setIntent(dto.getIntent());
         conversation.setStartTime(dto.getStartTime());
         conversation.setEndTime(dto.getEndTime());
@@ -114,8 +114,8 @@ public class ConversationService {
 
     private ChatHistoryDTO convertToChatHistoryDTO(Conversation conversation) {
         ChatHistoryDTO dto = new ChatHistoryDTO();
-        dto.setAgentId(conversation.getAgent().getAgentId());
-        dto.setAgentName(conversation.getAgent().getName());
+        dto.setAgentId(conversation.getUserAccount().getAgentId());
+        dto.setAgentName(conversation.getUserAccount().getName());
         dto.setIntent(conversation.getIntent());
         dto.setChatSummary(conversation.getChatSummary());
         

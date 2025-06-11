@@ -10,11 +10,11 @@ import java.util.List;
 @Data
 @Schema(description = "Chat History Response")
 public class ChatHistoryDTO {
-    @Schema(description = "Agent ID")
-    private Long agentId;
+    @Schema(description = "User ID")
+    private Long userId;
 
-    @Schema(description = "Agent Name")
-    private String agentName;
+    @Schema(description = "User Name")
+    private String userName;
 
     @Schema(description = "User Query")
     private String intent;

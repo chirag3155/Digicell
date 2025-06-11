@@ -9,8 +9,8 @@ import java.util.List;
 @Data
 public class ClientConvoDto {
     private Long conversationId;
-    private Long agentId;
-    private String agentName;
+    private Long userId;
+    private String userName;
     private String intent;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")

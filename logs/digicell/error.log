@@ -431,7 +431,7 @@ Caused by: org.springframework.data.mapping.PropertyReferenceException: No prope
 	at org.springframework.data.jpa.repository.query.PartTreeJpaQuery.<init>(PartTreeJpaQuery.java:100)
 	... 60 common frames omitted
 2025-06-10 16:17:45,580 ERROR o.s.b.SpringApplication [main] Application run failed
-org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'agentController' defined in file [C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes\com\api\digicell\controllers\AgentController.class]: Unsatisfied dependency expressed through constructor parameter 1: Error creating bean with name 'clientService' defined in file [C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes\com\api\digicell\services\ClientService.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'clientRepository' defined in com.api.digicell.repository.ClientRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration: Could not create query for public abstract java.util.List com.api.digicell.repository.ClientRepository.findByAgent_AgentId(java.lang.Long); Reason: Failed to create query for method public abstract java.util.List com.api.digicell.repository.ClientRepository.findByAgent_AgentId(java.lang.Long); No property 'agent' found for type 'Client'
+org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'agentController' defined in file [C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes\com\api\digicell\controllers\AgentController.class]: Unsatisfied dependency expressed through constructor parameter 1: Error creating bean with name 'clientService' defined in file [C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes\com\api\digicell\services\ClientService.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'clientRepository' defined in com.api.digicell.repository.ClientRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration: Could not create query for public abstract java.util.List com.api.digicell.repository.ClientRepository.findByAgent_AgentId(java.lang.Long); Reason: Failed to create query for method public abstract java.util.List com.api.digicell.repository.ClientRepository.findByAgent_AgentId(java.lang.Long); No property 'userAccount' found for type 'Client'
 	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:795)
 	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:237)
 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1355)
@@ -452,7 +452,7 @@ org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating
 	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1354)
 	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1343)
 	at com.api.digicell.DigicellApplication.main(DigicellApplication.java:10)
-Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'clientService' defined in file [C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes\com\api\digicell\services\ClientService.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'clientRepository' defined in com.api.digicell.repository.ClientRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration: Could not create query for public abstract java.util.List com.api.digicell.repository.ClientRepository.findByAgent_AgentId(java.lang.Long); Reason: Failed to create query for method public abstract java.util.List com.api.digicell.repository.ClientRepository.findByAgent_AgentId(java.lang.Long); No property 'agent' found for type 'Client'
+Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'clientService' defined in file [C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes\com\api\digicell\services\ClientService.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'clientRepository' defined in com.api.digicell.repository.ClientRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration: Could not create query for public abstract java.util.List com.api.digicell.repository.ClientRepository.findByAgent_AgentId(java.lang.Long); Reason: Failed to create query for method public abstract java.util.List com.api.digicell.repository.ClientRepository.findByAgent_AgentId(java.lang.Long); No property 'userAccount' found for type 'Client'
 	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:795)
 	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:237)
 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1355)
@@ -469,7 +469,7 @@ Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Err
 	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:904)
 	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:782)
 	... 19 common frames omitted
-Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'clientRepository' defined in com.api.digicell.repository.ClientRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration: Could not create query for public abstract java.util.List com.api.digicell.repository.ClientRepository.findByAgent_AgentId(java.lang.Long); Reason: Failed to create query for method public abstract java.util.List com.api.digicell.repository.ClientRepository.findByAgent_AgentId(java.lang.Long); No property 'agent' found for type 'Client'
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'clientRepository' defined in com.api.digicell.repository.ClientRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration: Could not create query for public abstract java.util.List com.api.digicell.repository.ClientRepository.findByAgent_AgentId(java.lang.Long); Reason: Failed to create query for method public abstract java.util.List com.api.digicell.repository.ClientRepository.findByAgent_AgentId(java.lang.Long); No property 'userAccount' found for type 'Client'
 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1786)
 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:600)
 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522)
@@ -483,7 +483,7 @@ Caused by: org.springframework.beans.factory.BeanCreationException: Error creati
 	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:904)
 	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:782)
 	... 33 common frames omitted
-Caused by: org.springframework.data.repository.query.QueryCreationException: Could not create query for public abstract java.util.List com.api.digicell.repository.ClientRepository.findByAgent_AgentId(java.lang.Long); Reason: Failed to create query for method public abstract java.util.List com.api.digicell.repository.ClientRepository.findByAgent_AgentId(java.lang.Long); No property 'agent' found for type 'Client'
+Caused by: org.springframework.data.repository.query.QueryCreationException: Could not create query for public abstract java.util.List com.api.digicell.repository.ClientRepository.findByAgent_AgentId(java.lang.Long); Reason: Failed to create query for method public abstract java.util.List com.api.digicell.repository.ClientRepository.findByAgent_AgentId(java.lang.Long); No property 'userAccount' found for type 'Client'
 	at org.springframework.data.repository.query.QueryCreationException.create(QueryCreationException.java:101)
 	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.lookupQuery(QueryExecutorMethodInterceptor.java:115)
 	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.mapMethodsToQuery(QueryExecutorMethodInterceptor.java:99)
@@ -499,14 +499,14 @@ Caused by: org.springframework.data.repository.query.QueryCreationException: Cou
 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1833)
 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1782)
 	... 44 common frames omitted
-Caused by: java.lang.IllegalArgumentException: Failed to create query for method public abstract java.util.List com.api.digicell.repository.ClientRepository.findByAgent_AgentId(java.lang.Long); No property 'agent' found for type 'Client'
+Caused by: java.lang.IllegalArgumentException: Failed to create query for method public abstract java.util.List com.api.digicell.repository.ClientRepository.findByAgent_AgentId(java.lang.Long); No property 'userAccount' found for type 'Client'
 	at org.springframework.data.jpa.repository.query.PartTreeJpaQuery.<init>(PartTreeJpaQuery.java:106)
 	at org.springframework.data.jpa.repository.query.JpaQueryLookupStrategy$CreateQueryLookupStrategy.resolveQuery(JpaQueryLookupStrategy.java:124)
 	at org.springframework.data.jpa.repository.query.JpaQueryLookupStrategy$CreateIfNotFoundQueryLookupStrategy.resolveQuery(JpaQueryLookupStrategy.java:258)
 	at org.springframework.data.jpa.repository.query.JpaQueryLookupStrategy$AbstractQueryLookupStrategy.resolveQuery(JpaQueryLookupStrategy.java:95)
 	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.lookupQuery(QueryExecutorMethodInterceptor.java:111)
 	... 56 common frames omitted
-Caused by: org.springframework.data.mapping.PropertyReferenceException: No property 'agent' found for type 'Client'
+Caused by: org.springframework.data.mapping.PropertyReferenceException: No property 'userAccount' found for type 'Client'
 	at org.springframework.data.mapping.PropertyPath.<init>(PropertyPath.java:90)
 	at org.springframework.data.mapping.PropertyPath.create(PropertyPath.java:443)
 	at org.springframework.data.mapping.PropertyPath.create(PropertyPath.java:419)
@@ -616,7 +616,7 @@ Caused by: java.lang.IllegalArgumentException: Validation failed for query for m
 	at org.springframework.data.jpa.repository.query.JpaQueryLookupStrategy$AbstractQueryLookupStrategy.resolveQuery(JpaQueryLookupStrategy.java:95)
 	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.lookupQuery(QueryExecutorMethodInterceptor.java:111)
 	... 56 common frames omitted
-Caused by: java.lang.IllegalArgumentException: org.hibernate.query.sqm.UnknownPathException: Could not resolve attribute 'user' of 'com.api.digicell.entities.Conversation' [SELECT DISTINCT c.user FROM Conversation c WHERE c.agent.agentId = :agentId]
+Caused by: java.lang.IllegalArgumentException: org.hibernate.query.sqm.UnknownPathException: Could not resolve attribute 'user' of 'com.api.digicell.entities.Conversation' [SELECT DISTINCT c.user FROM Conversation c WHERE c.userAccount.agentId = :agentId]
 	at org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:143)
 	at org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:167)
 	at org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:173)
@@ -631,7 +631,7 @@ Caused by: java.lang.IllegalArgumentException: org.hibernate.query.sqm.UnknownPa
 	at jdk.proxy2/jdk.proxy2.$Proxy168.createQuery(Unknown Source)
 	at org.springframework.data.jpa.repository.query.SimpleJpaQuery.validateQuery(SimpleJpaQuery.java:94)
 	... 62 common frames omitted
-Caused by: org.hibernate.query.sqm.UnknownPathException: Could not resolve attribute 'user' of 'com.api.digicell.entities.Conversation' [SELECT DISTINCT c.user FROM Conversation c WHERE c.agent.agentId = :agentId]
+Caused by: org.hibernate.query.sqm.UnknownPathException: Could not resolve attribute 'user' of 'com.api.digicell.entities.Conversation' [SELECT DISTINCT c.user FROM Conversation c WHERE c.userAccount.agentId = :agentId]
 	at org.hibernate.query.hql.internal.StandardHqlTranslator.translate(StandardHqlTranslator.java:87)
 	at org.hibernate.query.internal.QueryInterpretationCacheStandardImpl.createHqlInterpretation(QueryInterpretationCacheStandardImpl.java:165)
 	at org.hibernate.query.internal.QueryInterpretationCacheStandardImpl.resolveHqlInterpretation(QueryInterpretationCacheStandardImpl.java:147)
@@ -673,9 +673,9 @@ Caused by: org.hibernate.query.sqm.PathElementException: Could not resolve attri
 2025-06-10 16:25:25,112 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-8] Resource not found: Conversation not found
 2025-06-10 16:25:36,097 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-10] Resource not found: Conversation not found
 2025-06-10 16:43:19,635 ERROR c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Error converting JSON to chat history: Cannot deserialize value of type `java.util.ArrayList<com.api.digicell.entities.ChatMessage>` from Object value (token `JsonToken.START_OBJECT`)
- at [Source: (String)"[{"role": "user", "content": "I have a question about my bill", "timestamp": "2024-03-20T10:00:00"}, {"role": "agent", "content": "I'd be happy to help with your billing question", "timestamp": "2024-03-20T10:00:05"}]"; line: 1, column: 2] (through reference chain: java.util.ArrayList[0])
+ at [Source: (String)"[{"role": "user", "content": "I have a question about my bill", "timestamp": "2024-03-20T10:00:00"}, {"role": "userAccount", "content": "I'd be happy to help with your billing question", "timestamp": "2024-03-20T10:00:05"}]"; line: 1, column: 2] (through reference chain: java.util.ArrayList[0])
 com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `java.util.ArrayList<com.api.digicell.entities.ChatMessage>` from Object value (token `JsonToken.START_OBJECT`)
- at [Source: (String)"[{"role": "user", "content": "I have a question about my bill", "timestamp": "2024-03-20T10:00:00"}, {"role": "agent", "content": "I'd be happy to help with your billing question", "timestamp": "2024-03-20T10:00:05"}]"; line: 1, column: 2] (through reference chain: java.util.ArrayList[0])
+ at [Source: (String)"[{"role": "user", "content": "I have a question about my bill", "timestamp": "2024-03-20T10:00:00"}, {"role": "userAccount", "content": "I'd be happy to help with your billing question", "timestamp": "2024-03-20T10:00:05"}]"; line: 1, column: 2] (through reference chain: java.util.ArrayList[0])
 	at com.fasterxml.jackson.databind.exc.MismatchedInputException.from(MismatchedInputException.java:59)
 	at com.fasterxml.jackson.databind.DeserializationContext.reportInputMismatch(DeserializationContext.java:1752)
 	at com.fasterxml.jackson.databind.DeserializationContext.handleUnexpectedToken(DeserializationContext.java:1526)
@@ -2141,7 +2141,7 @@ Action:
 
 Identify and stop the process that's listening on port 8080 or configure this application to listen on another port.
 
-2025-06-10 20:49:24,437 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-1] Unexpected error: Null value was assigned to a property [class com.api.digicell.entities.Agent.isActive] of primitive type: 'com.api.digicell.entities.Agent.isActive' (setter)
+2025-06-10 20:49:24,437 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-1] Unexpected error: Null value was assigned to a property [class com.api.digicell.entities.UserAccount.isActive] of primitive type: 'com.api.digicell.entities.UserAccount.isActive' (setter)
 2025-06-10 20:51:35,753 ERROR o.s.b.d.LoggingFailureAnalysisReporter [main] 
 
 ***************************

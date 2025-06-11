@@ -1,6 +1,6 @@
 package com.api.digicell.responses;
 
-import com.api.digicell.entities.Agent;
+import com.api.digicell.entities.UserAccount;
 import com.api.digicell.entities.Conversation;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,6 +15,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AgentDetailsResponse {
-    private Agent agent;
+    private UserAccount userAccount;
     private List<Conversation> conversations;
 } 

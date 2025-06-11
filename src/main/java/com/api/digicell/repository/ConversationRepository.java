@@ -2,7 +2,7 @@ package com.api.digicell.repository;
 
 import com.api.digicell.entities.Conversation;
 import com.api.digicell.entities.Client;
-import com.api.digicell.entities.Agent;
+import com.api.digicell.entities.UserAccount;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -23,5 +23,5 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
 
     Optional<Conversation> findByConversationIdAndClient_ClientId(Long conversationId, Long clientId);
 
-    Optional<Conversation> findByClientAndAgentAndEndTimeIsNull(Client client, Agent agent);
+    Optional<Conversation> findByClientAndAgentAndEndTimeIsNull(Client client, UserAccount userAccount);
 } 

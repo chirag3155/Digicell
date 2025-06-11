@@ -15,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ConversationDTO {
     private Long clientId;
-    private Long agentId;
+    private Long userId;
     private String intent;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")

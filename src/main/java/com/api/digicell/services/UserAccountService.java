@@ -1,12 +1,12 @@
 package com.api.digicell.services;
 
-import com.api.digicell.dto.AgentCreateDTO;
-import com.api.digicell.dto.AgentDetailsResponseDTO;
-import com.api.digicell.dto.AgentStatusDTO;
-import com.api.digicell.dto.AgentUpdateDTO;
+import com.api.digicell.dto.UserAccountCreateDTO;
+import com.api.digicell.dto.UserAccountDetailsResponseDTO;
+import com.api.digicell.dto.UserAccountStatusDTO;
+import com.api.digicell.dto.UserAccountUpdateDTO;
 import com.api.digicell.dto.ConversationResponseDTO;
-import com.api.digicell.entities.Agent;
-import com.api.digicell.entities.AgentStatus;
+import com.api.digicell.entities.UserAccount;
+import com.api.digicell.entities.UserAccountStatus;
 import com.api.digicell.entities.Conversation;
 import com.api.digicell.exceptions.InvalidAgentStatusException;
 import com.api.digicell.exceptions.ResourceNotFoundException;
@@ -24,8 +24,8 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class AgentService {
-    private static final Logger logger = LoggerFactory.getLogger(AgentService.class);
+public class UserAccountService {
+    private static final Logger logger = LoggerFactory.getLogger(UserAccountService.class);
     private final AgentRepository agentRepository;
     private final ConversationRepository conversationRepository;
 
@@ -34,41 +34,40 @@ public class AgentService {
      * @throws InvalidAgentStatusException if the provided status is invalid
      */
     @Transactional
-    public Agent createAgent(AgentCreateDTO createDTO) {
+    public UserAccount createAgent(UserAccountCreateDTO createDTO) {
         logger.info("Creating new agent with name: {}", createDTO.getName());
         logger.debug("Agent creation request details - name: {}, status: {}, avatarUrl: {}, labels: {}", 
             createDTO.getName(), createDTO.getStatus(), createDTO.getAvatarUrl(), createDTO.getLabels());
         
         validateAgentStatus(createDTO.getStatus());
         
-        Agent agent = new Agent();
-        agent.setName(createDTO.getName());
-        agent.setEmail(createDTO.getEmail());
-        agent.setStatus(createDTO.getStatus());
-        agent.setAvatarUrl(createDTO.getAvatarUrl());
-        agent.setLabels(createDTO.getLabels());
-        agent.setCreatedAt(LocalDateTime.now());
-        agent.setUpdatedAt(LocalDateTime.now());
+        UserAccount userAccount = new UserAccount();
+        userAccount.setUserName(createDTO.getName());
+        userAccount.setEmail(createDTO.getEmail());
+        userAccount.setStatus(createDTO.getStatus());
+        userAccount.setLabels(createDTO.getLabels());
+        userAccount.setCreatedAt(LocalDateTime.now());
+        userAccount.setUpdatedAt(LocalDateTime.now());
         
-        Agent savedAgent = agentRepository.save(agent);
-        logger.info("Successfully created agent with id: {}", savedAgent.getAgentId());
+        UserAccount savedUserAccount = agentRepository.save(userAccount);
+        logger.info("Successfully created agent with id: {}", savedUserAccount.getUserId());
         logger.debug("Created agent details - id: {}, name: {}, status: {}, createdAt: {}", 
-            savedAgent.getAgentId(), savedAgent.getName(), savedAgent.getStatus(), savedAgent.getCreatedAt());
-        return savedAgent;
+            savedUserAccount.getUserId(), savedUserAccount.getUserName(), savedUserAccount.getStatus(), savedUserAccount.getCreatedAt());
+        return savedUserAccount;
     }
 
     /**
      * Get all agents.
      * @throws RuntimeException if there's an error fetching agents
      */
-    public List<Agent> getAllAgents() {
+    public List<UserAccount> getAllAgents() {
         logger.info("Fetching all agents");
         try {
-            List<Agent> agents = agentRepository.findAll();
-            logger.info("Successfully retrieved {} agents", agents.size());
+            List<UserAccount> userAccounts = agentRepository.findAll();
+            logger.info("Successfully retrieved {} agents", userAccounts.size());
             logger.debug("Retrieved agents - count: {}, ids: {}", 
-                agents.size(), agents.stream().map(Agent::getAgentId).collect(Collectors.toList()));
-            return agents;
+                userAccounts.size(), userAccounts.stream().map(UserAccount::getUserId).collect(Collectors.toList()));
+            return userAccounts;
         } catch (Exception e) {
             logger.error("Error fetching all agents: {}", e.getMessage());
             logger.info("Error fetching all agents: {}", e.getMessage());
@@ -80,7 +79,7 @@ public class AgentService {
      * Get agent by ID.
      * @throws ResourceNotFoundException if agent is not found
      */
-    public Agent getAgentById(Long id) {
+    public UserAccount getAgentById(Long id) {
         logger.info("Fetching agent with id: {}", id);
         return agentRepository.findById(id)
                 .orElseThrow(() -> {
@@ -96,31 +95,30 @@ public class AgentService {
      * @throws InvalidAgentStatusException if the provided status is invalid
      */
     @Transactional
-    public Agent updateAgent(Long id, AgentUpdateDTO updateDTO) {
+    public UserAccount updateAgent(Long id, UserAccountUpdateDTO updateDTO) {
         logger.info("Updating agent with id: {}", id);
         logger.debug("Agent update request details - id: {}, name: {}, status: {}, avatarUrl: {}, labels: {}", 
             id, updateDTO.getName(), updateDTO.getStatus(), updateDTO.getAvatarUrl(), updateDTO.getLabels());
         
         validateAgentStatus(updateDTO.getStatus());
         
-        Agent agent = agentRepository.findById(id)
+        UserAccount userAccount = agentRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("Agent not found with id: {}", id);
                     logger.info("Failed to find agent for update with id: {}", id);
                     return new ResourceNotFoundException("Agent not found with id: " + id);
                 });
         
-        agent.setName(updateDTO.getName());
-        agent.setStatus(updateDTO.getStatus());
-        agent.setAvatarUrl(updateDTO.getAvatarUrl());
-        agent.setLabels(updateDTO.getLabels());
-        agent.setUpdatedAt(LocalDateTime.now());
+        userAccount.setUserName(updateDTO.getName());
+        userAccount.setStatus(updateDTO.getStatus());
+        userAccount.setLabels(updateDTO.getLabels());
+        userAccount.setUpdatedAt(LocalDateTime.now());
         
-        Agent updatedAgent = agentRepository.save(agent);
+        UserAccount updatedUserAccount = agentRepository.save(userAccount);
         logger.info("Successfully updated agent with id: {}", id);
         logger.debug("Updated agent details - id: {}, name: {}, status: {}, updatedAt: {}", 
-            updatedAgent.getAgentId(), updatedAgent.getName(), updatedAgent.getStatus(), updatedAgent.getUpdatedAt());
-        return updatedAgent;
+            updatedUserAccount.getAgentId(), updatedUserAccount.getName(), updatedUserAccount.getStatus(), updatedUserAccount.getUpdatedAt());
+        return updatedUserAccount;
     }
 
     /**
@@ -129,26 +127,26 @@ public class AgentService {
      * @throws InvalidAgentStatusException if the provided status is invalid
      */
     @Transactional
-    public Agent updateAgentStatus(Long id, AgentStatusDTO statusDTO) {
+    public UserAccount updateAgentStatus(Long id, UserAccountStatusDTO statusDTO) {
         logger.info("Updating status for agent with id: {}", id);
         logger.debug("Agent status update request - id: {}, new status: {}", id, statusDTO.getStatus());
         
         validateAgentStatus(statusDTO.getStatus());
         
-        Agent agent = agentRepository.findById(id)
+        UserAccount userAccount = agentRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("Agent not found with id: {}", id);
                     logger.info("Failed to find agent for status update with id: {}", id);
                     return new ResourceNotFoundException("Agent not found with id: " + id);
                 });
         
-        agent.setStatus(statusDTO.getStatus());
-        agent.setUpdatedAt(LocalDateTime.now());
-        Agent updatedAgent = agentRepository.save(agent);
+        userAccount.setStatus(statusDTO.getStatus());
+        userAccount.setUpdatedAt(LocalDateTime.now());
+        UserAccount updatedUserAccount = agentRepository.save(userAccount);
         logger.info("Successfully updated agent status to: {} for agent id: {}", statusDTO.getStatus(), id);
         logger.debug("Updated agent status details - id: {}, old status: {}, new status: {}, updatedAt: {}", 
-            id, agent.getStatus(), updatedAgent.getStatus(), updatedAgent.getUpdatedAt());
-        return updatedAgent;
+            id, userAccount.getStatus(), updatedUserAccount.getStatus(), updatedUserAccount.getUpdatedAt());
+        return updatedUserAccount;
     }
 
     /**
@@ -159,7 +157,7 @@ public class AgentService {
     @Transactional
     public void deleteAgent(Long id) {
         logger.info("Attempting to delete agent with id: {}", id);
-        Agent agent = agentRepository.findById(id)
+        UserAccount userAccount = agentRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("Agent not found with id: {}", id);
                     logger.info("Failed to find agent for deletion with id: {}", id);
@@ -174,10 +172,10 @@ public class AgentService {
             throw new IllegalStateException("Cannot delete agent with active conversations");
         }
         
-        agentRepository.delete(agent);
+        agentRepository.delete(userAccount);
         logger.info("Successfully deleted agent with id: {}", id);
         logger.debug("Deleted agent details - id: {}, name: {}, status: {}", 
-            agent.getAgentId(), agent.getName(), agent.getStatus());
+            userAccount.getAgentId(), userAccount.getName(), userAccount.getStatus());
     }
 
     /**
@@ -185,22 +183,22 @@ public class AgentService {
      * @throws ResourceNotFoundException if agent is not found
      */
     @Transactional
-    public Agent setAgentAvailable(Long id) {
+    public UserAccount setAgentAvailable(Long id) {
         logger.info("Setting agent with id: {} to AVAILABLE", id);
-        Agent agent = agentRepository.findById(id)
+        UserAccount userAccount = agentRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("Agent not found with id: {}", id);
                     logger.info("Failed to find agent for setting AVAILABLE status with id: {}", id);
                     return new ResourceNotFoundException("Agent not found with id: " + id);
                 });
         
-        agent.setStatus(AgentStatus.AVAILABLE);
-        agent.setUpdatedAt(LocalDateTime.now());
-        Agent updatedAgent = agentRepository.save(agent);
+        userAccount.setStatus(UserAccountStatus.AVAILABLE);
+        userAccount.setUpdatedAt(LocalDateTime.now());
+        UserAccount updatedUserAccount = agentRepository.save(userAccount);
         logger.info("Successfully set agent status to AVAILABLE for agent id: {}", id);
         logger.debug("Updated agent status details - id: {}, old status: {}, new status: {}, updatedAt: {}", 
-            id, agent.getStatus(), updatedAgent.getStatus(), updatedAgent.getUpdatedAt());
-        return updatedAgent;
+            id, userAccount.getStatus(), updatedUserAccount.getStatus(), updatedUserAccount.getUpdatedAt());
+        return updatedUserAccount;
     }
 
     /**
@@ -209,10 +207,10 @@ public class AgentService {
      * @throws RuntimeException if there's an error fetching details
      */
     @Transactional(readOnly = true)
-    public AgentDetailsResponseDTO getAgentDetails(Long agentId) {
+    public UserAccountDetailsResponseDTO getAgentDetails(Long agentId) {
         logger.info("Fetching agent details for id: {}", agentId);
         try {
-            Agent agent = agentRepository.findById(agentId)
+            UserAccount userAccount = agentRepository.findById(agentId)
                     .orElseThrow(() -> {
                         logger.error("Agent not found with id: {}", agentId);
                         logger.info("Failed to find agent for details with id: {}", agentId);
@@ -238,13 +236,13 @@ public class AgentService {
                     })
                     .collect(Collectors.toList());
 
-            AgentDetailsResponseDTO response = new AgentDetailsResponseDTO();
-            response.setAgent(agent);
+            UserAccountDetailsResponseDTO response = new UserAccountDetailsResponseDTO();
+            response.setUserAccount(userAccount);
             response.setConversations(conversationDTOs);
 
             logger.info("Successfully fetched agent details for id: {}", agentId);
             logger.debug("Agent details response - id: {}, name: {}, status: {}, conversation count: {}", 
-                agentId, agent.getName(), agent.getStatus(), conversationDTOs.size());
+                agentId, userAccount.getName(), userAccount.getStatus(), conversationDTOs.size());
             return response;
         } catch (Exception e) {
             logger.error("Error fetching agent details for id {}: {}", agentId, e.getMessage());
@@ -257,14 +255,14 @@ public class AgentService {
      * Validates that the provided status is a valid AgentStatus enum value.
      * @throws InvalidAgentStatusException if the status is invalid
      */
-    private void validateAgentStatus(AgentStatus status) {
+    private void validateAgentStatus(UserAccountStatus status) {
         if (status == null) {
             logger.error("Agent status cannot be null");
             throw new InvalidAgentStatusException("null");
         }
         
         try {
-            AgentStatus.valueOf(status.name());
+            UserAccountStatus.valueOf(status.name());
         } catch (IllegalArgumentException e) {
             logger.error("Invalid agent status: {}", status);
             logger.info("Invalid agent status details - status: {}", status);
@@ -273,7 +271,7 @@ public class AgentService {
     }
 
     @Transactional
-    public Agent updateAgent(Agent agent) {
-        return agentRepository.save(agent);
+    public UserAccount updateAgent(UserAccount userAccount) {
+        return agentRepository.save(userAccount);
     }
 } 

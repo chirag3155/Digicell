@@ -1,28 +1,25 @@
 package com.api.digicell.mapper;
 
-import com.api.digicell.dto.AgentUpdateDTO;
-import com.api.digicell.entities.Agent;
+import com.api.digicell.dto.UserAccountUpdateDTO;
+import com.api.digicell.entities.UserAccount;
 import org.springframework.stereotype.Component;
 
 @Component
 public class AgentMapper {
 
-    public void updateAgentFromDTO(Agent agent, AgentUpdateDTO dto) {
+    public void updateAgentFromDTO(UserAccount userAccount, UserAccountUpdateDTO dto) {
         if (dto.getName() != null) {
-            agent.setName(dto.getName());
+            userAccount.setUserName(dto.getName());
         }
         if (dto.getEmail() != null) {
-            agent.setEmail(dto.getEmail());
-        }
-        if (dto.getAvatarUrl() != null) {
-            agent.setAvatarUrl(dto.getAvatarUrl());
+            userAccount.setEmail(dto.getEmail());
         }
         if (dto.getLabels() != null) {
-            agent.setLabels(dto.getLabels());
+            userAccount.setLabels(dto.getLabels());
         }
         if (dto.getStatus() != null) {
-            agent.setStatus(dto.getStatus());
+            userAccount.setStatus(dto.getStatus());
         }
-        agent.setUpdatedAt(java.time.LocalDateTime.now());
+        userAccount.setUpdatedAt(java.time.LocalDateTime.now());
     }
 } 

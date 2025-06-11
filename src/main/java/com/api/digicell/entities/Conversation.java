@@ -23,8 +23,8 @@ public class Conversation {
     private Client client;
 
     @ManyToOne
-    @JoinColumn(name = "agent_id", nullable = false)
-    private Agent agent;
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserAccount userAccount;
 
     @Column(nullable = false)
     private String intent;

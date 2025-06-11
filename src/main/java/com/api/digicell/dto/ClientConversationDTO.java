@@ -7,8 +7,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 @Data
 public class ClientConversationDTO {
     private Long conversationId;
-    private Long agentId;
-    private String agentName;
+    private Long userId;
+    private String userName;
     private String intent;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")

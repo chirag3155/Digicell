@@ -1,11 +1,11 @@
 package com.api.digicell.dto;
 
-import com.api.digicell.entities.Agent;
+import com.api.digicell.entities.UserAccount;
 import lombok.Data;
 import java.util.List;
 
 @Data
-public class AgentDetailsResponseDTO {
-    private Agent agent;
+public class UserAccountDetailsResponseDTO {
+    private UserAccount userAccount;
     private List<ConversationResponseDTO> conversations;
 } 

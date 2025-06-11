@@ -17,8 +17,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 public class ConvoDto {
 
     private Long conversationId;
-    private Long agentId;
-    private String agentName;
+    private Long userId;
+    private String userName;
     private String intent;
     private String chatSummary;
 

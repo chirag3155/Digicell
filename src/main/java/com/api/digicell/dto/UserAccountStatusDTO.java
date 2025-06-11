@@ -1,6 +1,6 @@
 package com.api.digicell.dto;
 
-import com.api.digicell.entities.AgentStatus;
+import com.api.digicell.entities.UserAccountStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,7 +10,7 @@ import jakarta.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AgentStatusDTO {
+public class UserAccountStatusDTO {
     @NotNull(message = "Status is required")
-    private AgentStatus status;
+    private UserAccountStatus status;
 } 
