@@ -117,7 +117,7 @@ public class UserAccountService {
         UserAccount updatedUserAccount = agentRepository.save(userAccount);
         logger.info("Successfully updated agent with id: {}", id);
         logger.debug("Updated agent details - id: {}, name: {}, status: {}, updatedAt: {}", 
-            updatedUserAccount.getAgentId(), updatedUserAccount.getName(), updatedUserAccount.getStatus(), updatedUserAccount.getUpdatedAt());
+            updatedUserAccount.getUserId(), updatedUserAccount.getUserName(), updatedUserAccount.getStatus(), updatedUserAccount.getUpdatedAt());
         return updatedUserAccount;
     }
 
@@ -175,7 +175,7 @@ public class UserAccountService {
         agentRepository.delete(userAccount);
         logger.info("Successfully deleted agent with id: {}", id);
         logger.debug("Deleted agent details - id: {}, name: {}, status: {}", 
-            userAccount.getAgentId(), userAccount.getName(), userAccount.getStatus());
+            userAccount.getUserId(), userAccount.getUserName(), userAccount.getStatus());
     }
 
     /**
@@ -242,7 +242,7 @@ public class UserAccountService {
 
             logger.info("Successfully fetched agent details for id: {}", agentId);
             logger.debug("Agent details response - id: {}, name: {}, status: {}, conversation count: {}", 
-                agentId, userAccount.getName(), userAccount.getStatus(), conversationDTOs.size());
+                agentId, userAccount.getUserName(), userAccount.getStatus(), conversationDTOs.size());
             return response;
         } catch (Exception e) {
             logger.error("Error fetching agent details for id {}: {}", agentId, e.getMessage());
