@@ -17,16 +17,15 @@ public class SocketConfig {
     public static final int STATUS_UNAVAILABLE = 501;
 
     // Event Names
-    public static final String EVENT_AGENT_REQUEST = "agent_request";
-    public static final String EVENT_AGENT_ACK = "agent_ack";
-    // public static final String EVENT_AGENT_ACK_CLIENT = "agent_ack_client";
+    public static final String EVENT_AGENT_REQUEST = "request_agent";
+    public static final String EVENT_AGENT_ACK = "agent_acknowledgement";
     public static final String EVENT_NEW_CLIENT_REQ = "new_client_req";
     
     // Message Events
-    public static final String EVENT_MESSAGE_REQ = "message_req";
+    public static final String EVENT_MESSAGE_REQ ="conversation_message";
     public static final String EVENT_MESSAGE_REQ_AGENT = "message_req_agent";
     public static final String EVENT_MESSAGE_RESP_AGENT = "message_resp_agent";
-    public static final String EVENT_MESSAGE_RESP = "message_resp";
+    public static final String EVENT_MESSAGE_RESP = "agent_response";
     
     // Chat Closure Events
     public static final String EVENT_CLOSE_AGENT = "close_agent";
@@ -35,6 +34,7 @@ public class SocketConfig {
     
     // Agent Status Events
     public static final String EVENT_PING = "ping";
+    public static final String EVENT_PONG = "pong";
     public static final String EVENT_PING_RESPONSE = "ping_response";
     public static final String EVENT_OFFLINE_REQ = "offline_req";
 

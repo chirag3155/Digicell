@@ -2,13 +2,18 @@ package com.api.digicell.model;
 
 import lombok.Data;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 public class ChatAgent {
     private String agentId;
+    private String agentName;
+    private String agentLabel;
     private int currentUserCount;
     private boolean offlineRequested;
     private long lastPingTime;
+    private Set<String> activeUsers = new HashSet<>();
 
     public ChatAgent(String agentId) {
         this.agentId = agentId;
@@ -23,6 +28,18 @@ public class ChatAgent {
 
     public boolean isPingTimeout(long timeoutMillis) {
         return (System.currentTimeMillis() - lastPingTime) > timeoutMillis;
+    }
+
+    public void addUser(String userId) {
+        activeUsers.add(userId);
+    }
+
+    public void removeUser(String userId) {
+        activeUsers.remove(userId);
+    }
+
+    public Set<String> getActiveUsers() {
+        return activeUsers;
     }
 
     public static class AgentComparator implements Comparator<ChatAgent> {

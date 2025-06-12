@@ -5,9 +5,11 @@ import java.time.LocalDateTime;
 
 @Data
 public class ChatMessage {
-    private LocalDateTime timestamp;
-    private String content;
-    private String role; // "agent" or "user"
     private String roomId;
-    private String senderId;
+    private String userId;
+    private String content;
+    private String messageId;
+    private String messageType;
+    private LocalDateTime timestamp;
+    private String role;  // "user" or "agent"
 } 

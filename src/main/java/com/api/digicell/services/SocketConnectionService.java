@@ -14,6 +14,7 @@ public class SocketConnectionService {
     private final SocketConfig socketConfig;
     private String chatModuleSocketId;
     private final Map<String, String> agentSocketMap;
+    private Map<String, String> agentSocketIds = new ConcurrentHashMap<>();
 
     public SocketConnectionService(SocketConfig socketConfig) {
         this.socketConfig = socketConfig;
@@ -73,9 +74,11 @@ public class SocketConnectionService {
             return;
         }
 
-        agentSocketMap.put(client.getSessionId().toString(), agentId);
+        String socketId = client.getSessionId().toString();
+        agentSocketMap.put(socketId, agentId);
+        agentSocketIds.put(agentId, socketId);
         log.info("Agent connected successfully. SocketId: {}, AgentId: {}, Type: {}", 
-                client.getSessionId(), agentId, clientType);
+                socketId, agentId, clientType);
     }
 
     public String getChatModuleSocketId() {
@@ -93,6 +96,7 @@ public class SocketConnectionService {
         } else {
             String agentId = agentSocketMap.remove(socketId);
             if (agentId != null) {
+                agentSocketIds.remove(agentId);
                 log.info("Agent disconnected. SocketId: {}, AgentId: {}", socketId, agentId);
             }
         }
@@ -100,5 +104,17 @@ public class SocketConnectionService {
 
     public boolean isChatModuleConnected() {
         return chatModuleSocketId != null;
+    }
+
+    public String getAgentSocketId(String agentId) {
+        return agentSocketIds.get(agentId);
+    }
+
+    public void setAgentSocketId(String agentId, String socketId) {
+        agentSocketIds.put(agentId, socketId);
+    }
+
+    public void removeAgentSocketId(String agentId) {
+        agentSocketIds.remove(agentId);
     }
 } 
