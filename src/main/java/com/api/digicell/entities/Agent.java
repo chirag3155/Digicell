@@ -31,12 +31,13 @@ public class Agent {
     @Column(name = "labels", columnDefinition = "json")
     private List<String> labels;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
-    private AgentStatus status = AgentStatus.AVAILABLE;
-
+    @Column(nullable = false)
+    private AgentStatus status = AgentStatus.ONLINE;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")

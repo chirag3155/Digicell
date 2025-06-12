@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -116,26 +117,20 @@ public class AgentService {
      * Update agent status.
      */
     @Transactional
-    public Agent updateAgentStatus(Long id, AgentStatusDTO statusDTO) {
-        logger.info("Updating status for agent with id: {}", id);
-        logger.debug("Agent status update request - id: {}, new status: {}", id, statusDTO.getStatus());
+    public Agent updateAgentStatus(Long agentId, AgentStatusDTO statusDTO) {
+        logger.info("Updating status for agent with id: {}", agentId);
+        logger.debug("Agent status update request - id: {}, new status: {}", agentId, statusDTO.getStatus());
         
         validateAgentStatus(statusDTO.getStatus());
         
-        Agent agent = agentRepository.findById(id)
-                .orElseThrow(() -> {
-                    logger.error("Agent not found with id: {}", id);
-                    logger.debug("Failed to find agent for status update with id: {}", id);
-                    return new ResourceNotFoundException("Agent not found with id: " + id);
-                });
-        
-        agent.setStatus(statusDTO.getStatus());
-        agent.setUpdatedAt(LocalDateTime.now());
-        Agent updatedAgent = agentRepository.save(agent);
-        logger.info("Successfully updated agent status to: {} for agent id: {}", statusDTO.getStatus(), id);
-        logger.debug("Updated agent status details - id: {}, old status: {}, new status: {}, updatedAt: {}", 
-            id, agent.getStatus(), updatedAgent.getStatus(), updatedAgent.getUpdatedAt());
-        return updatedAgent;
+        Optional<Agent> agentOpt = agentRepository.findById(agentId);
+        if (agentOpt.isPresent()) {
+            Agent agent = agentOpt.get();
+            agent.setStatus(statusDTO.getStatus());
+            agent.setUpdatedAt(LocalDateTime.now());
+            return agentRepository.save(agent);
+        }
+        throw new RuntimeException("Agent not found with id: " + agentId);
     }
 
     /**
@@ -166,25 +161,35 @@ public class AgentService {
     }
 
     /**
-     * Set agent status to AVAILABLE.
+     * Set agent status to ONLINE.
      */
     @Transactional
-    public Agent setAgentAvailable(Long id) {
-        logger.info("Setting agent with id: {} to AVAILABLE", id);
-        Agent agent = agentRepository.findById(id)
-                .orElseThrow(() -> {
-                    logger.error("Agent not found with id: {}", id);
-                    logger.debug("Failed to find agent for setting AVAILABLE status with id: {}", id);
-                    return new ResourceNotFoundException("Agent not found with id: " + id);
-                });
-        
-        agent.setStatus(AgentStatus.AVAILABLE);
-        agent.setUpdatedAt(LocalDateTime.now());
-        Agent updatedAgent = agentRepository.save(agent);
-        logger.info("Successfully set agent status to AVAILABLE for agent id: {}", id);
-        logger.debug("Updated agent status details - id: {}, old status: {}, new status: {}, updatedAt: {}", 
-            id, agent.getStatus(), updatedAgent.getStatus(), updatedAgent.getUpdatedAt());
-        return updatedAgent;
+    public Agent setAgentAvailable(Long agentId) {
+        logger.info("Setting agent with id: {} to ONLINE", agentId);
+        Optional<Agent> agentOpt = agentRepository.findById(agentId);
+        if (agentOpt.isPresent()) {
+            Agent agent = agentOpt.get();
+            agent.setStatus(AgentStatus.ONLINE);
+            agent.setUpdatedAt(LocalDateTime.now());
+            return agentRepository.save(agent);
+        }
+        throw new RuntimeException("Agent not found with id: " + agentId);
+    }
+
+    /**
+     * Set agent status to OFFLINE.
+     */
+    @Transactional
+    public Agent setAgentOffline(Long agentId) {
+        logger.info("Setting agent with id: {} to OFFLINE", agentId);
+        Optional<Agent> agentOpt = agentRepository.findById(agentId);
+        if (agentOpt.isPresent()) {
+            Agent agent = agentOpt.get();
+            agent.setStatus(AgentStatus.OFFLINE);
+            agent.setUpdatedAt(LocalDateTime.now());
+            return agentRepository.save(agent);
+        }
+        throw new RuntimeException("Agent not found with id: " + agentId);
     }
 
     /**
@@ -252,5 +257,15 @@ public class AgentService {
             logger.debug("Invalid agent status details - status: {}", status);
             throw new InvalidAgentStatusException(status.name());
         }
+    }
+
+    public boolean canAgentGoOffline(Long agentId) {
+        Optional<Agent> agentOpt = agentRepository.findById(agentId);
+        if (agentOpt.isPresent()) {
+            Agent agent = agentOpt.get();
+            // Add any additional checks here if needed
+            return true;
+        }
+        return false;
     }
 } 

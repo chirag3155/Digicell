@@ -2,6 +2,7 @@ package com.api.digicell.dto;
 
 import com.api.digicell.entities.AgentStatus;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -10,8 +11,9 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
+@Builder
 @AllArgsConstructor
+@NoArgsConstructor
 public class AgentCreateDTO {
     @NotBlank(message = "Name is required")
     private String name;
@@ -21,5 +23,6 @@ public class AgentCreateDTO {
     private List<String> labels;
     
     @NotNull(message = "Status is required")
-    private AgentStatus status = AgentStatus.AVAILABLE; // Default status
+    @Builder.Default
+    private AgentStatus status = AgentStatus.ONLINE;
 } 
