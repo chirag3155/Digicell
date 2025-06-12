@@ -12,6 +12,7 @@ public class ClientConvoDto {
     private Long userId;
     private String userName;
     private String intent;
+    private List<String> labels;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime startTime;

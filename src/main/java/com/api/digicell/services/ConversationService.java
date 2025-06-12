@@ -157,7 +157,6 @@ public class ConversationService {
             userAccount.getEmail(),
             userAccount.getPhoneNumber(),
             userAccount.isActive(),
-            userAccount.getLabels(),
             userAccount.getStatus(),
             userAccount.getCreatedBy(),
             userAccount.getCreatedAt(),

@@ -41,9 +41,6 @@ public class UserAccount {
     @Column(name = "is_active", nullable = false)
     private boolean isActive = false;
 
-    @Column(name = "labels", columnDefinition = "json")
-    private List<String> labels;
-
     @Enumerated(EnumType.STRING)
     private UserAccountStatus status = UserAccountStatus.AVAILABLE;
 

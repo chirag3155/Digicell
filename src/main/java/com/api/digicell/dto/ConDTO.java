@@ -25,7 +25,9 @@ public class ConDTO {
 
     private String chatSummary;
 
-     /**
+    private List<String> labels;
+
+        /**
      * Stores the chronological list of exchanged messages as JSON in DB using {@link ChatHistoryConverter}.
      * The structure is List<List<ChatMessage>> where the outer list represents conversation sessions
      * and the inner list contains the messages within each session.

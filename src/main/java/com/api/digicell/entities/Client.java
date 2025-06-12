@@ -41,6 +41,9 @@ public class Client {
     @Column(name = "is_assigned")
     private Boolean isAssigned = Boolean.FALSE;
 
+    @Column(name = "labels", columnDefinition = "json")
+    private List<String> labels;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")

@@ -138,4 +138,28 @@ public class ClientController {
                     .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error fetching client conversations", null));
         }
     }
+
+    /**
+     * Get clients by labels.
+     */
+    @Operation(
+        summary = "Get clients by labels",
+        description = "Retrieves a list of clients that have any of the specified labels",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
+    @GetMapping("/by-labels")
+    public ResponseEntity<ApiResponse<List<Client>>> getClientsByLabels(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @RequestParam("labels") List<String> labels) {
+        logger.info("Received request to get clients with labels: {}", labels);
+        try {
+            List<Client> clients = clientService.getClientsByLabels(labels);
+            logger.debug("Found {} clients with labels {}", clients.size(), labels);
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Clients fetched successfully", clients));
+        } catch (Exception e) {
+            logger.error("Error fetching clients with labels {}: {}", labels, e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error fetching clients", null));
+        }
+    }
 } 

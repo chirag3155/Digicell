@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.util.stream.Collectors;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class ClientService {
@@ -41,6 +42,63 @@ public class ClientService {
 
     public List<Client> getClientsByAssignmentStatus(boolean isAssigned) {
         return clientRepository.findByIsAssigned(isAssigned);
+    }
+
+    /**
+     * Returns a list of clients that have the specified label.
+     * @param label The label to search for
+     * @return List of clients with the specified label
+     */
+    public List<Client> getClientsByLabel(String label) {
+        logger.info("Fetching clients with label: {}", label);
+        try {
+            List<Client> clients = clientRepository.findAll().stream()
+                .filter(client -> client.getLabels() != null && client.getLabels().contains(label))
+                .collect(Collectors.toList());
+            
+            logger.debug("Found {} clients with label {}", clients.size(), label);
+            return clients;
+        } catch (Exception e) {
+            logger.error("Error fetching clients with label {}: {}", label, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * Returns a list of clients that have any of the specified labels.
+     * @param labels The list of labels to search for
+     * @return List of clients that have any of the specified labels
+     * @throws IllegalArgumentException if labels list is null or empty
+     */
+    public List<Client> getClientsByLabels(List<String> labels) {
+        logger.info("Fetching clients with labels: {}", labels);
+        
+        // Edge case 1: Null or empty labels list
+        if (labels == null || labels.isEmpty()) {
+            logger.warn("Labels list is null or empty");
+            throw new IllegalArgumentException("Labels list cannot be null or empty");
+        }
+
+
+        try {
+            Set<String> labelSet = Set.copyOf(labels);
+            List<Client> clients = clientRepository.findAll().stream()
+                .filter(client -> client.getLabels() != null && 
+                       client.getLabels().stream().anyMatch(labelSet::contains))
+                .collect(Collectors.toList());
+            
+            // Edge case 3: No clients found
+            if (clients.isEmpty()) {
+                logger.info("No clients found with labels: {}", labels);
+            } else {
+                logger.debug("Found {} clients with labels {}", clients.size(), labels);
+            }
+            
+            return clients;
+        } catch (Exception e) {
+            logger.error("Error fetching clients with labels {}: {}", labels, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**

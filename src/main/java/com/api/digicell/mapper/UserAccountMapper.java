@@ -14,9 +14,6 @@ public class UserAccountMapper {
         if (dto.getEmail() != null) {
             userAccount.setEmail(dto.getEmail());
         }
-        if (dto.getLabels() != null) {
-            userAccount.setLabels(dto.getLabels());
-        }
         if (dto.getStatus() != null) {
             userAccount.setStatus(dto.getStatus());
         }

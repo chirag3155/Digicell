@@ -21,9 +21,6 @@ public class UserAccountCreateDTO {
     @Email(message = "Please provide a valid email address")
     private String email;
     
-    private String avatarUrl;
-    
-    private List<String> labels;
 
     @NotNull(message = "Status is required")
     private UserAccountStatus status = UserAccountStatus.AVAILABLE; // Default status

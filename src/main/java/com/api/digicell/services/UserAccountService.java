@@ -39,7 +39,7 @@ public class UserAccountService {
     public UserAccount createUser(UserAccountCreateDTO createDTO) {
         logger.info("Creating new user with name: {}", createDTO.getName());
         logger.debug("user creation request details - name: {}, status: {}, avatarUrl: {}, labels: {}", 
-            createDTO.getName(), createDTO.getStatus(), createDTO.getAvatarUrl(), createDTO.getLabels());
+            createDTO.getName(), createDTO.getStatus());
         
         validateuserStatus(createDTO.getStatus());
         
@@ -47,7 +47,7 @@ public class UserAccountService {
         userAccount.setUserName(createDTO.getName());
         userAccount.setEmail(createDTO.getEmail());
         userAccount.setStatus(createDTO.getStatus());
-        userAccount.setLabels(createDTO.getLabels());
+        // userAccount.setLabels(createDTO.getLabels());
         userAccount.setCreatedAt(LocalDateTime.now());
         userAccount.setUpdatedAt(LocalDateTime.now());
         
@@ -100,7 +100,7 @@ public class UserAccountService {
     public UserAccount updateUser(Long id, UserAccountUpdateDTO updateDTO) {
         logger.info("Updating user with id: {}", id);
         logger.debug("user update request details - id: {}, name: {}, status: {}, avatarUrl: {}, labels: {}", 
-            id, updateDTO.getName(), updateDTO.getStatus(), updateDTO.getAvatarUrl(), updateDTO.getLabels());
+            id, updateDTO.getName(), updateDTO.getStatus());
         
         validateuserStatus(updateDTO.getStatus());
         
@@ -113,7 +113,7 @@ public class UserAccountService {
         
         userAccount.setUserName(updateDTO.getName());
         userAccount.setStatus(updateDTO.getStatus());
-        userAccount.setLabels(updateDTO.getLabels());
+        // userAccount.setLabels(updateDTO.getLabels());
         userAccount.setUpdatedAt(LocalDateTime.now());
         
         UserAccount updatedUserAccount = userRepository.save(userAccount);
@@ -245,7 +245,7 @@ public class UserAccountService {
             userAccountResponseDTO.setEmail(userAccount.getEmail());
             userAccountResponseDTO.setPhoneNumber(userAccount.getPhoneNumber());
             userAccountResponseDTO.setActive(userAccount.isActive());
-            userAccountResponseDTO.setLabels(userAccount.getLabels());
+            // userAccountResponseDTO.setLabels(userAccount.getLabels());
             userAccountResponseDTO.setStatus(userAccount.getStatus());
             userAccountResponseDTO.setCreatedBy(userAccount.getCreatedBy());
             userAccountResponseDTO.setCreatedAt(userAccount.getCreatedAt()); 

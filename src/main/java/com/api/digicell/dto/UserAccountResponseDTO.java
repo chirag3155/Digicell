@@ -18,7 +18,6 @@ public class UserAccountResponseDTO {
     private String email;
     private String phoneNumber;
     private boolean isActive;
-    private List<String> labels;
     private UserAccountStatus status;
     private Long createdBy;
     

@@ -18,9 +18,5 @@ public class UserAccountUpdateDTO {
     @Email(message = "Invalid email format")
     private String email;
     
-    private String avatarUrl;
-    
-    private List<String> labels;
-    
     private UserAccountStatus status;
 } 

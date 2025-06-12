@@ -19,6 +19,8 @@ public class ConversationResponseDTO {
     private Long userId;
     private String userName;
     private String intent;
+
+    private List<String> labels;
     private String chatSummary;
     
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
