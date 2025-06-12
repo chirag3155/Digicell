@@ -180,8 +180,8 @@ public class GlobalExceptionHandler {
     /**
      * Handles InvalidAgentStatusException - 400 Bad Request
      */
-    @ExceptionHandler(InvalidAgentStatusException.class)
-    public ResponseEntity<ApiResponse<Void>> handleInvalidAgentStatusException(InvalidAgentStatusException ex) {
+    @ExceptionHandler(InvalidUserStatusException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidAgentStatusException(InvalidUserStatusException ex) {
         logger.error("Invalid agent status: {}", ex.getMessage());
         logger.debug("Invalid agent status details - cause: {}", ex.getCause());
         

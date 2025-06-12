@@ -5,7 +5,7 @@ import com.api.digicell.entities.UserAccount;
 import org.springframework.stereotype.Component;
 
 @Component
-public class AgentMapper {
+public class UserAccountMapper {
 
     public void updateAgentFromDTO(UserAccount userAccount, UserAccountUpdateDTO dto) {
         if (dto.getName() != null) {

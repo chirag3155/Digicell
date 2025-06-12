@@ -35,8 +35,8 @@ public class ClientService {
                 .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + id));
     }
 
-    public List<Client> getClientsByAgent(Long agentId) {
-        return clientRepository.findByAgent_AgentId(agentId);
+    public List<Client> getClientsByUser(Long userId) {
+        return clientRepository.findByUserAccount_UserId(userId);
     }
 
     public List<Client> getClientsByAssignmentStatus(boolean isAssigned) {
@@ -59,8 +59,8 @@ public class ClientService {
                     .map(conv -> {
                         ClientConvoDto dto = new ClientConvoDto();
                         dto.setConversationId(conv.getConversationId());
-                        dto.setAgentId(conv.getUserAccount().getAgentId());
-                        dto.setAgentName(conv.getUserAccount().getName());
+                        dto.setUserId(conv.getUserAccount().getUserId());
+                        dto.setUserName(conv.getUserAccount().getUserName());
                         dto.setStartTime(conv.getStartTime());
                         dto.setEndTime(conv.getEndTime());
                         dto.setIntent(conv.getIntent());
@@ -94,8 +94,8 @@ public class ClientService {
                 .map(conv -> {
                     ConvoDto dto = new ConvoDto();
                     dto.setConversationId(conv.getConversationId());
-                    dto.setAgentId(conv.getUserAccount().getAgentId());
-                    dto.setAgentName(conv.getUserAccount().getName());
+                    dto.setUserId(conv.getUserAccount().getUserId());
+                    dto.setUserName(conv.getUserAccount().getUserName());
                     dto.setStartTime(conv.getStartTime());
                     dto.setEndTime(conv.getEndTime());
                     dto.setIntent(conv.getIntent());

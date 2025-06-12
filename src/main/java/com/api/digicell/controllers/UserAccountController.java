@@ -6,7 +6,7 @@ import com.api.digicell.dto.UserAccountStatusDTO;
 import com.api.digicell.dto.UserAccountUpdateDTO;
 import com.api.digicell.entities.UserAccount;
 import com.api.digicell.entities.Client;
-import com.api.digicell.exceptions.InvalidAgentStatusException;
+import com.api.digicell.exceptions.InvalidUserStatusException;
 import com.api.digicell.exceptions.ResourceNotFoundException;
 import com.api.digicell.responses.ApiResponse;
 import com.api.digicell.services.UserAccountService;
@@ -22,7 +22,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import com.api.digicell.responses.ResponseUtil;
 import org.springframework.transaction.annotation.Transactional;
-import com.api.digicell.mapper.AgentMapper;
+import com.api.digicell.mapper.UserAccountMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,245 +30,245 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/agents")
+@RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 @Validated
-@Tag(name = "Agent Management", description = "APIs for managing agents")
+@Tag(name = "User Management", description = "APIs for managing users")
 @SecurityRequirement(name = "bearerAuth")
 public class UserAccountController {
 
     private final UserAccountService userAccountService;
     private final ClientService clientService;
-    private final AgentMapper agentMapper;
+    private final UserAccountMapper userAccountMapper;
     private static final Logger logger = LoggerFactory.getLogger(UserAccountController.class);
 
     /**
-     * Create a new agent.
+     * Create a new user.
      */
     @Operation(
-        summary = "Create a new agent",
-        description = "Creates a new agent with the provided information. Email and name are required fields.",
+        summary = "Create a new user",
+        description = "Creates a new user with the provided information. Email and name are required fields.",
         security = { @SecurityRequirement(name = "bearerAuth") }
     )
     @PostMapping
     @Transactional
-    public ResponseEntity<ApiResponse<UserAccount>> createAgent(
+    public ResponseEntity<ApiResponse<UserAccount>> createUser(
             @RequestHeader(name = "Authorization", required = false) String authToken,
             @Valid @RequestBody UserAccountCreateDTO createDTO) {
-        logger.info("Creating new agent with name: {}", createDTO.getName());
+        logger.info("Creating new user with name: {}", createDTO.getName());
         try {
-            UserAccount userAccount = userAccountService.createAgent(createDTO);
-            logger.info("Successfully created agent with id: {}", userAccount.getUserId());
+            UserAccount userAccount = userAccountService.createUser(createDTO);
+            logger.info("Successfully created user with id: {}", userAccount.getUserId());
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(new ApiResponse<>(HttpStatus.CREATED.value(), "Agent created successfully", userAccount));
-        } catch (InvalidAgentStatusException e) {
-            logger.error("Invalid agent status while creating agent: {}", e.getMessage());
+                    .body(new ApiResponse<>(HttpStatus.CREATED.value(), "User created successfully", userAccount));
+        } catch (InvalidUserStatusException e) {
+            logger.error("Invalid user status while creating user: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
         } catch (Exception e) {
-            logger.error("Error creating agent: {}", e.getMessage());
+            logger.error("Error creating user: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error creating agent", null));
+                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error creating user", null));
         }
     }
 
     /**
-     * List all agents.
+     * List all users.
      */
     @Operation(
-        summary = "Get all agents",
-        description = "Retrieves a list of all agents",
+        summary = "Get all users",
+        description = "Retrieves a list of all users",
         security = { @SecurityRequirement(name = "bearerAuth") }
     )
     @GetMapping
-    public ResponseEntity<ApiResponse<List<UserAccount>>> getAllAgents(
+    public ResponseEntity<ApiResponse<List<UserAccount>>> getAllUsers(
             @RequestHeader(name = "Authorization", required = false) String authToken) {
-        logger.info("Fetching all agents");
+        logger.info("Fetching all users");
         try {
-            List<UserAccount> userAccounts = userAccountService.getAllAgents();
-            logger.info("Successfully retrieved {} agents", userAccounts.size());
-            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agents retrieved successfully", userAccounts));
+            List<UserAccount> userAccounts = userAccountService.getAllUsers();
+            logger.info("Successfully retrieved {} users", userAccounts.size());
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Users retrieved successfully", userAccounts));
         } catch (Exception e) {
-            logger.error("Error fetching agents: {}", e.getMessage());
+            logger.error("Error fetching users: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error fetching agents", null));
+                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error fetching users", null));
         }
     }
 
     /**
-     * Get agent by ID.
+     * Get user by ID.
      */
     @Operation(
-        summary = "Get agent by ID",
-        description = "Retrieves agent details by their ID",
+        summary = "Get user by ID",
+        description = "Retrieves user details by their ID",
         security = { @SecurityRequirement(name = "bearerAuth") }
     )
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<UserAccount>> getAgentById(
+    @GetMapping("/{user_id}")
+    public ResponseEntity<ApiResponse<UserAccount>> getUserById(
             @RequestHeader(name = "Authorization", required = false) String authToken,
-            @PathVariable @Positive Long id) {
-        logger.info("Fetching agent with id: {}", id);
+            @PathVariable @Positive Long user_id) {
+        logger.info("Fetching user with id: {}", user_id);
         try {
-            UserAccount userAccount = userAccountService.getAgentById(id);
-            logger.info("Successfully retrieved agent with id: {}", id);
-            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agent retrieved successfully", userAccount));
+            UserAccount userAccount = userAccountService.getUserById(user_id);
+            logger.info("Successfully retrieved user with id: {}", user_id);
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "User retrieved successfully", userAccount));
         } catch (ResourceNotFoundException e) {
-            logger.error("Agent not found with id: {}", id);
+            logger.error("User not found with id: {}", user_id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null));
         } catch (Exception e) {
-            logger.error("Error fetching agent with id {}: {}", id, e.getMessage());
+            logger.error("Error fetching user with id {}: {}", user_id, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error fetching agent", null));
+                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error fetching user", null));
         }
     }
 
     /**
-     * Update agent details.
+     * Update user details.
      */
     @Operation(
-        summary = "Update an existing agent",
-        description = "Updates the details of an existing agent by ID",
+        summary = "Update an existing user",
+        description = "Updates the details of an existing user by user_id",
         security = { @SecurityRequirement(name = "bearerAuth") }
     )
-    @PutMapping("/{id}")
+    @PutMapping("/{user_id}")
     @Transactional
-    public ResponseEntity<ApiResponse<UserAccount>> updateAgent(
+    public ResponseEntity<ApiResponse<UserAccount>> updateUser(
             @RequestHeader(name = "Authorization", required = false) String authToken,
-            @PathVariable @Positive Long id,
+            @PathVariable @Positive Long user_id,
             @Valid @RequestBody UserAccountUpdateDTO updateDTO) {
-        logger.info("Updating agent with id: {}", id);
+        logger.info("Updating user with user_id: {}", user_id);
         try {
-            UserAccount updatedUserAccount = userAccountService.updateAgent(id, updateDTO);
-            logger.info("Successfully updated agent with id: {}", id);
-            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agent updated successfully", updatedUserAccount));
+            UserAccount updatedUserAccount = userAccountService.updateUser(user_id, updateDTO);
+            logger.info("Successfully updated user with id: {}", user_id);
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "User updated successfully", updatedUserAccount));
         } catch (ResourceNotFoundException e) {
-            logger.error("Agent not found with id: {}", id);
+            logger.error("User not found with id: {}", user_id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null));
-        } catch (InvalidAgentStatusException e) {
-            logger.error("Invalid agent status while updating agent: {}", e.getMessage());
+        } catch (InvalidUserStatusException e) {
+            logger.error("Invalid user status while updating user: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
         } catch (Exception e) {
-            logger.error("Error updating agent with id {}: {}", id, e.getMessage());
+            logger.error("Error updating user with id {}: {}", user_id, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error updating agent", null));
+                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error updating user", null));
         }
     }
 
     /**
-     * Update agent status.
+     * Update user status.
      */
     @Operation(
-        summary = "Update agent status",
-        description = "Updates the status of an existing agent",
+        summary = "Update user status",
+        description = "Updates the status of an existing user",
         security = { @SecurityRequirement(name = "bearerAuth") }
     )
-    @PatchMapping("/{id}/status")
+    @PatchMapping("/{user_id}/status")
     @Transactional
-    public ResponseEntity<ApiResponse<UserAccount>> updateAgentStatus(
+    public ResponseEntity<ApiResponse<UserAccount>> updateUserStatus(
             @RequestHeader(name = "Authorization", required = false) String authToken,
-            @PathVariable @Positive Long id,
+            @PathVariable @Positive Long user_id,
             @Valid @RequestBody UserAccountStatusDTO statusDTO) {
-        logger.info("Updating status for agent with id: {}", id);
+        logger.info("Updating status for user with user_id: {}", user_id);
         try {
-            UserAccount updatedUserAccount = userAccountService.updateAgentStatus(id, statusDTO);
-            logger.info("Successfully updated agent status to: {} for agent id: {}", statusDTO.getStatus(), id);
-            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agent status updated successfully", updatedUserAccount));
+            UserAccount updatedUserAccount = userAccountService.updateUserStatus(user_id, statusDTO);
+            logger.info("Successfully updated user status to: {} for user id: {}", statusDTO.getStatus(), user_id);
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "User status updated successfully", updatedUserAccount));
         } catch (ResourceNotFoundException e) {
-            logger.error("Agent not found with id: {}", id);
+            logger.error("User not found with user_id: {}", user_id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null));
-        } catch (InvalidAgentStatusException e) {
-            logger.error("Invalid agent status while updating status: {}", e.getMessage());
+        } catch (InvalidUserStatusException e) {
+            logger.error("Invalid user status while updating status: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
         } catch (Exception e) {
-            logger.error("Error updating agent status for id {}: {}", id, e.getMessage());
+            logger.error("Error updating user status for user_id {}: {}", user_id, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error updating agent status", null));
+                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error updating user status", null));
         }
     }
 
     /**
-     * Delete agent.
+     * Delete user.
      */
     @Operation(
-        summary = "Delete an agent",
-        description = "Deletes an agent by their ID",
+        summary = "Delete an user",
+        description = "Deletes an user by their ID",
         security = { @SecurityRequirement(name = "bearerAuth") }
     )
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{user_id}")
     @Transactional
-    public ResponseEntity<ApiResponse<Void>> deleteAgent(
+    public ResponseEntity<ApiResponse<Void>> deleteUser(
             @RequestHeader(name = "Authorization", required = false) String authToken,
-            @PathVariable @Positive Long id) {
-        logger.info("Deleting agent with id: {}", id);
+            @PathVariable @Positive Long user_id) {
+        logger.info("Deleting user with user_id: {}", user_id);
         try {
-            userAccountService.deleteAgent(id);
-            logger.info("Successfully deleted agent with id: {}", id);
-            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agent deleted successfully", null));
+            userAccountService.deleteUser(user_id);
+            logger.info("Successfully deleted user with id: {}", user_id);
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "User deleted successfully", null));
         } catch (ResourceNotFoundException e) {
-            logger.error("Agent not found with id: {}", id);
+            logger.error("User not found with id: {}", user_id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null));
         } catch (IllegalStateException e) {
-            logger.error("Cannot delete agent with id {}: {}", id, e.getMessage());
+            logger.error("Cannot delete user with id {}: {}", user_id, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
         } catch (Exception e) {
-            logger.error("Error deleting agent with id {}: {}", id, e.getMessage());
+            logger.error("Error deleting user with id {}: {}", user_id, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error deleting agent", null));
+                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error deleting user", null));
         }
     }
 
     /**
-     * List Clients being handled by a specific agent.
+     * List Clients being handled by a specific user.
      */
     @Operation(
-        summary = "List clients by agent",
-        description = "Retrieves a list of clients being handled by a specific agent",
+        summary = "List clients by user",
+        description = "Retrieves a list of clients being handled by a specific user",
         security = { @SecurityRequirement(name = "bearerAuth") }
     )
-    @GetMapping("/{agent_id}/clients")
-    public ResponseEntity<ApiResponse<List<Client>>> listClientsByAgent(
+    @GetMapping("/{user_id}/clients")
+    public ResponseEntity<ApiResponse<List<Client>>> listClientsByUser(
             @RequestHeader(name = "Authorization", required = false) String authToken,
-            @PathVariable("agent_id") @Positive(message = "agent_id must be positive") Long agentId) {
-        List<Client> clients = clientService.getClientsByAgent(agentId);
-        return ResponseUtil.listResponse(clients, "clients for agent");
+            @PathVariable("user_id") @Positive(message = "user_id must be positive") Long userId) {
+        List<Client> clients = clientService.getClientsByUser(userId);
+        return ResponseUtil.listResponse(clients, "clients for user");
     }
 
     /**
-     * Fetch agent details including all conversations.
+     * Fetch user details including all conversations.
      */
     @Operation(
-        summary = "Get agent details",
-        description = "Fetches detailed information about an agent including all conversations",
+        summary = "Get user details",
+        description = "Fetches detailed information about an user including all conversations",
         security = { @SecurityRequirement(name = "bearerAuth") }
     )
-    @GetMapping("/{agentId}/details")
-    public ResponseEntity<ApiResponse<UserAccountDetailsResponseDTO>> getAgentDetails(
+    @GetMapping("/{user_id}/details")
+    public ResponseEntity<ApiResponse<UserAccountDetailsResponseDTO>> getUserDetails(
             @RequestHeader(name = "Authorization", required = false) String authToken,
-            @PathVariable @Positive(message = "agentId must be positive") Long agentId) {
-        logger.info("Received request to get details for agent: {}", agentId);
+            @PathVariable @Positive(message = "user_id must be positive") Long user_id) {
+        logger.info("Received request to get details for user: {}", user_id);
         try {
-            UserAccountDetailsResponseDTO response = userAccountService.getAgentDetails(agentId);
+            UserAccountDetailsResponseDTO response = userAccountService.getUserDetails(user_id);
             return ResponseEntity.ok(new ApiResponse<>(
                 HttpStatus.OK.value(),
-                "Agent details fetched successfully",
+                "User details fetched successfully",
                 response
             ));
         } catch (IllegalArgumentException e) {
-            logger.error("Error fetching agent details: {}", e.getMessage());
+            logger.error("Error fetching user details: {}", e.getMessage());
             return ResponseEntity.badRequest().body(new ApiResponse<>(
                 HttpStatus.BAD_REQUEST.value(),
                 e.getMessage(),
                 null
             ));
         } catch (Exception e) {
-            logger.error("Unexpected error fetching agent details: {}", e.getMessage());
+            logger.error("Unexpected error fetching user details: {}", e.getMessage());
             return ResponseEntity.internalServerError().body(new ApiResponse<>(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "An unexpected error occurred",
@@ -278,31 +278,31 @@ public class UserAccountController {
     }
 
     /**
-     * Set agent status to AVAILABLE.
+     * Set user status to AVAILABLE.
      */
     @Operation(
-        summary = "Set agent as available",
-        description = "Sets the status of an agent to AVAILABLE",
+        summary = "Set user as available",
+        description = "Sets the status of an user to AVAILABLE",
         security = { @SecurityRequirement(name = "bearerAuth") }
     )
-    @PatchMapping("/{id}/available")
+    @PatchMapping("/{user_id}/available")
     @Transactional
-    public ResponseEntity<ApiResponse<UserAccount>> setAgentAvailable(
+    public ResponseEntity<ApiResponse<UserAccount>> setUserAvailable(
             @RequestHeader(name = "Authorization", required = false) String authToken,
-            @PathVariable @Positive Long id) {
-        logger.info("Setting agent with id: {} to AVAILABLE", id);
+            @PathVariable @Positive Long user_id) {
+        logger.info("Setting user with id: {} to AVAILABLE", user_id);
         try {
-            UserAccount updatedUserAccount = userAccountService.setAgentAvailable(id);
-            logger.info("Successfully set agent status to AVAILABLE for agent id: {}", id);
-            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Agent status set to AVAILABLE", updatedUserAccount));
+            UserAccount updatedUserAccount = userAccountService.setUserAvailable(user_id);
+            logger.info("Successfully set user status to AVAILABLE for user id: {}", user_id);
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "User status set to AVAILABLE", updatedUserAccount));
         } catch (ResourceNotFoundException e) {
-            logger.error("Agent not found with id: {}", id);
+            logger.error("User not found with id: {}", user_id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null));
         } catch (Exception e) {
-            logger.error("Error setting agent status to AVAILABLE for id {}: {}", id, e.getMessage());
+            logger.error("Error setting user status to AVAILABLE for id {}: {}", user_id, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error setting agent status", null));
+                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error setting user status", null));
         }
     }
 } 

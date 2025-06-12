@@ -13,6 +13,6 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     List<Client> findByIsAssigned(Boolean isAssigned);
 
-    @Query("SELECT DISTINCT c.client FROM Conversation c WHERE c.agent.agentId = :agentId")
-    List<Client> findByAgent_AgentId(@Param("agentId") Long agentId);
+    @Query("SELECT DISTINCT c.client FROM Conversation c WHERE c.userAccount.userId = :userId")
+    List<Client> findByUserAccount_UserId(@Param("userId") Long userId);
 } 

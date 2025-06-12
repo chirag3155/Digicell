@@ -6,6 +6,6 @@ import java.util.List;
 
 @Data
 public class UserAccountDetailsResponseDTO {
-    private UserAccount userAccount;
+    private UserAccountResponseDTO userAccountResponseDTO;
     private List<ConversationResponseDTO> conversations;
 } 

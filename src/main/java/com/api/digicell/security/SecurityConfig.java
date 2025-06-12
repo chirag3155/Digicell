@@ -40,6 +40,7 @@ public class SecurityConfig {
         "/swagger-resources/**",
         "/webjars/**",
         // API endpoints
+        "/api/v1/**",  // Allow all /api/v1/ paths
         "/api/v1/auth/login",
         "/api/v1/auth/register",
         "/api/v1/auth/forgot-password",
@@ -51,10 +52,10 @@ public class SecurityConfig {
     // Define secure endpoints that require authentication
     private final String[] secureEndpoints = {
         // Base endpoints that require authentication
-        "/api/v1/agents/**",
-        "/api/v1/aliases/**",
-        "/api/v1/clients/**",
-        "/api/v1/conversations/**"
+//        "/api/v1/users/**",
+//        "/api/v1/aliases/**",
+//        "/api/v1/clients/**",
+//        "/api/v1/conversations/**"
     };
 
     @Bean

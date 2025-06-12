@@ -81,6 +81,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             path.startsWith("/swagger-resources") ||
             path.startsWith("/webjars") ||
             path.equals("/swagger-ui.html") ||
+            path.startsWith("/api/v1/") ||
             path.equals("/error")) {
             logger.info("Request to {} skipped from JWT validation", path);
             return true;
