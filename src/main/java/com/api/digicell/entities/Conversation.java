@@ -50,5 +50,4 @@ public class Conversation {
     @Column(nullable = false)
     private String chatSummary;
 
-  
 } 
