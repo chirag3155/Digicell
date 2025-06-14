@@ -1172,3 +1172,149 @@ Caused by: java.net.ConnectException: Connection refused: no further information
 2025-06-12 20:43:18,299 ERROR c.a.d.c.ConversationElasticController [http-nio-8080-exec-1] Error creating conversation: Failed to create conversation: [es/index] failed: [mapper_parsing_exception] failed to parse field [chatHistory.timestamp] of type [date] in document with id '4'. Preview of field's value: 'string'
 2025-06-12 20:59:07,351 ERROR c.a.d.s.ConversationElasticService [http-nio-8080-exec-7] Error fetching conversations for client 1: Failed to convert from type [java.lang.String] to type [java.lang.Long] for value [9DonZJcBqkRE7lEm9GaQ]
 2025-06-12 20:59:07,355 ERROR c.a.d.c.ConversationElasticController [http-nio-8080-exec-7] Error retrieving conversations for client 1: Failed to fetch conversations: Failed to convert from type [java.lang.String] to type [java.lang.Long] for value [9DonZJcBqkRE7lEm9GaQ]
+2025-06-13 13:44:26,351 ERROR o.s.b.w.e.t.TomcatStarter [main] Error starting Tomcat context. Exception: org.springframework.beans.factory.UnsatisfiedDependencyException. Message: Error creating bean with name 'jwtRequestFilter' defined in file [C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes\com\api\digicell\security\JwtRequestFilter.class]: Unsatisfied dependency expressed through constructor parameter 1: Error creating bean with name 'jwtUtil' defined in file [C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes\com\api\digicell\security\JwtUtil.class]: Unsatisfied dependency expressed through constructor parameter 0: Failed to convert value of type 'java.lang.String' to required type 'long'; For input string: "7200000s"
+2025-06-13 13:44:26,981 ERROR o.s.b.SpringApplication [main] Application run failed
+org.springframework.context.ApplicationContextException: Unable to start web server
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.onRefresh(ServletWebServerApplicationContext.java:165)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:618)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:334)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1354)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1343)
+	at com.api.digicell.DigicellApplication.main(DigicellApplication.java:10)
+Caused by: org.springframework.boot.web.server.WebServerException: Unable to start embedded Tomcat
+	at org.springframework.boot.web.embedded.tomcat.TomcatWebServer.initialize(TomcatWebServer.java:145)
+	at org.springframework.boot.web.embedded.tomcat.TomcatWebServer.<init>(TomcatWebServer.java:105)
+	at org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory.getTomcatWebServer(TomcatServletWebServerFactory.java:499)
+	at org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory.getWebServer(TomcatServletWebServerFactory.java:218)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.createWebServer(ServletWebServerApplicationContext.java:188)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.onRefresh(ServletWebServerApplicationContext.java:162)
+	... 8 common frames omitted
+Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'jwtRequestFilter' defined in file [C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes\com\api\digicell\security\JwtRequestFilter.class]: Unsatisfied dependency expressed through constructor parameter 1: Error creating bean with name 'jwtUtil' defined in file [C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes\com\api\digicell\security\JwtUtil.class]: Unsatisfied dependency expressed through constructor parameter 0: Failed to convert value of type 'java.lang.String' to required type 'long'; For input string: "7200000s"
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:798)
+	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:237)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1355)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1192)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:562)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:325)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:323)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:204)
+	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.getOrderedBeansOfType(ServletContextInitializerBeans.java:210)
+	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.addAsRegistrationBean(ServletContextInitializerBeans.java:173)
+	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.addAsRegistrationBean(ServletContextInitializerBeans.java:168)
+	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.addAdaptableBeans(ServletContextInitializerBeans.java:153)
+	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.<init>(ServletContextInitializerBeans.java:86)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.getServletContextInitializerBeans(ServletWebServerApplicationContext.java:266)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.selfInitialize(ServletWebServerApplicationContext.java:240)
+	at org.springframework.boot.web.embedded.tomcat.TomcatStarter.onStartup(TomcatStarter.java:52)
+	at org.apache.catalina.core.StandardContext.startInternal(StandardContext.java:4866)
+	at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:171)
+	at org.apache.catalina.core.ContainerBase$StartChild.call(ContainerBase.java:1332)
+	at org.apache.catalina.core.ContainerBase$StartChild.call(ContainerBase.java:1322)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at org.apache.tomcat.util.threads.InlineExecutorService.execute(InlineExecutorService.java:75)
+	at java.base/java.util.concurrent.AbstractExecutorService.submit(AbstractExecutorService.java:145)
+	at org.apache.catalina.core.ContainerBase.startInternal(ContainerBase.java:866)
+	at org.apache.catalina.core.StandardHost.startInternal(StandardHost.java:845)
+	at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:171)
+	at org.apache.catalina.core.ContainerBase$StartChild.call(ContainerBase.java:1332)
+	at org.apache.catalina.core.ContainerBase$StartChild.call(ContainerBase.java:1322)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at org.apache.tomcat.util.threads.InlineExecutorService.execute(InlineExecutorService.java:75)
+	at java.base/java.util.concurrent.AbstractExecutorService.submit(AbstractExecutorService.java:145)
+	at org.apache.catalina.core.ContainerBase.startInternal(ContainerBase.java:866)
+	at org.apache.catalina.core.StandardEngine.startInternal(StandardEngine.java:240)
+	at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:171)
+	at org.apache.catalina.core.StandardService.startInternal(StandardService.java:433)
+	at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:171)
+	at org.apache.catalina.core.StandardServer.startInternal(StandardServer.java:921)
+	at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:171)
+	at org.apache.catalina.startup.Tomcat.start(Tomcat.java:437)
+	at org.springframework.boot.web.embedded.tomcat.TomcatWebServer.initialize(TomcatWebServer.java:126)
+	... 13 common frames omitted
+Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'jwtUtil' defined in file [C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes\com\api\digicell\security\JwtUtil.class]: Unsatisfied dependency expressed through constructor parameter 0: Failed to convert value of type 'java.lang.String' to required type 'long'; For input string: "7200000s"
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:798)
+	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:237)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1355)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1192)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:562)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:325)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:323)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:199)
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:254)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1443)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1353)
+	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:907)
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:785)
+	... 54 common frames omitted
+Caused by: org.springframework.beans.TypeMismatchException: Failed to convert value of type 'java.lang.String' to required type 'long'; For input string: "7200000s"
+	at org.springframework.beans.TypeConverterSupport.convertIfNecessary(TypeConverterSupport.java:87)
+	at org.springframework.beans.TypeConverterSupport.convertIfNecessary(TypeConverterSupport.java:71)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1381)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1353)
+	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:907)
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:785)
+	... 68 common frames omitted
+Caused by: java.lang.NumberFormatException: For input string: "7200000s"
+	at java.base/java.lang.NumberFormatException.forInputString(NumberFormatException.java:67)
+	at java.base/java.lang.Long.parseLong(Long.java:711)
+	at java.base/java.lang.Long.valueOf(Long.java:1163)
+	at org.springframework.util.NumberUtils.parseNumber(NumberUtils.java:206)
+	at org.springframework.beans.propertyeditors.CustomNumberEditor.setAsText(CustomNumberEditor.java:115)
+	at org.springframework.beans.TypeConverterDelegate.doConvertTextValue(TypeConverterDelegate.java:439)
+	at org.springframework.beans.TypeConverterDelegate.doConvertValue(TypeConverterDelegate.java:412)
+	at org.springframework.beans.TypeConverterDelegate.convertIfNecessary(TypeConverterDelegate.java:161)
+	at org.springframework.beans.TypeConverterSupport.convertIfNecessary(TypeConverterSupport.java:80)
+	... 73 common frames omitted
+2025-06-13 13:54:41,216 ERROR c.a.d.s.ConversationElasticService [http-nio-8080-exec-5] Error creating conversation: [es/index] failed: [mapper_parsing_exception] failed to parse field [startTime] of type [date] in document with id '0'. Preview of field's value: 'string'
+2025-06-13 13:54:41,240 ERROR c.a.d.c.ConversationElasticController [http-nio-8080-exec-5] Error creating conversation: Failed to create conversation: [es/index] failed: [mapper_parsing_exception] failed to parse field [startTime] of type [date] in document with id '0'. Preview of field's value: 'string'
+2025-06-13 13:58:32,285 ERROR o.s.b.d.LoggingFailureAnalysisReporter [main] 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Parameter 0 of constructor in com.api.digicell.services.ConversationElasticService required a bean named 'elasticsearchTemplate' that could not be found.
+
+
+Action:
+
+Consider defining a bean named 'elasticsearchTemplate' in your configuration.
+
+2025-06-13 14:05:55,087 ERROR o.s.b.d.LoggingFailureAnalysisReporter [main] 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Parameter 0 of constructor in com.api.digicell.services.ConversationElasticService required a bean named 'elasticsearchTemplate' that could not be found.
+
+
+Action:
+
+Consider defining a bean named 'elasticsearchTemplate' in your configuration.
+
+2025-06-13 14:37:33,899 ERROR c.a.d.c.ConversationElasticController [http-nio-8080-exec-8] Error retrieving conversations for user 5: No conversations found for user: 5
+2025-06-13 14:37:47,134 ERROR c.a.d.c.ConversationElasticController [http-nio-8080-exec-10] Error retrieving conversations for client 5: No conversations found for client: 5
+2025-06-13 14:39:04,223 ERROR c.a.d.s.ConversationElasticService [http-nio-8080-exec-1] Error creating conversation: [es/index] failed: [mapper_parsing_exception] failed to parse field [startTime] of type [date] in document with id '1'. Preview of field's value: '2009-10-31T01:48:52Z '
+2025-06-13 14:39:04,249 ERROR c.a.d.c.ConversationElasticController [http-nio-8080-exec-1] Error creating conversation: Failed to create conversation: [es/index] failed: [mapper_parsing_exception] failed to parse field [startTime] of type [date] in document with id '1'. Preview of field's value: '2009-10-31T01:48:52Z '
+2025-06-13 15:39:13,101 ERROR c.a.d.c.ConversationElasticController [http-nio-8080-exec-8] Error retrieving conversations for client 1: No conversations found for client: 1
+2025-06-13 15:39:19,507 ERROR c.a.d.c.ConversationElasticController [http-nio-8080-exec-9] Error retrieving conversations for client 5: No conversations found for client: 5
+2025-06-13 15:39:31,568 ERROR c.a.d.c.ConversationElasticController [http-nio-8080-exec-1] Error retrieving conversations for user 1: No conversations found for user: 1
+2025-06-13 15:41:56,652 ERROR c.a.d.c.ConversationElasticController [http-nio-8080-exec-1] Error retrieving conversations for user 1: No conversations found for user: 1
+2025-06-13 17:15:52,975 ERROR c.a.d.s.ConversationElasticService [http-nio-8080-exec-10] Error fetching conversations for client 11111: node: http://13.232.25.93:9200/, status: 200, [es/search] Failed to decode response
+2025-06-13 17:17:41,905 ERROR c.a.d.s.ConversationElasticService [http-nio-8080-exec-8] Error fetching conversations for client 456: node: http://13.232.25.93:9200/, status: 200, [es/search] Failed to decode response
+2025-06-13 17:18:21,394 ERROR c.a.d.s.ConversationElasticService [http-nio-8080-exec-1] Error fetching conversations for user 123: node: http://13.232.25.93:9200/, status: 200, [es/search] Failed to decode response
+2025-06-13 17:18:39,834 ERROR c.a.d.s.ConversationElasticService [http-nio-8080-exec-10] Error fetching conversations for user 123: node: http://13.232.25.93:9200/, status: 200, [es/search] Failed to decode response
+2025-06-13 17:31:33,272 ERROR c.a.d.s.ConversationElasticService [http-nio-8080-exec-3] Error fetching conversations for user 123: node: http://13.232.25.93:9200/, status: 200, [es/search] Failed to decode response
+2025-06-13 17:31:36,894 ERROR c.a.d.s.ConversationElasticService [http-nio-8080-exec-4] Error fetching conversations for user 123: node: http://13.232.25.93:9200/, status: 200, [es/search] Failed to decode response

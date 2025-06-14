@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="warn" name="MyApp">
+    <Properties>
+        <property name="log.file.path">${bundle:logging:logging.file.path}</property>
+        <property name="log.file.path.gz">${bundle:logging:logging.file.path.gz}</property>
+        <property name="log.file.name">${bundle:logging:logging.file.name}</property>
+        <property name="log.file.size">${bundle:logging:logging.file.size}</property>
+        <property name="log.level">${bundle:logging:logging.level}</property>
+        <property name="log.console.json.enabled">${bundle:logging:logging.console.json.enabled}</property>
+        <property name="log.file.json.enabled">${bundle:logging:logging.file.json.enabled}</property>
+        <property name="log.kafka.json.enabled">${bundle:logging:logging.kafka.json.enabled}</property>
+        <property name="log.kafka.enabled">${bundle:logging:logging.kafka.enabled}</property>
+        <property name="log.kafka.bootstrap.servers">${bundle:logging:logging.kafka.bootstrap.servers}</property>
+        <property name="log.kafka.topic.name">${bundle:logging:logging.kafka.topic.name}</property>
+    </Properties>
+
+    <Appenders>
+        <!-- Main Rolling File Appender -->
+        <RollingFile name="RollingFile" fileName="${log.file.path}/${log.file.name}.json.log" filePattern="${log.file.path.gz}/all/${date:yyyy-MM-dd}/${log.file.name}_%d{yyyy-MM-dd-HH}.json.log.gz">
+            <CustomJsonLayout jsonEnabled="${log.file.json.enabled}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="${log.file.size}"/>
+            </Policies>
+        </RollingFile>
+
+        <!-- Console Appender -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <CustomJsonLayout jsonEnabled="${log.console.json.enabled}"/>
+        </Console>
+
+        <!-- Kafka Appender -->
+        <Kafka name="Kafka" topic="${log.kafka.topic.name}">
+            <CustomJsonLayout jsonEnabled="${log.kafka.json.enabled}"/>
+            <Property name="bootstrap.servers">${log.kafka.bootstrap.servers}</Property>
+       </Kafka>
+
+        <!--Failover Appender -->
+        <Failover name="KafkaFailover" primary="Kafka">
+            <Failovers>
+                <AppenderRef ref="Console"/>
+            </Failovers>
+        </Failover>
+
+        <Async name="AsyncKafka" bufferSize="1024">
+            <AppenderRef ref="KafkaFailover"/>
+        </Async>
+
+        <Routing name="RoutingAppender">
+            <Routes pattern="${log.kafka.enabled}">
+                <Route ref="AsyncKafka" key="true"/>
+            </Routes>
+        </Routing>
+
+    </Appenders>
+
+    <Loggers>
+        <!-- Root Logger -->
+        <Root level="${log.level}">
+            <AppenderRef ref="RollingFile"/>
+            <AppenderRef ref="RoutingAppender"/>
+            <AppenderRef ref="Console"/>
+        </Root>
+
+        <Logger name="org.apache.kafka" level="ERROR">
+            <AppenderRef ref="Kafka"/>
+        </Logger>
+    </Loggers>
+
+</Configuration>

@@ -98,6 +98,12 @@
 			<artifactId>micrometer-core</artifactId>
 		</dependency>
 		<dependency>
+		<!-- <dependency>
+        <groupId>com.eva</groupId>
+        <artifactId>logger</artifactId>
+        <version>1.0.0</version>
+    </dependency> -->
+
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-elasticsearch</artifactId>
 		</dependency>
@@ -121,6 +127,13 @@
 			<version>8.3.0</version>
 		</dependency>
 	</dependencies>
+	 <exclusions>
+      <exclusion>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-logging</artifactId>
+      </exclusion>
+  </exclusions>
+
 
 	<build>
 		<plugins>
