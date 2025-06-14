@@ -7,6 +7,9 @@ import com.api.digicell.entities.Agent;
 import com.api.digicell.entities.AgentStatus;
 import com.api.digicell.services.AgentService;
 import com.api.digicell.dto.AgentStatusDTO;
+import com.api.digicell.dto.ChatMessageRequest;
+import com.api.digicell.dto.AgentMessageResponse;
+import com.api.digicell.dto.ChatModuleMessageResponse;
 import com.api.digicell.config.SocketConfig;
 import com.api.digicell.services.SocketConnectionService;
 import com.corundumstudio.socketio.*;
@@ -29,7 +32,7 @@ import java.time.format.DateTimeFormatter;
 @Component
 public class ChatModule {
     private final SocketIOServer server;
-    private final Map<String, String> userAgentMapping;
+    private final Map<String, String> clientAgentMapping;
     private final PriorityBlockingQueue<ChatAgent> agentQueue;
     private final Map<String, Set<String>> agentRooms;
     private final Map<String, ChatAgent> agentMap;
@@ -37,7 +40,7 @@ public class ChatModule {
     private final AgentService agentService;
     private final SocketConfig socketConfig;
     private final SocketConnectionService connectionService;
-    private static final int MAX_USERS_PER_AGENT = 5;
+    private static final int MAX_CLIENTS_PER_AGENT = 5;
 
     public ChatModule(AgentService agentService, SocketConfig socketConfig, SocketConnectionService connectionService) {
         Configuration config = new Configuration();
@@ -50,7 +53,7 @@ public class ChatModule {
         config.setTransports(Transport.WEBSOCKET, Transport.POLLING);
 
         this.server = new SocketIOServer(config);
-        this.userAgentMapping = new ConcurrentHashMap<>();
+        this.clientAgentMapping = new ConcurrentHashMap<>();
         this.agentQueue = new PriorityBlockingQueue<>(100, new ChatAgent.AgentComparator());
         this.agentRooms = new ConcurrentHashMap<>();
         this.agentMap = new ConcurrentHashMap<>();
@@ -63,68 +66,65 @@ public class ChatModule {
     }
 
     private void initializeSocketListeners() {
-        server.addConnectListener(client -> connectionService.handleConnection(client));
+        server.addConnectListener(socketClient -> connectionService.handleConnection(socketClient));
 
-        server.addDisconnectListener(client -> {
-            String socketId = client.getSessionId().toString();
+        server.addDisconnectListener(socketClient -> {
+            String socketId = socketClient.getSessionId().toString();
             connectionService.removeConnection(socketId);
-            log.debug("Client disconnected: {}", socketId);
+            log.debug("Socket client disconnected: {}", socketId);
         });
 
-        server.addEventListener(socketConfig.EVENT_AGENT_REQUEST, Map.class, (client, data, ackSender) -> {
+        server.addEventListener(socketConfig.EVENT_AGENT_REQUEST, Map.class, (socketClient, data, ackSender) -> {
             try {
-                String userId = (String) data.get("user_id");
+                String clientId = (String) data.get("client_id");
                 String conversationId = (String) data.get("conversation_id");
                 String summary = (String) data.get("summary");
                 List<Map<String, Object>> history = (List<Map<String, Object>>) data.get("history");
                 String timestamp = (String) data.get("timestamp");
 
-                log.info("Received agent request from chat module - User: {}, Conversation: {}", userId, conversationId);
-                handleAgentRequest(client, userId, conversationId, summary, history, timestamp);
+                log.info("Received agent request from chat module - Client: {}, Conversation: {}", clientId, conversationId);
+                handleAgentRequest(socketClient, clientId, conversationId, summary, history, timestamp);
             } catch (Exception e) {
                 log.error("Error handling agent request: {}", e.getMessage(), e);
             }
         });
 
-        server.addEventListener(socketConfig.EVENT_MESSAGE_REQ, Map.class, (client, messageData, ackSender) -> {
-            String roomId = messageData.get("conversation_id").toString();
-            log.debug("Message request received in room {}: {}", roomId, messageData);
+        server.addEventListener(socketConfig.EVENT_MESSAGE_REQ, ChatMessageRequest.class, (socketClient, messageRequest, ackSender) -> {
+            String conversationId = messageRequest.getConversationId();
+            log.debug("Message request received for conversation {}: {}", conversationId, messageRequest);
             
             // Store the message
-            ChatRoom chatRoom = chatRooms.get(roomId);
+            ChatRoom chatRoom = chatRooms.get(conversationId);
             if (chatRoom != null) {
                 ChatMessage message = new ChatMessage();
-                message.setRoomId(roomId);
-                message.setUserId(messageData.get("user_id").toString());
-                message.setContent(messageData.get("transcript").toString());
-                message.setMessageId(messageData.get("message_id").toString());
+                message.setConversationId(conversationId);
+                message.setClientId(messageRequest.getClientId());
+                message.setContent(messageRequest.getTranscript());
                 message.setTimestamp(LocalDateTime.ofInstant(
-                    Instant.ofEpochMilli(Long.parseLong(messageData.get("timestamp").toString())),
+                    Instant.ofEpochMilli(Long.parseLong(messageRequest.getTimestamp())),
                     ZoneOffset.UTC
                 ));
                 message.setRole("user");
                 chatRoom.addMessage(message);
                 
                 // Forward to agent with the same format
-                server.getRoomOperations(roomId).sendEvent(socketConfig.EVENT_MESSAGE_REQ_AGENT, messageData);
+                server.getRoomOperations(conversationId).sendEvent(socketConfig.EVENT_MESSAGE_REQ_AGENT, messageRequest);
             }
         });
 
-        server.addEventListener(socketConfig.EVENT_MESSAGE_RESP_AGENT, Map.class, (client, messageData, ackSender) -> {
-            String roomId = messageData.get("conversation_id").toString();
-            log.debug("Agent response received in room {}: {}", roomId, messageData);
+        server.addEventListener(socketConfig.EVENT_MESSAGE_RESP_AGENT, AgentMessageResponse.class, (socketClient, agentResponse, ackSender) -> {
+            String conversationId = agentResponse.getConversationId();
+            log.debug("Agent response received for conversation {}: {}", conversationId, agentResponse);
             
             // Store the message
-            ChatRoom chatRoom = chatRooms.get(roomId);
+            ChatRoom chatRoom = chatRooms.get(conversationId);
             if (chatRoom != null) {
                 ChatMessage message = new ChatMessage();
-                message.setRoomId(roomId);
-                message.setUserId(messageData.get("user_id").toString());
-                message.setContent(messageData.get("message").toString());
-                message.setMessageId(messageData.get("message_id").toString());
-                message.setMessageType(messageData.get("message_type").toString());
+                message.setConversationId(conversationId);
+                message.setClientId(agentResponse.getClientId());
+                message.setContent(agentResponse.getMessage());
                 message.setTimestamp(LocalDateTime.parse(
-                    messageData.get("timestamp").toString().replace("Z", ""),
+                    agentResponse.getTimestamp().replace("Z", ""),
                     DateTimeFormatter.ISO_DATE_TIME
                 ));
                 message.setRole("agent");
@@ -133,49 +133,45 @@ public class ChatModule {
                 // Forward to chat module with DivineMessage format
                 String chatModuleSocketId = connectionService.getChatModuleSocketId();
                 if (chatModuleSocketId != null) {
-                    Map<String, Object> divineMessage = new HashMap<>();
-                    divineMessage.put("conversation_id", roomId);
-                    divineMessage.put("user_id", messageData.get("user_id"));
-                    divineMessage.put("timestamp", messageData.get("timestamp"));
-                    divineMessage.put("message", messageData.get("message"));
-                    divineMessage.put("message_type", messageData.get("message_type"));
-                    divineMessage.put("message_id", messageData.get("message_id"));
+                    ChatModuleMessageResponse chatModuleResponse = new ChatModuleMessageResponse();
+                    chatModuleResponse.setConversationId(conversationId);
+                    chatModuleResponse.setClientId(agentResponse.getClientId());
+                    chatModuleResponse.setTimestamp(agentResponse.getTimestamp());
+                    chatModuleResponse.setMessage(agentResponse.getMessage());
                     
                     server.getClient(UUID.fromString(chatModuleSocketId))
-                          .sendEvent(socketConfig.EVENT_MESSAGE_RESP, divineMessage);
+                          .sendEvent(socketConfig.EVENT_MESSAGE_RESP, chatModuleResponse);
                 }
             }
         });
 
         // Listen for agent close requests
-        server.addEventListener(socketConfig.EVENT_CLOSE_AGENT, Map.class, (client, data, ackSender) -> {
+        server.addEventListener(socketConfig.EVENT_CLOSE_AGENT, Map.class, (socketClient, data, ackSender) -> {
             String agentId = data.get("agent_id").toString();
             String conversationId = data.get("conversation_id").toString();
-            String userId = data.get("user_id").toString();
+            String clientId = data.get("client_id").toString();
             String timestamp = data.get("timestamp").toString();
             
             // Find the chat room
             ChatRoom chatRoom = findChatRoomByConversationId(conversationId);
             if (chatRoom != null) {
-                String roomId = chatRoom.getRoomId();
-                
                 // Get the agent
                 ChatAgent agent = agentMap.get(agentId);
                 if (agent != null) {
-                    // Remove user from agent's room
-                    agent.removeUser(userId);
-                    agent.setCurrentUserCount(agent.getCurrentUserCount() - 1);
+                    // Remove client from agent's room
+                    agent.removeClient(clientId);
+                    agent.setCurrentClientCount(agent.getCurrentClientCount() - 1);
                     
-                    // If this was the last user, clean up the room
-                    if (agent.getCurrentUserCount() == 0) {
+                    // If this was the last client, clean up the room
+                    if (agent.getCurrentClientCount() == 0) {
                         // Remove the chat room
-                        chatRooms.remove(roomId);
-                        log.info("Chat room {} removed as last user {} left", roomId, userId);
+                        chatRooms.remove(conversationId);
+                        log.info("Chat conversation {} removed as last client {} left", conversationId, clientId);
                     } else {
-                        log.info("User {} left chat room {}, {} users remaining", userId, roomId, agent.getCurrentUserCount());
+                        log.info("Client {} left conversation {}, {} clients remaining", clientId, conversationId, agent.getCurrentClientCount());
                     }
                 } else {
-                    log.warn("Agent {} not found for chat room {}", agentId, roomId);
+                    log.warn("Agent {} not found for conversation {}", agentId, conversationId);
                 }
             } else {
                 log.warn("No chat room found for conversation {}", conversationId);
@@ -184,19 +180,19 @@ public class ChatModule {
             // Get the chat module socket ID for this conversation
             String chatModuleSocketId = connectionService.getChatModuleSocketId();
             if (chatModuleSocketId != null) {
-                SocketIOClient chatModuleClient = server.getClient(UUID.fromString(chatModuleSocketId));
-                if (chatModuleClient != null) {
+                SocketIOClient chatModuleSocketClient = server.getClient(UUID.fromString(chatModuleSocketId));
+                if (chatModuleSocketClient != null) {
                     // Prepare close request data
                     Map<String, String> closeRequest = new HashMap<>();
                     closeRequest.put("conversation_id", conversationId);
-                    closeRequest.put("user_id", userId);
+                    closeRequest.put("client_id", clientId);
                     closeRequest.put("timestamp", timestamp);
                     
                     // Send close event to chat module
-                    chatModuleClient.sendEvent(socketConfig.EVENT_CLOSE, closeRequest);
-                    log.info("Close event sent to chat module for conversation {} and user {}", conversationId, userId);
+                    chatModuleSocketClient.sendEvent(socketConfig.EVENT_CLOSE, closeRequest);
+                    log.info("Close event sent to chat module for conversation {} and client {}", conversationId, clientId);
                 } else {
-                    log.warn("Chat module client not found for socket ID: {}", chatModuleSocketId);
+                    log.warn("Chat module socket client not found for socket ID: {}", chatModuleSocketId);
                 }
             } else {
                 log.warn("No chat module socket ID found for conversation: {}", conversationId);
@@ -204,48 +200,46 @@ public class ChatModule {
         });
 
         // Listen for client close/disconnect events
-        server.addEventListener(socketConfig.EVENT_CLIENT_CLOSE, Map.class, (client, data, ackSender) -> {
+        server.addEventListener(socketConfig.EVENT_CLIENT_CLOSE, Map.class, (socketClient, data, ackSender) -> {
             String conversationId = data.get("conversation_id").toString();
-            String userId = data.get("user_id").toString();
+            String clientId = data.get("client_id").toString();
             
             // Find the chat room
             ChatRoom chatRoom = findChatRoomByConversationId(conversationId);
             if (chatRoom != null) {
-                String roomId = chatRoom.getRoomId();
                 String agentId = chatRoom.getAgentId();
                 
                 // Get the agent
                 ChatAgent agent = agentMap.get(agentId);
                 if (agent != null) {
-                    // Remove user from agent's room
-                    agent.removeUser(userId);
-                    agent.setCurrentUserCount(agent.getCurrentUserCount() - 1);
+                    // Remove client from agent's room
+                    agent.removeClient(clientId);
+                    agent.setCurrentClientCount(agent.getCurrentClientCount() - 1);
                     
-                    // If this was the last user, clean up the room
-                    if (agent.getCurrentUserCount() == 0) {
+                    // If this was the last client, clean up the room
+                    if (agent.getCurrentClientCount() == 0) {
                         // Remove the chat room
-                        chatRooms.remove(roomId);
-                        log.info("Chat room {} removed as last user {} left", roomId, userId);
+                        chatRooms.remove(conversationId);
+                        log.info("Chat conversation {} removed as last client {} left", conversationId, clientId);
                         
                         // Notify the agent that the chat is closed
                         String agentSocketId = connectionService.getAgentSocketId(agentId);
                         if (agentSocketId != null) {
-                            SocketIOClient agentClient = server.getClient(UUID.fromString(agentSocketId));
-                            if (agentClient != null) {
+                            SocketIOClient agentSocketClient = server.getClient(UUID.fromString(agentSocketId));
+                            if (agentSocketClient != null) {
                                 Map<String, String> closeInfo = new HashMap<>();
                                 closeInfo.put("conversation_id", conversationId);
-                                closeInfo.put("user_id", userId);
-                                closeInfo.put("room_id", roomId);
+                                closeInfo.put("client_id", clientId);
                                 
-                                agentClient.sendEvent(socketConfig.EVENT_CLOSE, closeInfo);
-                                log.info("Notified agent {} about chat closure for room {}", agentId, roomId);
+                                agentSocketClient.sendEvent(socketConfig.EVENT_CLOSE, closeInfo);
+                                log.info("Notified agent {} about chat closure for conversation {}", agentId, conversationId);
                             }
                         }
                     } else {
-                        log.info("User {} left chat room {}, {} users remaining", userId, roomId, agent.getCurrentUserCount());
+                        log.info("Client {} left conversation {}, {} clients remaining", clientId, conversationId, agent.getCurrentClientCount());
                     }
                 } else {
-                    log.warn("Agent {} not found for chat room {}", agentId, roomId);
+                    log.warn("Agent {} not found for conversation {}", agentId, conversationId);
                 }
             } else {
                 log.warn("No chat room found for conversation {}", conversationId);
@@ -253,10 +247,10 @@ public class ChatModule {
         });
 
         // Handle ping from agent
-        server.addEventListener(SocketConfig.EVENT_PING, Map.class, (client, data, ackSender) -> {
+        server.addEventListener(SocketConfig.EVENT_PING, Map.class, (socketClient, data, ackSender) -> {
             try {
                 String agentId = data.get("agent_id").toString();
-                String socketId = client.getSessionId().toString();
+                String socketId = socketClient.getSessionId().toString();
                 log.info("Received ping from agent: {}", agentId);
                 
                 // Verify this socket is actually connected with this agent ID
@@ -294,18 +288,18 @@ public class ChatModule {
                 }
 
                 // Send pong response
-                client.sendEvent(SocketConfig.EVENT_PONG, "pong");
+                socketClient.sendEvent(SocketConfig.EVENT_PONG, "pong");
             } catch (Exception e) {
                 log.error("Error handling ping: {}", e.getMessage());
             }
         });
 
-        server.addEventListener(socketConfig.EVENT_OFFLINE_REQ, String.class, (client, agentId, ackSender) -> {
-            handleOfflineRequest(agentId, client);
+        server.addEventListener(socketConfig.EVENT_OFFLINE_REQ, String.class, (socketClient, agentId, ackSender) -> {
+            handleOfflineRequest(agentId, socketClient);
         });
     }
 
-    private void handleAgentRequest(SocketIOClient client, String userId, String conversationId, String summary, List<Map<String, Object>> history, String timestamp) {
+    private void handleAgentRequest(SocketIOClient socketClient, String clientId, String conversationId, String summary, List<Map<String, Object>> history, String timestamp) {
         // Get the next available agent that hasn't requested offline
         ChatAgent agent = null;
         
@@ -325,22 +319,20 @@ public class ChatModule {
             }
         }
 
-        if (agent != null && agent.getCurrentUserCount() < MAX_USERS_PER_AGENT) {
-            String roomId = UUID.randomUUID().toString();
+        if (agent != null && agent.getCurrentClientCount() < MAX_CLIENTS_PER_AGENT) {
+            // Create and store the chat room using conversationId as the key
+            ChatRoom chatRoom = new ChatRoom(conversationId, agent.getAgentId(), clientId, summary, history);
+            chatRooms.put(conversationId, chatRoom);
             
-            // Create and store the chat room
-            ChatRoom chatRoom = new ChatRoom(roomId, agent.getAgentId(), userId, conversationId, summary, history);
-            chatRooms.put(roomId, chatRoom);
-            
-            // Add user to agent's room
-            agent.addUser(userId);
-            agent.setCurrentUserCount(agent.getCurrentUserCount() + 1);
+            // Add client to agent's room
+            agent.addClient(clientId);
+            agent.setCurrentClientCount(agent.getCurrentClientCount() + 1);
             
             // Store socket ID mapping
             String agentSocketId = connectionService.getAgentSocketId(agent.getAgentId());
             if (agentSocketId != null) {
-                SocketIOClient agentClient = server.getClient(UUID.fromString(agentSocketId));
-                if (agentClient != null) {
+                SocketIOClient agentSocketClient = server.getClient(UUID.fromString(agentSocketId));
+                if (agentSocketClient != null) {
                     // Prepare agent info data
                     Map<String, String> agentInfo = new HashMap<>();
                     agentInfo.put("status", "available");
@@ -350,14 +342,14 @@ public class ChatModule {
                     agentInfo.put("agent_label", agent.getAgentLabel());
                     
                     // Send acknowledgment to chat module
-                    client.sendEvent(socketConfig.EVENT_AGENT_ACK, agentInfo);
+                    socketClient.sendEvent(socketConfig.EVENT_AGENT_ACK, agentInfo);
                     
                     // Notify the agent with the same agent info format
-                    agentClient.sendEvent(socketConfig.EVENT_NEW_CLIENT_REQ, agentInfo);
+                    agentSocketClient.sendEvent(socketConfig.EVENT_NEW_CLIENT_REQ, agentInfo);
                     
-                    log.info("Agent {} assigned to user {} in room {}", agent.getAgentId(), userId, roomId);
+                    log.info("Agent {} assigned to client {} for conversation {}", agent.getAgentId(), clientId, conversationId);
                 } else {
-                    log.warn("Agent client not found for socket ID: {}", agentSocketId);
+                    log.warn("Agent socket client not found for socket ID: {}", agentSocketId);
                 }
             } else {
                 log.warn("No socket ID found for agent: {}", agent.getAgentId());
@@ -371,38 +363,38 @@ public class ChatModule {
             agentInfo.put("agent_name", "");
             agentInfo.put("agent_label", "");
             
-            client.sendEvent(socketConfig.EVENT_AGENT_ACK, agentInfo);
-            log.warn("No agent available for user {}", userId);
+            socketClient.sendEvent(socketConfig.EVENT_AGENT_ACK, agentInfo);
+            log.warn("No agent available for client {}", clientId);
         }
     }
 
-    private void handleChatClosure(String roomId) {
+    private void handleChatClosure(String conversationId) {
         // Get the chat room
-        ChatRoom chatRoom = chatRooms.get(roomId);
+        ChatRoom chatRoom = chatRooms.get(conversationId);
         if (chatRoom != null) {
             // Close the chat room
             chatRoom.close();
-            log.debug("Chat room {} closed at {}", roomId, chatRoom.getEndTime());
-        }
-
-        // Notify both parties
-        server.getRoomOperations(roomId).sendEvent(socketConfig.EVENT_CLOSE);
-        
-        // Update agent's user count
-        String agentId = findAgentIdByRoomId(roomId);
-        if (agentId != null) {
-            ChatAgent agent = agentMap.get(agentId);
-            if (agent != null) {
-                agent.setCurrentUserCount(agent.getCurrentUserCount() - 1);
-                if (agent.getCurrentUserCount() == 0) {
-                    // Agent has no more active chats
-                    updateAgentStatus(agentId, AgentStatus.OFFLINE);
+            log.debug("Chat conversation {} closed at {}", conversationId, chatRoom.getEndTime());
+            
+            // Update agent's client count
+            String agentId = chatRoom.getAgentId();
+            if (agentId != null) {
+                ChatAgent agent = agentMap.get(agentId);
+                if (agent != null) {
+                    agent.setCurrentClientCount(agent.getCurrentClientCount() - 1);
+                    if (agent.getCurrentClientCount() == 0) {
+                        // Agent has no more active chats
+                        updateAgentStatus(agentId, AgentStatus.OFFLINE);
+                    }
                 }
             }
         }
+
+        // Notify both parties
+        server.getRoomOperations(conversationId).sendEvent(socketConfig.EVENT_CLOSE);
     }
 
-    private void handleOfflineRequest(String agentId, SocketIOClient client) {
+    private void handleOfflineRequest(String agentId, SocketIOClient socketClient) {
         ChatAgent agent = agentMap.get(agentId);
         if (agent != null) {
             // Check if agent has any active chats
@@ -429,13 +421,9 @@ public class ChatModule {
         }
     }
 
-    private String findAgentIdByRoomId(String roomId) {
-        for (Map.Entry<String, Set<String>> entry : agentRooms.entrySet()) {
-            if (entry.getValue().contains(roomId)) {
-                return entry.getKey();
-            }
-        }
-        return null;
+    private String findAgentIdByConversationId(String conversationId) {
+        ChatRoom chatRoom = chatRooms.get(conversationId);
+        return chatRoom != null ? chatRoom.getAgentId() : null;
     }
 
     // Helper method to find chat room by conversation ID

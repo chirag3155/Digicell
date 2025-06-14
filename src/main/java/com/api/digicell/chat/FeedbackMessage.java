@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class FeedbackMessage {
     private String roomId;
-    private String userId;
-    private String agentId;
+    private String clientId;
+    private String feedback;
     private int rating;
-    private String comment;
 } 
