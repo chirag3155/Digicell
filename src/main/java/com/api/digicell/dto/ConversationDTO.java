@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ConversationDTO {
-    private Long userId;
+    private Long clientId;
     private Long agentId;
     private String query;
     private LocalDateTime startTime;

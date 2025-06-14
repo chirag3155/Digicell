@@ -8,10 +8,9 @@ import java.util.Map;
 
 @Data
 public class ChatRoom {
-    private String roomId;
-    private String agentId;
-    private String userId;
     private String conversationId;
+    private String agentId;
+    private String clientId;
     private String summary;
     private List<Map<String, Object>> history;
     private LocalDateTime startTime;
@@ -19,11 +18,10 @@ public class ChatRoom {
     private List<ChatMessage> messages;
     private boolean isActive;
 
-    public ChatRoom(String roomId, String agentId, String userId, String conversationId, String summary, List<Map<String, Object>> history) {
-        this.roomId = roomId;
-        this.agentId = agentId;
-        this.userId = userId;
+    public ChatRoom(String conversationId, String agentId, String clientId, String summary, List<Map<String, Object>> history) {
         this.conversationId = conversationId;
+        this.agentId = agentId;
+        this.clientId = clientId;
         this.summary = summary;
         this.history = history != null ? new ArrayList<>(history) : new ArrayList<>();
         this.startTime = LocalDateTime.now();
@@ -41,5 +39,9 @@ public class ChatRoom {
     public void close() {
         this.endTime = LocalDateTime.now();
         this.isActive = false;
+    }
+
+    public String getRoomId() {
+        return conversationId;
     }
 } 

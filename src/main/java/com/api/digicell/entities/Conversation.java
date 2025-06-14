@@ -18,8 +18,8 @@ public class Conversation {
     private Long conversationId;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "client_id", nullable = false)
+    private Client client;
 
     @ManyToOne
     @JoinColumn(name = "agent_id", nullable = false)

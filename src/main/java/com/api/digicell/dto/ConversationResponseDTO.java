@@ -8,8 +8,8 @@ import java.util.List;
 @Data
 public class ConversationResponseDTO {
     private Long conversationId;
-    private Long userId;
-    private String userName;
+    private Long clientId;
+    private String clientName;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String query;

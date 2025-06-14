@@ -22,42 +22,42 @@ public class SocketConnectionService {
         this.chatModuleSocketId = null;
     }
 
-    public void handleConnection(SocketIOClient client) {
-        String clientType = client.getHandshakeData().getSingleUrlParam(socketConfig.PARAM_CLIENT_TYPE);
+    public void handleConnection(SocketIOClient socketClient) {
+        String clientType = socketClient.getHandshakeData().getSingleUrlParam(socketConfig.PARAM_CLIENT_TYPE);
         
         // Reject connection if no parameters are provided
         if (clientType == null || clientType.trim().isEmpty()) {
-            log.warn("Connection rejected: No parameters provided. SocketId: {}", client.getSessionId());
-            client.disconnect();
+            log.warn("Connection rejected: No parameters provided. SocketId: {}", socketClient.getSessionId());
+            socketClient.disconnect();
             return;
         }
 
         if (socketConfig.PARAM_CHAT_MODULE.equals(clientType)) {
-            handleChatModuleConnection(client);
+            handleChatModuleConnection(socketClient);
         } else if (socketConfig.PARAM_AGENT.equals(clientType)) {
-            handleAgentConnection(client, clientType);
+            handleAgentConnection(socketClient, clientType);
         } else {
-            log.warn("Connection rejected: Invalid clientType: {}. SocketId: {}", clientType, client.getSessionId());
-            client.disconnect();
+            log.warn("Connection rejected: Invalid clientType: {}. SocketId: {}", clientType, socketClient.getSessionId());
+            socketClient.disconnect();
         }
     }
 
-    private void handleChatModuleConnection(SocketIOClient client) {
-        String newSocketId = client.getSessionId().toString();
+    private void handleChatModuleConnection(SocketIOClient socketClient) {
+        String newSocketId = socketClient.getSessionId().toString();
         log.info("Chat module connection attempt. Previous socketId: {}, New socketId: {}", chatModuleSocketId, newSocketId);
         
-        // If there's an existing connection, check if it's the same client reconnecting
+        // If there's an existing connection, check if it's the same socket client reconnecting
         if (chatModuleSocketId != null) {
-            // If it's the same client (same socket ID), just update the connection
+            // If it's the same socket client (same socket ID), just update the connection
             if (chatModuleSocketId.equals(newSocketId)) {
                 log.info("Chat module reconnected with same socket ID: {}", newSocketId);
                 return;
             }
             
-            // If it's a different client, reject the new connection
+            // If it's a different socket client, reject the new connection
             log.warn("Chat module already connected with different socket ID. Rejecting new connection. Previous: {}, New: {}", 
                     chatModuleSocketId, newSocketId);
-            client.disconnect();
+            socketClient.disconnect();
             return;
         }
 
@@ -66,15 +66,15 @@ public class SocketConnectionService {
         log.info("Chat module connected successfully. SocketId: {}", chatModuleSocketId);
     }
 
-    private void handleAgentConnection(SocketIOClient client, String clientType) {
-        String agentId = client.getHandshakeData().getSingleUrlParam("agentId");
+    private void handleAgentConnection(SocketIOClient socketClient, String clientType) {
+        String agentId = socketClient.getHandshakeData().getSingleUrlParam("agentId");
         if (agentId == null || agentId.trim().isEmpty()) {
-            log.warn("Agent connection rejected: Missing agentId. SocketId: {}", client.getSessionId());
-            client.disconnect();
+            log.warn("Agent connection rejected: Missing agentId. SocketId: {}", socketClient.getSessionId());
+            socketClient.disconnect();
             return;
         }
 
-        String socketId = client.getSessionId().toString();
+        String socketId = socketClient.getSessionId().toString();
         agentSocketMap.put(socketId, agentId);
         agentSocketIds.put(agentId, socketId);
         log.info("Agent connected successfully. SocketId: {}, AgentId: {}, Type: {}", 

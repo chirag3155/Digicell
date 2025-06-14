@@ -156,8 +156,8 @@
         </div>
 
         <div class="section">
-            <h2>User Management</h2>
-            <input type="text" id="userId" placeholder="User ID">
+            <h2>Client Management</h2>
+            <input type="text" id="clientId" placeholder="Client ID">
             <button onclick="requestAgent()">Request Agent</button>
         </div>
 
@@ -182,7 +182,7 @@
         let socket;
         let currentRoomId = null;
         let currentAgentId = null;
-        let currentUserId = null;
+        let currentClientId = null;
 
         function connect() {
             socket = io('http://localhost:9092');
@@ -232,14 +232,14 @@
         }
 
         function requestAgent() {
-            const userId = document.getElementById('userId').value;
-            if (!userId) {
-                log('Please enter a user ID', 'error');
+            const clientId = document.getElementById('clientId').value;
+            if (!clientId) {
+                log('Please enter a client ID', 'error');
                 return;
             }
-            currentUserId = userId;
-            socket.emit('request_agent', userId);
-            log(`Requesting agent for user ${userId}`, 'info');
+            currentClientId = clientId;
+            socket.emit('request_agent', clientId);
+            log(`Requesting agent for client ${clientId}`, 'info');
         }
 
         function sendMessage() {
@@ -255,7 +255,7 @@
             const message = {
                 roomId: currentRoomId,
                 content: content,
-                senderId: currentUserId || 'user',
+                senderId: currentClientId || 'client',
                 timestamp: new Date().toISOString()
             };
             socket.emit('message', message);
@@ -272,7 +272,7 @@
             const feedback = {
                 roomId: currentRoomId,
                 agentId: currentAgentId,
-                userId: currentUserId,
+                clientId: currentClientId,
                 content: document.getElementById('feedbackText').value,
                 timestamp: new Date().toISOString()
             };

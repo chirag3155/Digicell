@@ -126,8 +126,8 @@ public class AgentService {
         Optional<Agent> agentOpt = agentRepository.findById(agentId);
         if (agentOpt.isPresent()) {
             Agent agent = agentOpt.get();
-            agent.setStatus(statusDTO.getStatus());
-            agent.setUpdatedAt(LocalDateTime.now());
+        agent.setStatus(statusDTO.getStatus());
+        agent.setUpdatedAt(LocalDateTime.now());
             return agentRepository.save(agent);
         }
         throw new RuntimeException("Agent not found with id: " + agentId);
@@ -186,7 +186,7 @@ public class AgentService {
         if (agentOpt.isPresent()) {
             Agent agent = agentOpt.get();
             agent.setStatus(AgentStatus.OFFLINE);
-            agent.setUpdatedAt(LocalDateTime.now());
+        agent.setUpdatedAt(LocalDateTime.now());
             return agentRepository.save(agent);
         }
         throw new RuntimeException("Agent not found with id: " + agentId);
@@ -215,8 +215,8 @@ public class AgentService {
                     .map(conv -> {
                         ConversationResponseDTO dto = new ConversationResponseDTO();
                         dto.setConversationId(conv.getConversationId());
-                        dto.setUserId(conv.getUser().getUserId());
-                        dto.setUserName(conv.getUser().getName());
+                        dto.setClientId(conv.getClient().getClientId());
+                        dto.setClientName(conv.getClient().getName());
                         dto.setStartTime(conv.getStartTime());
                         dto.setEndTime(conv.getEndTime());
                         dto.setQuery(conv.getQuery());

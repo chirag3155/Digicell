@@ -5,6 +5,6 @@ package com.api.digicell.exceptions;
  */
 public class InvalidAgentStatusException extends IllegalArgumentException {
     public InvalidAgentStatusException(String status) {
-        super(String.format("Invalid agent status: '%s'. Valid statuses are: AVAILABLE, BREAK, LOGOUT", status));
+        super(String.format("Invalid agent status: '%s'. Valid statuses are: ONLINE and  OFFLINE", status));
     }
 } 

@@ -2,11 +2,11 @@ package com.api.digicell.services;
 
 import com.api.digicell.dto.ConversationDTO;
 import com.api.digicell.entities.Conversation;
-import com.api.digicell.entities.User;
+import com.api.digicell.entities.Client;
 import com.api.digicell.entities.Agent;
 import com.api.digicell.exceptions.ResourceNotFoundException;
 import com.api.digicell.repository.ConversationRepository;
-import com.api.digicell.repository.UserRepository;
+import com.api.digicell.repository.ClientRepository;
 import com.api.digicell.repository.AgentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ import java.util.List;
 public class ConversationService {
 
     private final ConversationRepository conversationRepository;
-    private final UserRepository userRepository;
+    private final ClientRepository clientRepository;
     private final AgentRepository agentRepository;
 
     public List<Conversation> getAllConversations() {
@@ -36,24 +36,24 @@ public class ConversationService {
         return conversationRepository.findByAgent_AgentId(agentId);
     }
 
-    public List<Conversation> getConversationsByUser(Long userId) {
-        return conversationRepository.findByUser_UserId(userId);
+    public List<Conversation> getConversationsByClient(Long clientId) {
+        return conversationRepository.findByClient_ClientId(clientId);
     }
 
-    public List<Conversation> getConversationsByAgentAndUser(Long agentId, Long userId) {
-        return conversationRepository.findByAgent_AgentIdAndUser_UserId(agentId, userId);
+    public List<Conversation> getConversationsByAgentAndClient(Long agentId, Long clientId) {
+        return conversationRepository.findByAgent_AgentIdAndClient_ClientId(agentId, clientId);
     }
 
     @Transactional
     public Conversation createConversation(ConversationDTO dto) {
-        User user = userRepository.findById(dto.getUserId())
-            .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + dto.getUserId()));
+        Client client = clientRepository.findById(dto.getClientId())
+            .orElseThrow(() -> new IllegalArgumentException("Client not found with id: " + dto.getClientId()));
         
         Agent agent = agentRepository.findById(dto.getAgentId())
             .orElseThrow(() -> new IllegalArgumentException("Agent not found with id: " + dto.getAgentId()));
 
         // Check for existing conversation
-        Conversation existingConversation = conversationRepository.findByUserAndAgentAndEndTimeIsNull(user, agent)
+        Conversation existingConversation = conversationRepository.findByClientAndAgentAndEndTimeIsNull(client, agent)
             .orElse(null); // If no conversation exists, return null
 
 
@@ -70,7 +70,7 @@ public class ConversationService {
 
         // Create new conversation if none exists
         Conversation conversation = new Conversation();
-        conversation.setUser(user);
+        conversation.setClient(client);
         conversation.setAgent(agent);
         conversation.setQuery(dto.getQuery());
         conversation.setStartTime(dto.getStartTime());
