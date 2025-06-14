@@ -1,5 +1,6 @@
  package com.api.digicell.services;
 
+ import co.elastic.clients.elasticsearch.ElasticsearchClient;
  import com.api.digicell.document.ConversationDocument;
  import com.api.digicell.document.ChatMessageDocument;
  import com.api.digicell.entities.Conversation;
@@ -20,8 +21,18 @@
      private static final Logger logger = LoggerFactory.getLogger(ConversationElasticService.class);
      private final ConversationElasticRepository conversationElasticRepository;
 
+     private final ElasticsearchClient elasticsearchClient; // This is injected from your ElasticsearchConfig
+
+     private boolean isElasticsearchAvailable() {
+         // Check if the Elasticsearch client is available (not null)
+         return elasticsearchClient != null;
+     }
 
      public List<ConversationDocument> getConversationsByUser(Long userId) {
+         if (!isElasticsearchAvailable()) {
+             logger.warn("Elasticsearch is not available. Cannot fetch conversations for user {}", userId);
+             throw new RuntimeException("Elasticsearch is not available.");
+         }
          try {
              if (userId == null || userId <= 0) {
                  throw new IllegalArgumentException("Invalid user ID: " + userId);
@@ -40,6 +51,10 @@
      }
 
      public List<ConversationDocument> getConversationsByClient(Long clientId) {
+         if (!isElasticsearchAvailable()) {
+             logger.warn("Elasticsearch is not available. Cannot fetch conversations for client {}", clientId);
+             throw new RuntimeException("Elasticsearch is not available.");
+         }
          try {
              if (clientId == null || clientId <= 0) {
                  throw new IllegalArgumentException("Invalid client ID: " + clientId);
@@ -58,6 +73,10 @@
      }
 
      public List<ConversationDocument> getConversationsByUserAndClient(Long userId, Long clientId) {
+         if (!isElasticsearchAvailable()) {
+             logger.warn("Elasticsearch is not available. Cannot fetch conversations for user {} and client {}", userId, clientId);
+             throw new RuntimeException("Elasticsearch is not available.");
+         }
          try {
              if (userId == null || userId <= 0) {
                  throw new IllegalArgumentException("Invalid user ID: " + userId);
@@ -79,6 +98,10 @@
      }
 
      public ConversationDocument getConversationByIdAndClient(Long conversationId, Long clientId) {
+         if (!isElasticsearchAvailable()) {
+             logger.warn("Elasticsearch is not available. Cannot fetch conversation with ID {} and client {}", conversationId, clientId);
+             throw new RuntimeException("Elasticsearch is not available.");
+         }
          try {
              if (conversationId == null || conversationId <= 0) {
                  throw new IllegalArgumentException("Invalid conversation ID: " + conversationId);
@@ -98,6 +121,10 @@
 
      @Transactional
      public ConversationDocument createConversation(ConversationDocument conversation) {
+         if (!isElasticsearchAvailable()) {
+             logger.warn("Elasticsearch is not available. Cannot create conversation.");
+             throw new RuntimeException("Elasticsearch is not available.");
+         }
          try {
              if (conversation == null) {
                  throw new IllegalArgumentException("Conversation cannot be null");
