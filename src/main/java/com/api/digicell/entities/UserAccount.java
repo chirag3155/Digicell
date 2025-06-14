@@ -42,7 +42,7 @@ public class UserAccount {
     private boolean isActive = false;
 
     @Enumerated(EnumType.STRING)
-    private UserAccountStatus status = UserAccountStatus.AVAILABLE;
+    private UserAccountStatus status = UserAccountStatus.OFFLINE;
 
     @OneToMany(mappedBy = "userAccount", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
