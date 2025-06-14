@@ -2,7 +2,7 @@ package com.api.digicell.repository;
 
 import com.api.digicell.entities.Conversation;
 import com.api.digicell.entities.Client;
-import com.api.digicell.entities.Agent;
+import com.api.digicell.entities.UserAccount;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,21 +13,20 @@ import java.util.Optional;
 public interface ConversationRepository extends JpaRepository<Conversation, Long> {
 
     /**
-     * Fetch all conversations belonging to a given client id.
+     * Fetch all conversations assigned to a given user id.
      */
+    List<Conversation> findByUserAccount_UserId(Long userId);
+
     List<Conversation> findByClient_ClientId(Long clientId);
 
-    /**
-     * Fetch all conversations assigned to a given agent id.
-     */
-    List<Conversation> findByAgent_AgentId(Long agentId);
+    List<Conversation> findByUserAccount_UserIdAndClient_ClientId(Long userId, Long clientId);
+
+    Optional<Conversation> findByConversationIdAndClient_ClientId(Long conversationId, Long clientId);
+
+    Optional<Conversation> findByClientAndUserAccountAndEndTimeIsNull(Client client, UserAccount userAccount);
 
     /**
-     * Fetch conversations involving a specific client and handled by a specific agent.
+     * Delete all conversations for a given user id.
      */
-    List<Conversation> findByAgent_AgentIdAndClient_ClientId(Long agentId, Long clientId);
-
-    List<Conversation> findByClientAndAgent(Client client, Agent agent);
-
-    Optional<Conversation> findByClientAndAgentAndEndTimeIsNull(Client client, Agent agent);
+    void deleteByUserAccount_UserId(Long userId);
 } 

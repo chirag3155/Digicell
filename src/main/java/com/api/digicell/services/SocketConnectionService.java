@@ -13,12 +13,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SocketConnectionService {
     private final SocketConfig socketConfig;
     private String chatModuleSocketId;
-    private final Map<String, String> agentSocketMap;
-    private Map<String, String> agentSocketIds = new ConcurrentHashMap<>();
+    private final Map<String, String> userSocketMap;
+    private Map<String, String> userSocketIds = new ConcurrentHashMap<>();
 
     public SocketConnectionService(SocketConfig socketConfig) {
         this.socketConfig = socketConfig;
-        this.agentSocketMap = new ConcurrentHashMap<>();
+        this.userSocketMap = new ConcurrentHashMap<>();
         this.chatModuleSocketId = null;
     }
 
@@ -35,7 +35,7 @@ public class SocketConnectionService {
         if (socketConfig.PARAM_CHAT_MODULE.equals(clientType)) {
             handleChatModuleConnection(socketClient);
         } else if (socketConfig.PARAM_AGENT.equals(clientType)) {
-            handleAgentConnection(socketClient, clientType);
+            handleUserConnection(socketClient, clientType);
         } else {
             log.warn("Connection rejected: Invalid clientType: {}. SocketId: {}", clientType, socketClient.getSessionId());
             socketClient.disconnect();
@@ -66,27 +66,27 @@ public class SocketConnectionService {
         log.info("Chat module connected successfully. SocketId: {}", chatModuleSocketId);
     }
 
-    private void handleAgentConnection(SocketIOClient socketClient, String clientType) {
-        String agentId = socketClient.getHandshakeData().getSingleUrlParam("agentId");
-        if (agentId == null || agentId.trim().isEmpty()) {
-            log.warn("Agent connection rejected: Missing agentId. SocketId: {}", socketClient.getSessionId());
+    private void handleUserConnection(SocketIOClient socketClient, String clientType) {
+        String userId = socketClient.getHandshakeData().getSingleUrlParam("userId");
+        if (userId == null || userId.trim().isEmpty()) {
+            log.warn("User connection rejected: Missing userId. SocketId: {}", socketClient.getSessionId());
             socketClient.disconnect();
             return;
         }
 
         String socketId = socketClient.getSessionId().toString();
-        agentSocketMap.put(socketId, agentId);
-        agentSocketIds.put(agentId, socketId);
-        log.info("Agent connected successfully. SocketId: {}, AgentId: {}, Type: {}", 
-                socketId, agentId, clientType);
+        userSocketMap.put(socketId, userId);
+        userSocketIds.put(userId, socketId);
+        log.info("User connected successfully. SocketId: {}, UserId: {}, Type: {}", 
+                socketId, userId, clientType);
     }
 
     public String getChatModuleSocketId() {
         return chatModuleSocketId;
     }
 
-    public String getAgentIdBySocketId(String socketId) {
-        return agentSocketMap.get(socketId);
+    public String getUserIdBySocketId(String socketId) {
+        return userSocketMap.get(socketId);
     }
 
     public void removeConnection(String socketId) {
@@ -94,10 +94,10 @@ public class SocketConnectionService {
             log.info("Chat module disconnected. SocketId: {}", socketId);
             chatModuleSocketId = null;
         } else {
-            String agentId = agentSocketMap.remove(socketId);
-            if (agentId != null) {
-                agentSocketIds.remove(agentId);
-                log.info("Agent disconnected. SocketId: {}, AgentId: {}", socketId, agentId);
+            String userId = userSocketMap.remove(socketId);
+            if (userId != null) {
+                userSocketIds.remove(userId);
+                log.info("User disconnected. SocketId: {}, UserId: {}", socketId, userId);
             }
         }
     }
@@ -106,15 +106,15 @@ public class SocketConnectionService {
         return chatModuleSocketId != null;
     }
 
-    public String getAgentSocketId(String agentId) {
-        return agentSocketIds.get(agentId);
+    public String getUserSocketId(String userId) {
+        return userSocketIds.get(userId);
     }
 
-    public void setAgentSocketId(String agentId, String socketId) {
-        agentSocketIds.put(agentId, socketId);
+    public void setUserSocketId(String userId, String socketId) {
+        userSocketIds.put(userId, socketId);
     }
 
-    public void removeAgentSocketId(String agentId) {
-        agentSocketIds.remove(agentId);
+    public void removeUserSocketId(String userId) {
+        userSocketIds.remove(userId);
     }
 } 

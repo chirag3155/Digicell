@@ -9,7 +9,7 @@ import java.util.Map;
 @Data
 public class ChatRoom {
     private String conversationId;
-    private String agentId;
+    private String userId;
     private String clientId;
     private String summary;
     private List<Map<String, Object>> history;
@@ -18,9 +18,9 @@ public class ChatRoom {
     private List<ChatMessage> messages;
     private boolean isActive;
 
-    public ChatRoom(String conversationId, String agentId, String clientId, String summary, List<Map<String, Object>> history) {
+    public ChatRoom(String conversationId, String userId, String clientId, String summary, List<Map<String, Object>> history) {
         this.conversationId = conversationId;
-        this.agentId = agentId;
+        this.userId = userId;
         this.clientId = clientId;
         this.summary = summary;
         this.history = history != null ? new ArrayList<>(history) : new ArrayList<>();

@@ -8,14 +8,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AgentMessageResponse {
+public class ChatCloseRequest {
     @JsonProperty("conversation_id")
     private String conversationId;
     
     @JsonProperty("client_id")
     private String clientId;
-    
-    private String message;
     
     private String timestamp;
 } 

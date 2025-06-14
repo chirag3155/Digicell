@@ -22,10 +22,10 @@ public class LoggingUtils {
     private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
     
     // MDC Keys for structured logging
-    public static final String MDC_USER_ID = "userId";
+    public static final String MDC_CLIENT_ID = "clientId";
     public static final String MDC_SESSION_ID = "sessionId";
     public static final String MDC_REQUEST_ID = "requestId";
-    public static final String MDC_AGENT_ID = "agentId";
+    public static final String MDC_USER_ID = "userId";
     public static final String MDC_CONVERSATION_ID = "conversationId";
     
     /**
@@ -38,20 +38,20 @@ public class LoggingUtils {
     }
     
     /**
+     * Set client context for logging
+     */
+    public static void setClientContext(String clientId) {
+        if (clientId != null && !clientId.trim().isEmpty()) {
+            MDC.put(MDC_CLIENT_ID, clientId);
+        }
+    }
+    
+    /**
      * Set user context for logging
      */
     public static void setUserContext(String userId) {
         if (userId != null && !userId.trim().isEmpty()) {
             MDC.put(MDC_USER_ID, userId);
-        }
-    }
-    
-    /**
-     * Set agent context for logging
-     */
-    public static void setAgentContext(String agentId) {
-        if (agentId != null && !agentId.trim().isEmpty()) {
-            MDC.put(MDC_AGENT_ID, agentId);
         }
     }
     
@@ -155,9 +155,9 @@ public class LoggingUtils {
     /**
      * Log API request
      */
-    public static void logApiRequest(Logger logger, String method, String endpoint, String userId) {
-        setUserContext(userId);
-        logger.info("API Request: {} {} by user: {}", method, endpoint, userId);
+    public static void logApiRequest(Logger logger, String method, String endpoint, String clientId) {
+        setClientContext(clientId);
+        logger.info("API Request: {} {} by client: {}", method, endpoint, clientId);
     }
     
     /**

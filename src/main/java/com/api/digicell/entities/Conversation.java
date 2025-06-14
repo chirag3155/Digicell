@@ -3,6 +3,7 @@ package com.api.digicell.entities;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import com.api.digicell.converters.ChatHistoryConverter;
 
@@ -22,16 +23,18 @@ public class Conversation {
     private Client client;
 
     @ManyToOne
-    @JoinColumn(name = "agent_id", nullable = false)
-    private Agent agent;
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserAccount userAccount;
 
     @Column(nullable = false)
-    private String query;
+    private String intent;
 
     @CreationTimestamp
     @Column(nullable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime startTime;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime endTime;
 
     /**
@@ -42,6 +45,10 @@ public class Conversation {
     @Convert(converter = ChatHistoryConverter.class)
     @Column(columnDefinition = "json")
     private List<List<ChatMessage>> chatHistory;
+
+
+    @Column(nullable = false)
+    private String chatSummary;
 
   
 } 

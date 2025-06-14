@@ -1,5 +1,6 @@
 package com.api.digicell.controllers;
 
+import com.api.digicell.dto.ConDTO;
 import com.api.digicell.dto.ConversationDTO;
 import com.api.digicell.entities.Conversation;
 import com.api.digicell.responses.ApiResponse;
@@ -15,6 +16,11 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import java.util.List;
 
+import com.api.digicell.dtos.ChatHistoryDTO;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * CRUD and filter endpoints for Conversation entity.
  */
@@ -22,6 +28,8 @@ import java.util.List;
 @RequestMapping("/api/v1/conversations")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Conversation Management", description = "APIs for managing conversations and chat history")
+@SecurityRequirement(name = "bearerAuth")
 public class ConversationController {
 
     private final ConversationService conversationService;
@@ -29,51 +37,98 @@ public class ConversationController {
     /**
      * List all conversations.
      */
+    @Operation(
+        summary = "Get all conversations",
+        description = "Retrieves a list of all conversations in the system",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Conversation>>> listAll() {
+    public ResponseEntity<ApiResponse<List<ConDTO>>> listAll(
+            @RequestHeader(name = "Authorization", required = false) String authToken) {
         return ResponseUtil.listResponse(conversationService.getAllConversations(), "conversations");
     }
 
     /**
      * Get conversation by id.
      */
+    @Operation(
+        summary = "Get conversation by ID",
+        description = "Retrieves a conversation by its unique ID",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @GetMapping("/{conversation_id}")
-    public ResponseEntity<ApiResponse<Conversation>> getById(@PathVariable("conversation_id") @Positive(message = "conversation_id must be positive") Long conversationId) {
-        Conversation conv = conversationService.getConversationById(conversationId);
-        ApiResponse<Conversation> response = new ApiResponse<>(HttpStatus.OK.value(), "Conversation fetched successfully", conv);
+    public ResponseEntity<ApiResponse<ConDTO>> getById(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @PathVariable("conversation_id") @Positive(message = "conversation_id must be positive") Long conversation_id) {
+        ConDTO conDTO = conversationService.getConversationById(conversation_id);
+        ApiResponse<ConDTO> response = new ApiResponse<>(HttpStatus.OK.value(), "Conversation fetched successfully", conDTO);
         return ResponseEntity.ok(response);
-    }
-
-    /**
-     * Filter conversations by agent.
-     */
-    @GetMapping("/agent/{agent_id}")
-    public ResponseEntity<ApiResponse<List<Conversation>>> getByAgent(@PathVariable("agent_id") @Positive(message = "agent_id must be positive") Long agentId) {
-        return ResponseUtil.listResponse(conversationService.getConversationsByAgent(agentId), "conversations for agent");
     }
 
     /**
      * Filter conversations by user.
      */
+    @Operation(
+        summary = "Get conversations by user",
+        description = "Retrieves all conversations associated with a specific user",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @GetMapping("/user/{user_id}")
-    public ResponseEntity<ApiResponse<List<Conversation>>> getByUser(@PathVariable("user_id") @Positive(message = "user_id must be positive") Long userId) {
-        return ResponseUtil.listResponse(conversationService.getConversationsByUser(userId), "conversations for user");
+    public ResponseEntity<ApiResponse<List<ConDTO>>> getByUser(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @PathVariable("user_id") @Positive(message = "user_id must be positive") Long user_id) {
+        return ResponseUtil.listResponse(conversationService.getConversationsByUser(user_id), "conversations for user");
     }
 
     /**
-     * Filter conversations by agent and user.
+     * Filter conversations by user.
      */
-    @GetMapping("/agent/{agent_id}/user/{user_id}")
-    public ResponseEntity<ApiResponse<List<Conversation>>> getByAgentAndUser(@PathVariable("agent_id") @Positive(message = "agent_id must be positive") Long agentId,
-                                                                             @PathVariable("user_id") @Positive(message = "user_id must be positive") Long userId) {
-        return ResponseUtil.listResponse(conversationService.getConversationsByAgentAndUser(agentId, userId), "conversations for agent and user");
+    @Operation(
+        summary = "Get chat history by client ID",
+        description = "Retrieves all chat history for a specific client",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
+    @GetMapping("/client/{client_id}")
+    public ResponseEntity<ApiResponse<List<ChatHistoryDTO>>> getChatHistoryByUser(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @PathVariable("client_id") @Positive(message = "client_id must be positive") Long client_id) {
+        List<ChatHistoryDTO> chatHistory = conversationService.getChatHistoryByClient(client_id);
+        ApiResponse<List<ChatHistoryDTO>> response = new ApiResponse<>(
+            HttpStatus.OK.value(),
+            "Chat history retrieved successfully",
+            chatHistory
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Filter conversations by user and client.
+     */
+    @Operation(
+        summary = "Get conversations by user and client",
+        description = "Retrieves conversations between a specific user and client",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
+    @GetMapping("/user/{user_id}/client/{client_id}")
+    public ResponseEntity<ApiResponse<List<ConDTO>>> getByUserAndClient(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @PathVariable("user_id") @Positive(message = "user_id must be positive") Long user_id,
+            @PathVariable("client_id") @Positive(message = "user_id must be positive") Long clientId) {
+        return ResponseUtil.listResponse(conversationService.getConversationsByUserAndClient(user_id, clientId), "conversations for user and user");
     }
 
     /**
      * Create new conversation.
      */
+    @Operation(
+        summary = "Create a new conversation",
+        description = "Creates a new conversation with the provided details",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @PostMapping
-    public ResponseEntity<ApiResponse<Conversation>> create(@Valid @RequestBody ConversationDTO dto) {
+    public ResponseEntity<ApiResponse<Conversation>> create(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @Valid @RequestBody ConversationDTO dto) {
         Conversation created = conversationService.createConversation(dto);
         ApiResponse<Conversation> response = new ApiResponse<>(HttpStatus.CREATED.value(), "Conversation created successfully", created);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -82,10 +137,17 @@ public class ConversationController {
     /**
      * Update existing conversation.
      */
+    @Operation(
+        summary = "Update a conversation",
+        description = "Updates an existing conversation with new details",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @PutMapping("/{conversation_id}")
-    public ResponseEntity<ApiResponse<Conversation>> update(@PathVariable("conversation_id") @Positive(message = "conversation_id must be positive") Long conversationId,
-                                                             @Valid @RequestBody Conversation updated) {
-        Conversation conv = conversationService.updateConversation(conversationId, updated);
+    public ResponseEntity<ApiResponse<Conversation>> update(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @PathVariable("conversation_id") @Positive(message = "conversation_id must be positive") Long conversation_id,
+            @Valid @RequestBody Conversation updated) {
+        Conversation conv = conversationService.updateConversation(conversation_id, updated);
         ApiResponse<Conversation> response = new ApiResponse<>(HttpStatus.OK.value(), "Conversation updated successfully", conv);
         return ResponseEntity.ok(response);
     }
@@ -93,10 +155,37 @@ public class ConversationController {
     /**
      * Delete conversation.
      */
+    @Operation(
+        summary = "Delete a conversation",
+        description = "Deletes a conversation by its ID",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
     @DeleteMapping("/{conversation_id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable("conversation_id") @Positive(message = "conversation_id must be positive") Long conversationId) {
-        conversationService.deleteConversation(conversationId);
-        ApiResponse<Void> response = new ApiResponse<>(HttpStatus.OK.value(), "Conversation with ID " + conversationId + " has been deleted", null);
+    public ResponseEntity<ApiResponse<Void>> delete(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @PathVariable("conversation_id") @Positive(message = "conversation_id must be positive") Long conversation_id) {
+        conversationService.deleteConversation(conversation_id);
+        ApiResponse<Void> response = new ApiResponse<>(HttpStatus.OK.value(), "Conversation with ID " + conversation_id + " has been deleted", null);
         return ResponseEntity.ok(response);
     }
+
+    @Operation(
+        summary = "Get conversation details",
+        description = "Retrieves detailed chat history for a specific conversation and user",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
+    @GetMapping("/{conversation_id}/client/{client_id}")
+    public ResponseEntity<ApiResponse<ChatHistoryDTO>> getConversationDetails(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @PathVariable("conversation_id") @Positive(message = "conversation_id must be positive") Long conversationId,
+            @PathVariable("client_id") @Positive(message = "user_id must be positive") Long client_id) {
+        ChatHistoryDTO conversation = conversationService.getConversationDetails(conversationId, client_id);
+        ApiResponse<ChatHistoryDTO> response = new ApiResponse<>(
+            HttpStatus.OK.value(),
+            "Conversation details retrieved successfully",
+            conversation
+        );
+        return ResponseEntity.ok(response);
+    }
+
 } 

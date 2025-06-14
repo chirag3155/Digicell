@@ -1,6 +1,6 @@
 package com.api.digicell.entities;
 
-public enum AgentStatus {
+public enum UserAccountStatus {
     ONLINE,
     OFFLINE
 } 

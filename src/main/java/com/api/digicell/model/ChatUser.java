@@ -6,17 +6,17 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Data
-public class ChatAgent {
-    private String agentId;
-    private String agentName;
-    private String agentLabel;
+public class ChatUser {
+    private String userId;
+    private String userName;
+    private String userLabel;
     private int currentClientCount;
     private boolean offlineRequested;
     private long lastPingTime;
     private Set<String> activeClients = new HashSet<>();
 
-    public ChatAgent(String agentId) {
-        this.agentId = agentId;
+    public ChatUser(String userId) {
+        this.userId = userId;
         this.currentClientCount = 0;
         this.offlineRequested = false;
         this.lastPingTime = System.currentTimeMillis();
@@ -42,9 +42,9 @@ public class ChatAgent {
         return activeClients;
     }
 
-    public static class AgentComparator implements Comparator<ChatAgent> {
+    public static class UserComparator implements Comparator<ChatUser> {
         @Override
-        public int compare(ChatAgent a1, ChatAgent a2) {
+        public int compare(ChatUser a1, ChatUser a2) {
             // First compare by offline request status
             if (a1.isOfflineRequested() != a2.isOfflineRequested()) {
                 return a1.isOfflineRequested() ? 1 : -1;
