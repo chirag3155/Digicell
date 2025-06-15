@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 public class ChatHistoryDTO {
-    private Long conversationId;
+    private String conversationId;
     private Long userId;
     private String userName;
     private String intent;

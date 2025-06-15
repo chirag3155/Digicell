@@ -64,7 +64,7 @@ public class ClientController {
     @GetMapping("/{client_id}")
     public ResponseEntity<ApiResponse<Client>> getClientById(
             @RequestHeader(name = "Authorization", required = false) String authToken,
-            @PathVariable("client_id") @Positive(message = "client_id must be positive") Long clientId) {
+            @PathVariable("client_id") String clientId) {
         Client client = clientService.getClientById(clientId);
         ApiResponse<Client> response = new ApiResponse<>(HttpStatus.OK.value(), "Client fetched successfully", client);
         return ResponseEntity.ok(response);
@@ -97,7 +97,7 @@ public class ClientController {
     @GetMapping("/{client_id}/details")
     public ResponseEntity<ApiResponse<ClientDetailsResponse>> getClientDetails(
             @RequestHeader(name = "Authorization", required = false) String authToken,
-            @PathVariable("client_id") @Positive(message = "client_id must be positive") Long clientId) {
+            @PathVariable("client_id") String clientId) {
         logger.info("Received request to get details for client: {}", clientId);
         try {
             ClientDetailsResponse details = clientService.getClientDetails(clientId);
@@ -122,7 +122,7 @@ public class ClientController {
     @GetMapping("/{client_id}/conversations")
     public ResponseEntity<ApiResponse<List<ConvoDto>>> getClientConversations(
             @RequestHeader(name = "Authorization", required = false) String authToken,
-            @PathVariable("client_id") @Positive(message = "client_id must be positive") Long clientId) {
+            @PathVariable("client_id") String clientId) {
         logger.info("Received request to get conversations for client: {}", clientId);
         try {
             List<ConvoDto> conversations = clientService.getClientConversations(clientId);

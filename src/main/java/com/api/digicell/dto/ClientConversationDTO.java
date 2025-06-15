@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Data
 public class ClientConversationDTO {
-    private Long conversationId;
+    private String conversationId;
     private Long userId;
     private String userName;
     private String intent;

@@ -25,9 +25,8 @@ import java.util.List;
 public class Client {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "client_id")
-    private Long clientId;
+    private String clientId;
 
     @Column(nullable = false)
     private String name;

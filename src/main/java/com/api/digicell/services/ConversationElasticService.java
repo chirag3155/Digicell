@@ -67,14 +67,14 @@ public class ConversationElasticService {
         }
     }
 
-    public List<ConversationDocument> getConversationsByClient(Long clientId) {
+    public List<ConversationDocument> getConversationsByClient(String clientId) {
         if (esClient.isEmpty()) {
             logger.warn("Elasticsearch client is not available");
             throw new RuntimeException("Elasticsearch is not available");
         }
 
         try {
-            if (clientId == null || clientId <= 0) {
+            if (clientId == null || clientId.trim().isEmpty()) {
                 throw new IllegalArgumentException("Invalid client ID: " + clientId);
             }
 
@@ -103,7 +103,7 @@ public class ConversationElasticService {
         }
     }
 
-    public List<ConversationDocument> getConversationsByUserAndClient(Long userId, Long clientId) {
+    public List<ConversationDocument> getConversationsByUserAndClient(Long userId, String clientId) {
         if (esClient.isEmpty()) {
             logger.warn("Elasticsearch client is not available");
             throw new RuntimeException("Elasticsearch is not available");
@@ -113,7 +113,7 @@ public class ConversationElasticService {
             if (userId == null || userId <= 0) {
                 throw new IllegalArgumentException("Invalid user ID: " + userId);
             }
-            if (clientId == null || clientId <= 0) {
+            if (clientId == null || clientId.trim().isEmpty()) {
                 throw new IllegalArgumentException("Invalid client ID: " + clientId);
             }
 
@@ -145,18 +145,18 @@ public class ConversationElasticService {
         }
     }
 
-    public ConversationDocument getConversationByIdAndClient(Long conversationId, Long clientId) {
+    public ConversationDocument getConversationByIdAndClient(String conversationId, String clientId) {
         if (esClient.isEmpty()) {
             logger.warn("Elasticsearch client is not available");
             throw new RuntimeException("Elasticsearch is not available");
         }
 
         try {
-            if (conversationId == null || conversationId <= 0) {
+            if (conversationId == null || conversationId.trim().isEmpty()) {
                 throw new IllegalArgumentException("Invalid conversation ID: " + conversationId);
             }
 
-            if (clientId == null || clientId <= 0) {
+            if (clientId == null || clientId.trim().isEmpty()) {
                 throw new IllegalArgumentException("Invalid client ID: " + clientId);
             }
 

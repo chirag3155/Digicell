@@ -15,10 +15,10 @@ public class ConversationDocument {
 
     private String id; // Elasticsearch document ID (String)
 
-    private Long conversationId;
+    private String conversationId;
     private Long userId;
     private String userName;
-    private Long clientId;
+    private String clientId;
     private String clientName;
     private String intent;
     private List<String> labels;

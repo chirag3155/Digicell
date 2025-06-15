@@ -13,8 +13,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ConversationResponseDTO {
-    private Long conversationId;
-    private Long clientId;
+    private String conversationId;
+    private String clientId;
     private String clientName;
     private Long userId;
     private String userName;

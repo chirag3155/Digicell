@@ -36,7 +36,7 @@ public class ConversationService {
                 .collect(Collectors.toList());
     }
 
-    public ConDTO getConversationById(Long id) {
+    public ConDTO getConversationById(String id) {
         Conversation conversation = conversationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Conversation not found with id: " + id));
         return convertToConDTO(conversation);
@@ -49,7 +49,7 @@ public class ConversationService {
                 .collect(Collectors.toList());
     }
 
-    public List<ConDTO> getConversationsByUserAndClient(Long userId, Long clientId) {
+    public List<ConDTO> getConversationsByUserAndClient(Long userId, String clientId) {
         List<Conversation> conversations = conversationRepository.findByUserAccount_UserIdAndClient_ClientId(userId, clientId);
         return conversations.stream()
                 .map(this::convertToConDTO)
@@ -93,7 +93,7 @@ public class ConversationService {
     }
 
     @Transactional
-    public Conversation updateConversation(Long id, Conversation updated) {
+    public Conversation updateConversation(String id, Conversation updated) {
         Conversation existing = conversationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Conversation not found with id: " + id));
         existing.setChatHistory(updated.getChatHistory());
@@ -101,21 +101,21 @@ public class ConversationService {
         return existing;
     }
 
-    public void deleteConversation(Long id) {
+    public void deleteConversation(String id) {
         if (!conversationRepository.existsById(id)) {
             throw new ResourceNotFoundException("Conversation not found with id: " + id);
         }
         conversationRepository.deleteById(id);
     }
 
-    public List<ChatHistoryDTO> getChatHistoryByClient(Long clientId) {
+    public List<ChatHistoryDTO> getChatHistoryByClient(String clientId) {
         List<Conversation> conversations = conversationRepository.findByClient_ClientId(clientId);
         return conversations.stream()
                 .map(this::convertToChatHistoryDTO)
                 .collect(Collectors.toList());
     }
 
-    public ChatHistoryDTO getConversationDetails(Long conversationId, Long clientId) {
+    public ChatHistoryDTO getConversationDetails(String conversationId, String clientId) {
         Conversation conversation = conversationRepository.findByConversationIdAndClient_ClientId(conversationId, clientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
         return convertToChatHistoryDTO(conversation);
@@ -123,6 +123,7 @@ public class ConversationService {
 
     private ChatHistoryDTO convertToChatHistoryDTO(Conversation conversation) {
         ChatHistoryDTO dto = new ChatHistoryDTO();
+        // dto.setConversationId(conversation.getConversationId());
         dto.setUserId(conversation.getUserAccount().getUserId());
         dto.setUserName(conversation.getUserAccount().getUserName());
         dto.setIntent(conversation.getIntent());

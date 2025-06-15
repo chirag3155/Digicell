@@ -16,7 +16,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 @AllArgsConstructor
 public class ConvoDto {
 
-    private Long conversationId;
+    private String conversationId;
     private Long userId;
     private String userName;
     private String intent;

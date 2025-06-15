@@ -53,7 +53,7 @@ public class ConversationElasticController {
    }
 
    @GetMapping("/client/{clientId}")
-   public ResponseEntity<ApiResponse<List<ConversationDocument>>> getConversationsByClient(@PathVariable Long clientId) {
+       public ResponseEntity<ApiResponse<List<ConversationDocument>>> getConversationsByClient(@PathVariable String clientId) {
        try {
            logger.info("Retrieving conversations for client: {}", clientId);
            List<ConversationDocument> conversations = conversationElasticService.getConversationsByClient(clientId);
@@ -69,7 +69,7 @@ public class ConversationElasticController {
    @GetMapping("/user/{userId}/client/{clientId}")
    public ResponseEntity<ApiResponse<List<ConversationDocument>>> getConversationsByUserAndClient(
            @PathVariable Long userId,
-           @PathVariable Long clientId) {
+           @PathVariable String clientId) {
        try {
            logger.info("Retrieving conversations for user: {} and client: {}", userId, clientId);
            List<ConversationDocument> conversations = conversationElasticService.getConversationsByUserAndClient(userId, clientId);
@@ -84,8 +84,8 @@ public class ConversationElasticController {
 
    @GetMapping("/{conversationId}/client/{clientId}")
    public ResponseEntity<ApiResponse<ConversationDocument>> getConversationByIdAndClient(
-           @PathVariable Long conversationId,
-           @PathVariable Long clientId) {
+           @PathVariable String conversationId,
+           @PathVariable String clientId) {
        try {
            logger.info("Retrieving conversation: {} for client: {}", conversationId, clientId);
            ConversationDocument conversation = conversationElasticService.getConversationByIdAndClient(conversationId, clientId);

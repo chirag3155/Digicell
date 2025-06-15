@@ -10,18 +10,18 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ConversationRepository extends JpaRepository<Conversation, Long> {
+public interface ConversationRepository extends JpaRepository<Conversation, String> {
 
     /**
      * Fetch all conversations assigned to a given agent id.
      */
     List<Conversation> findByUserAccount_UserId(Long userId);
 
-    List<Conversation> findByClient_ClientId(Long clientId);
+    List<Conversation> findByClient_ClientId(String clientId);
 
-    List<Conversation> findByUserAccount_UserIdAndClient_ClientId(Long userId, Long clientId);
+    List<Conversation> findByUserAccount_UserIdAndClient_ClientId(Long userId, String clientId);
 
-    Optional<Conversation> findByConversationIdAndClient_ClientId(Long conversationId, Long clientId);
+    Optional<Conversation> findByConversationIdAndClient_ClientId(String conversationId, String clientId);
 
     Optional<Conversation> findByClientAndUserAccountAndEndTimeIsNull(Client client, UserAccount userAccount);
 

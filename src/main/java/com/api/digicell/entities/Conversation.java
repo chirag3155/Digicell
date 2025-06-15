@@ -15,8 +15,8 @@ import java.util.List;
 @Table(name = "Conversations")
 public class Conversation {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long conversationId;
+    @Column(name = "conversation_id")
+    private String conversationId;
 
     @ManyToOne
     @JoinColumn(name = "client_id", nullable = false)

@@ -31,7 +31,7 @@ public class ClientService {
         return clientRepository.findAll();
     }
 
-    public Client getClientById(Long id) {
+    public Client getClientById(String id) {
         return clientRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + id));
     }
@@ -104,7 +104,7 @@ public class ClientService {
     /**
      * Returns a {@link ClientDetailsResponse} containing the client as well as all their conversations.
      */
-    public ClientDetailsResponse getClientDetails(Long clientId) {
+    public ClientDetailsResponse getClientDetails(String clientId) {
         logger.info("Fetching client details for id: {}", clientId);
         try {
             Client client = clientRepository.findById(clientId)
@@ -140,7 +140,7 @@ public class ClientService {
         }
     }
 
-    public List<ConvoDto> getClientConversations(Long clientId) {
+    public List<ConvoDto> getClientConversations(String clientId) {
         logger.info("Fetching conversations for client ID: {}", clientId);
         Client client = clientRepository.findById(clientId)
                 .orElseThrow(() -> new IllegalArgumentException("Client not found with id: " + clientId));

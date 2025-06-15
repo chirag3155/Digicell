@@ -23,5 +23,5 @@ public class UserAccountCreateDTO {
     
 
     @NotNull(message = "Status is required")
-    private UserAccountStatus status = UserAccountStatus.AVAILABLE; // Default status
+    private UserAccountStatus status = UserAccountStatus.OFFLINE; // Default status
 } 

@@ -59,7 +59,7 @@ public class ConversationController {
     @GetMapping("/{conversation_id}")
     public ResponseEntity<ApiResponse<ConDTO>> getById(
             @RequestHeader(name = "Authorization", required = false) String authToken,
-            @PathVariable("conversation_id") @Positive(message = "conversation_id must be positive") Long conversation_id) {
+            @PathVariable("conversation_id") String conversation_id) {
         ConDTO conDTO = conversationService.getConversationById(conversation_id);
         ApiResponse<ConDTO> response = new ApiResponse<>(HttpStatus.OK.value(), "Conversation fetched successfully", conDTO);
         return ResponseEntity.ok(response);
@@ -91,7 +91,7 @@ public class ConversationController {
     @GetMapping("/client/{client_id}")
     public ResponseEntity<ApiResponse<List<ChatHistoryDTO>>> getChatHistoryByUser(
             @RequestHeader(name = "Authorization", required = false) String authToken,
-            @PathVariable("client_id") @Positive(message = "client_id must be positive") Long client_id) {
+            @PathVariable("client_id") String client_id) {
         List<ChatHistoryDTO> chatHistory = conversationService.getChatHistoryByClient(client_id);
         ApiResponse<List<ChatHistoryDTO>> response = new ApiResponse<>(
             HttpStatus.OK.value(),
@@ -113,7 +113,7 @@ public class ConversationController {
     public ResponseEntity<ApiResponse<List<ConDTO>>> getByUserAndClient(
             @RequestHeader(name = "Authorization", required = false) String authToken,
             @PathVariable("user_id") @Positive(message = "user_id must be positive") Long user_id,
-            @PathVariable("client_id") @Positive(message = "user_id must be positive") Long clientId) {
+            @PathVariable("client_id") String clientId) {
         return ResponseUtil.listResponse(conversationService.getConversationsByUserAndClient(user_id, clientId), "conversations for user and user");
     }
 
@@ -145,7 +145,7 @@ public class ConversationController {
     @PutMapping("/{conversation_id}")
     public ResponseEntity<ApiResponse<Conversation>> update(
             @RequestHeader(name = "Authorization", required = false) String authToken,
-            @PathVariable("conversation_id") @Positive(message = "conversation_id must be positive") Long conversation_id,
+            @PathVariable("conversation_id") String conversation_id,
             @Valid @RequestBody Conversation updated) {
         Conversation conv = conversationService.updateConversation(conversation_id, updated);
         ApiResponse<Conversation> response = new ApiResponse<>(HttpStatus.OK.value(), "Conversation updated successfully", conv);
@@ -163,7 +163,7 @@ public class ConversationController {
     @DeleteMapping("/{conversation_id}")
     public ResponseEntity<ApiResponse<Void>> delete(
             @RequestHeader(name = "Authorization", required = false) String authToken,
-            @PathVariable("conversation_id") @Positive(message = "conversation_id must be positive") Long conversation_id) {
+            @PathVariable("conversation_id") String conversation_id) {
         conversationService.deleteConversation(conversation_id);
         ApiResponse<Void> response = new ApiResponse<>(HttpStatus.OK.value(), "Conversation with ID " + conversation_id + " has been deleted", null);
         return ResponseEntity.ok(response);
@@ -177,8 +177,8 @@ public class ConversationController {
     @GetMapping("/{conversation_id}/client/{client_id}")
     public ResponseEntity<ApiResponse<ChatHistoryDTO>> getConversationDetails(
             @RequestHeader(name = "Authorization", required = false) String authToken,
-            @PathVariable("conversation_id") @Positive(message = "conversation_id must be positive") Long conversationId,
-            @PathVariable("client_id") @Positive(message = "user_id must be positive") Long client_id) {
+            @PathVariable("conversation_id") String conversationId,
+            @PathVariable("client_id") String client_id) {
         ChatHistoryDTO conversation = conversationService.getConversationDetails(conversationId, client_id);
         ApiResponse<ChatHistoryDTO> response = new ApiResponse<>(
             HttpStatus.OK.value(),

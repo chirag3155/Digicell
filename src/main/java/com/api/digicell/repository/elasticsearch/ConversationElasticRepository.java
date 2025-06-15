@@ -12,7 +12,7 @@ import java.util.Optional;
 @Lazy
 public interface ConversationElasticRepository extends ElasticsearchRepository<ConversationDocument, String> {
     List<ConversationDocument> findByUserId(Long userId);
-    List<ConversationDocument> findByClientId(Long clientId);
-    List<ConversationDocument> findByUserIdAndClientId(Long userId, Long clientId);
-    Optional<ConversationDocument> findByConversationIdAndClientId(Long conversationId, Long clientId);
+    List<ConversationDocument> findByClientId(String clientId);
+    List<ConversationDocument> findByUserIdAndClientId(Long userId, String clientId);
+    Optional<ConversationDocument> findByConversationIdAndClientId(String conversationId, String clientId);
 } 
