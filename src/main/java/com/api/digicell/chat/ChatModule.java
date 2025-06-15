@@ -5,7 +5,13 @@ import com.api.digicell.model.ChatMessage;
 import com.api.digicell.model.ChatRoom;
 import com.api.digicell.entities.UserAccount;
 import com.api.digicell.entities.UserAccountStatus;
+import com.api.digicell.entities.Client;
+import com.api.digicell.entities.Conversation;
 import com.api.digicell.services.UserAccountService;
+import com.api.digicell.services.ConversationService;
+import com.api.digicell.repository.ClientRepository;
+import com.api.digicell.repository.ConversationRepository;
+import com.api.digicell.repository.UserRepository;
 import com.api.digicell.dto.UserAccountStatusDTO;
 import com.api.digicell.dto.ChatMessageRequest;
 import com.api.digicell.dto.UserMessageResponse;
@@ -45,9 +51,13 @@ public class ChatModule {
     private final UserAccountService userAccountService;
     private final SocketConfig socketConfig;
     private final SocketConnectionService connectionService;
+    private final ClientRepository clientRepository;
+    private final ConversationRepository conversationRepository;
+    private final UserRepository userRepository;
     private static final int MAX_CLIENTS_PER_USER = 5;
 
-    public ChatModule(UserAccountService userAccountService, SocketConfig socketConfig, SocketConnectionService connectionService) {
+    public ChatModule(UserAccountService userAccountService, SocketConfig socketConfig, SocketConnectionService connectionService, 
+                     ClientRepository clientRepository, ConversationRepository conversationRepository, UserRepository userRepository) {
         Configuration config = new Configuration();
         config.setHostname(socketConfig.getHost());
         config.setPort(socketConfig.getPort());
@@ -66,6 +76,9 @@ public class ChatModule {
         this.userAccountService = userAccountService;
         this.socketConfig = socketConfig;
         this.connectionService = connectionService;
+        this.clientRepository = clientRepository;
+        this.conversationRepository = conversationRepository;
+        this.userRepository = userRepository;
 
         initializeSocketListeners();
     }
@@ -86,9 +99,14 @@ public class ChatModule {
                 String summary = (String) data.get("summary");
                 String history = (String) data.get("history");
                 String timestamp = (String) data.get("timestamp");
+                
+                // Extract client data for database storage
+                String clientName = (String) data.get("name");
+                String clientEmail = (String) data.get("email");
+                String clientPhone = (String) data.get("phone");
 
                 log.info("Received user request from chat module - Client: {}, Conversation: {}", clientId, conversationId);
-                handleUserRequest(socketClient, clientId, conversationId, summary, history, timestamp);
+                handleUserRequest(socketClient, clientId, conversationId, summary, history, timestamp, clientName, clientEmail, clientPhone);
             } catch (Exception e) {
                 log.error("Error handling user request: {}", e.getMessage(), e);
             }
@@ -103,7 +121,8 @@ public class ChatModule {
             if (chatRoom != null) {
                 ChatMessage message = new ChatMessage();
                 message.setConversationId(conversationId);
-                message.setClientId(messageRequest.getClientId());
+                // chat module is sending the user_id as client_id
+                message.setClientId(messageRequest.getUserId());
                 message.setContent(messageRequest.getTranscript());
                 message.setTimestamp(LocalDateTime.ofInstant(
                     Instant.ofEpochMilli(Long.parseLong(messageRequest.getTimestamp())),
@@ -318,7 +337,7 @@ public class ChatModule {
         });
     }
 
-    private void handleUserRequest(SocketIOClient socketClient, String clientId, String conversationId, String summary, String history, String timestamp) {
+    private void handleUserRequest(SocketIOClient socketClient, String clientId, String conversationId, String summary, String history, String timestamp, String clientName, String clientEmail, String clientPhone) {
         // Check if this conversation ID already exists
         if (chatRooms.containsKey(conversationId)) {
             log.warn("Duplicate request for conversation ID: {}. Ignoring duplicate request.", conversationId);
@@ -340,6 +359,13 @@ public class ChatModule {
             //     log.info("Sent existing user info for duplicate conversation {}: {}", conversationId, userInfo);
             // }
             return;
+        }
+        
+        // Store/Update client data in database
+        try {
+            saveOrUpdateClientData(clientId, clientName, clientEmail, clientPhone);
+        } catch (Exception e) {
+            log.error("Error saving client data for clientId {}: {}", clientId, e.getMessage(), e);
         }
         
         // Get the next available user that hasn't requested offline
@@ -394,6 +420,13 @@ public class ChatModule {
                     userSocketClient.sendEvent(socketConfig.EVENT_NEW_CLIENT_REQ, userInfo);
                     
                     log.info("User {} assigned to client {} for conversation {}", user.getUserId(), clientId, conversationId);
+                    
+                    // Store conversation data in database
+                    try {
+                        saveConversationData(conversationId, user.getUserId(), clientId, summary);
+                    } catch (Exception e) {
+                        log.error("Error saving conversation data for conversationId {}: {}", conversationId, e.getMessage(), e);
+                    }
                 } else {
                     log.warn("User socket client not found for socket ID: {}", userSocketId);
                 }
@@ -490,5 +523,128 @@ public class ChatModule {
     public void stop() {
         server.stop();
         log.info("Chat module stopped");
+    }
+    
+    /**
+     * Save or update client data in the database.
+     * Handles nullable fields appropriately.
+     */
+    private void saveOrUpdateClientData(String clientId, String clientName, String clientEmail, String clientPhone) {
+        if (clientId == null || clientId.trim().isEmpty()) {
+            log.warn("Cannot save client data: clientId is null or empty");
+            return;
+        }
+        
+        try {
+            // Check if client already exists
+            Client existingClient = clientRepository.findById(clientId).orElse(null);
+            
+            if (existingClient != null) {
+                // Update existing client if new data is provided
+                boolean updated = false;
+                
+                if (clientName != null && !clientName.trim().isEmpty() && !clientName.equals(existingClient.getName())) {
+                    existingClient.setName(clientName.trim());
+                    updated = true;
+                }
+                
+                if (clientEmail != null && !clientEmail.trim().isEmpty() && !clientEmail.equals(existingClient.getEmail())) {
+                    existingClient.setEmail(clientEmail.trim());
+                    updated = true;
+                }
+                
+                if (clientPhone != null && !clientPhone.trim().isEmpty() && !clientPhone.equals(existingClient.getPhone())) {
+                    existingClient.setPhone(clientPhone.trim());
+                    updated = true;
+                }
+                
+                if (updated) {
+                    clientRepository.save(existingClient);
+                    log.info("Updated existing client data for clientId: {}", clientId);
+                } else {
+                    log.debug("No updates needed for existing client: {}", clientId);
+                }
+            } else {
+                // Create new client
+                Client newClient = Client.builder()
+                    .clientId(clientId)
+                    .name(clientName != null && !clientName.trim().isEmpty() ? clientName.trim() : "Unknown")
+                    .email(clientEmail != null && !clientEmail.trim().isEmpty() ? clientEmail.trim() : "unknown@example.com")
+                    .phone(clientPhone != null && !clientPhone.trim().isEmpty() ? clientPhone.trim() : "N/A")
+                    .isAssigned(true)
+                    .build();
+                
+                clientRepository.save(newClient);
+                log.info("Created new client with clientId: {}", clientId);
+            }
+        } catch (Exception e) {
+            log.error("Error saving/updating client data for clientId {}: {}", clientId, e.getMessage(), e);
+            throw e;
+        }
+    }
+    
+    /**
+     * Save conversation data in the database.
+     * Links the conversation with the client and user.
+     */
+    private void saveConversationData(String conversationId, String userId, String clientId, String summary) {
+        if (conversationId == null || conversationId.trim().isEmpty()) {
+            log.warn("Cannot save conversation data: conversationId is null or empty");
+            return;
+        }
+        
+        if (userId == null || userId.trim().isEmpty()) {
+            log.warn("Cannot save conversation data: userId is null or empty");
+            return;
+        }
+        
+        if (clientId == null || clientId.trim().isEmpty()) {
+            log.warn("Cannot save conversation data: clientId is null or empty");
+            return;
+        }
+        
+        try {
+            // Check if conversation already exists
+            Conversation existingConversation = conversationRepository.findById(conversationId).orElse(null);
+            
+            if (existingConversation != null) {
+                log.debug("Conversation {} already exists in database", conversationId);
+                return;
+            }
+            
+            // Get client and user entities
+            Client client = clientRepository.findById(clientId).orElse(null);
+            if (client == null) {
+                log.error("Client not found with id: {} when saving conversation", clientId);
+                return;
+            }
+            
+            UserAccount userAccount = userRepository.findById(Long.parseLong(userId)).orElse(null);
+            if (userAccount == null) {
+                log.error("User not found with id: {} when saving conversation", userId);
+                return;
+            }
+            
+            // Create new conversation
+            Conversation conversation = new Conversation();
+            conversation.setConversationId(conversationId);
+            conversation.setClient(client);
+            conversation.setUserAccount(userAccount);
+            conversation.setIntent("SUPPORT"); // Default intent, can be updated later
+            conversation.setChatSummary(summary != null && !summary.trim().isEmpty() ? summary.trim() : "Chat conversation");
+            // startTime is automatically set by @CreationTimestamp
+            // endTime is null initially (conversation is ongoing)
+            // chatHistory is null initially (will be populated as messages are exchanged)
+            
+            conversationRepository.save(conversation);
+            log.info("Created new conversation with conversationId: {} for user: {} and client: {}", 
+                    conversationId, userId, clientId);
+            
+        } catch (NumberFormatException e) {
+            log.error("Invalid userId format: {} when saving conversation", userId);
+        } catch (Exception e) {
+            log.error("Error saving conversation data for conversationId {}: {}", conversationId, e.getMessage(), e);
+            throw e;
+        }
     }
 } 

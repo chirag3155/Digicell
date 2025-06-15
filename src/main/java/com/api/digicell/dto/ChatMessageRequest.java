@@ -12,8 +12,8 @@ public class ChatMessageRequest {
     @JsonProperty("conversation_id")
     private String conversationId;
     
-    @JsonProperty("client_id")
-    private String clientId;
+    @JsonProperty("user_id")
+    private String userId;
     
     private String transcript;
     
