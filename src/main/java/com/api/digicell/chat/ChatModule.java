@@ -188,13 +188,13 @@ public class ChatModule {
                 SocketIOClient chatModuleSocketClient = server.getClient(UUID.fromString(chatModuleSocketId));
                 if (chatModuleSocketClient != null) {
                     // Prepare close request data
-                    ChatCloseRequest closeRequest = new ChatCloseRequest();
-                    closeRequest.setConversationId(conversationId);
-                    closeRequest.setClientId(clientId);
-                    closeRequest.setTimestamp(timestamp);
+                    ChatCloseRequest chatCloseRequest = new ChatCloseRequest();
+                    chatCloseRequest.setConversationId(conversationId);
+                    chatCloseRequest.setClientId(clientId);
+                    chatCloseRequest.setTimestamp(timestamp);
                     
                     // Send close event to chat module
-                    chatModuleSocketClient.sendEvent(socketConfig.EVENT_CLOSE, closeRequest);
+                    chatModuleSocketClient.sendEvent(socketConfig.EVENT_CLOSE, chatCloseRequest);
                     log.info("Close event sent to chat module for conversation {} and client {}", conversationId, clientId);
                 } else {
                     log.warn("Chat module socket client not found for socket ID: {}", chatModuleSocketId);

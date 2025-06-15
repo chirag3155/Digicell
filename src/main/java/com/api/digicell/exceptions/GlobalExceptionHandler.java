@@ -1,31 +1,31 @@
 package com.api.digicell.exceptions;
 
 import com.api.digicell.responses.ApiResponse;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.transaction.TransactionSystemException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.transaction.TransactionSystemException;
-import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.validation.FieldError;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.persistence.EntityNotFoundException;
-import java.lang.NumberFormatException;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Global exception handler for all REST controllers.
- * Provides consistent error responses and logging across the application.
+ * Global exception handler for the application.
+ * Provides centralized exception handling across all controllers.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
@@ -45,13 +45,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleEntityNotFound(EntityNotFoundException ex) {
         logger.error("Entity not found: {}", ex.getMessage());
-        logger.debug("Entity not found details - message: {}", ex.getMessage());
-        
-        ApiResponse<Void> response = new ApiResponse<>(
-                HttpStatus.NOT_FOUND.value(),
-                "Requested resource not found",
-                null);
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        logger.debug("Entity not found details - cause: {}", ex.getCause());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiResponse<>(HttpStatus.NOT_FOUND.value(), "Entity not found", null));
     }
 
     /**

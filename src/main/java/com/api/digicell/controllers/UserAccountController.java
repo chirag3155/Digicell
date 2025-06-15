@@ -292,7 +292,7 @@ public class UserAccountController {
             @PathVariable @Positive Long user_id) {
         logger.info("Setting user with id: {} to AVAILABLE", user_id);
         try {
-            UserAccount updatedUserAccount = userAccountService.setUserAvailable(user_id);
+            UserAccount updatedUserAccount = userAccountService.setUserONLINE(user_id);
             logger.info("Successfully set user status to AVAILABLE for user id: {}", user_id);
             return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "User status set to AVAILABLE", updatedUserAccount));
         } catch (ResourceNotFoundException e) {

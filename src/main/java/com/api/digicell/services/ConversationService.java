@@ -62,7 +62,7 @@ public class ConversationService {
             .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + dto.getClientId()));
 
         UserAccount userAccount = userRepository.findById(dto.getUserId())
-            .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + dto.getUserId()));
+            .orElseThrow(() -> new IllegalArgumentException("Agent not found with id: " + dto.getUserId()));
 
         // Check for existing conversation
         Conversation existingConversation = conversationRepository.findByClientAndUserAccountAndEndTimeIsNull(client, userAccount)

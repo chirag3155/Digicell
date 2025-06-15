@@ -1,26 +1,44 @@
 package com.api.digicell.config;
 
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
-import io.swagger.v3.oas.annotations.info.Info;
-import io.swagger.v3.oas.annotations.info.Contact;
-import io.swagger.v3.oas.annotations.info.License;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.servers.Server;
+import org.springdoc.core.models.GroupedOpenApi;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-/**
- * Central configuration for Springdoc-OpenAPI (Swagger UI).
- *
- * Once the application is running, the documentation will be available at:
- *   • http://localhost:8080/swagger-ui/index.html (interactive UI)
- *   • http://localhost:8080/v3/api-docs             (raw JSON)
- */
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+
+/*
+ * @Author Digicell Team
+*/
+
+@Configuration
 @OpenAPIDefinition(
-        info = @Info(
-                title = "Digicell Support API",
-                description = "REST APIs for Digicell agent–user conversation system.",
-                version = "1.0.0",
-                contact = @Contact(name = "Digicell Dev Team", email = "support@digicell.com"),
-                license = @License(name = "Apache 2.0", url = "https://www.apache.org/licenses/LICENSE-2.0.html")
-        )
+    info = @Info(
+        title = "Digicell: BACKEND API'S",
+        version = "1.0",
+        description = "API Documentation for Digicell Backend Services"
+    )
+)
+@SecurityScheme(    
+    name = "bearerAuth",
+    type = SecuritySchemeType.HTTP,
+    bearerFormat = "JWT",
+    scheme = "Bearer",
+    in = SecuritySchemeIn.HEADER
 )
 public class OpenApiConfig {
-    // No implementation needed; annotations provide the configuration.
+
+    @Bean
+    public GroupedOpenApi api() {
+        return GroupedOpenApi.builder()
+            .group("default")
+            .packagesToScan("com.api.digicell.controllers")
+            .build();
+    }
 } 

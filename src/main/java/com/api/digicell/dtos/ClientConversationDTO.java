@@ -1,26 +1,23 @@
-package com.api.digicell.dto;
+package com.api.digicell.dtos;
 
-import com.api.digicell.entities.ChatMessage;
 import lombok.Data;
 import java.time.LocalDateTime;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Data
-public class ClientConvoDto {
+public class ClientConversationDTO {
     private Long conversationId;
-    private Long userId;
+    private String userId;
     private String userName;
-    private String intent;
-    private List<String> labels;
+    private String query;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime startTime;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime endTime;
-    private String chatSummary;
-    private List<List<ChatMessage>> chatHistory;
+    private List<List<ChatMessageDTO>> chatHistory;
 
     @Data
     public static class ChatMessageDTO {
@@ -28,5 +25,4 @@ public class ClientConvoDto {
         private String content;
         private String role;
     }
-
-} 
+}

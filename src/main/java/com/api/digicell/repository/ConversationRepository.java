@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface ConversationRepository extends JpaRepository<Conversation, Long> {
 
     /**
-     * Fetch all conversations assigned to a given user id.
+     * Fetch all conversations assigned to a given agent id.
      */
     List<Conversation> findByUserAccount_UserId(Long userId);
 
