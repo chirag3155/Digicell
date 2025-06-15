@@ -12,18 +12,18 @@ public class ChatRoom {
     private String userId;
     private String clientId;
     private String summary;
-    private List<Map<String, Object>> history;
+    private String history;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private List<ChatMessage> messages;
     private boolean isActive;
 
-    public ChatRoom(String conversationId, String userId, String clientId, String summary, List<Map<String, Object>> history) {
+    public ChatRoom(String conversationId, String userId, String clientId, String summary, String history) {
         this.conversationId = conversationId;
         this.userId = userId;
         this.clientId = clientId;
         this.summary = summary;
-        this.history = history != null ? new ArrayList<>(history) : new ArrayList<>();
+        this.history = history;
         this.startTime = LocalDateTime.now();
         this.messages = new ArrayList<>();
         this.isActive = true;

@@ -30,7 +30,7 @@ public class SocketConfig {
     // Chat Closure Events
     public static final String EVENT_CLOSE_AGENT = "close_agent";
     public static final String EVENT_CLIENT_CLOSE = "client_close";
-    public static final String EVENT_CLOSE = "close";
+    public static final String EVENT_CLOSE = "close_chat";
     
     // Agent Status Events
     public static final String EVENT_PING = "ping";
