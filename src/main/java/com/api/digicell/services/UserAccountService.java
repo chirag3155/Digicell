@@ -194,7 +194,7 @@ public class UserAccountService {
                     return new ResourceNotFoundException("user not found with id: " + id);
                 });
         
-        userAccount.setStatus(UserAccountStatus.AVAILABLE);
+        userAccount.setStatus(UserAccountStatus.ONLINE);
         userAccount.setUpdatedAt(LocalDateTime.now());
         UserAccount updatedUserAccount = userRepository.save(userAccount);
         logger.info("Successfully set user status to AVAILABLE for user id: {}", id);
