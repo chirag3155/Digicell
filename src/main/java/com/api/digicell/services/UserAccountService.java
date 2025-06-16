@@ -229,12 +229,15 @@ public class UserAccountService {
                         ConversationResponseDTO dto = new ConversationResponseDTO();
                         dto.setConversationId(conv.getConversationId());
                         dto.setClientId(conv.getClient().getClientId());
-                        dto.setUserName(conv.getClient().getName());
-                        dto.setStartTime(conv.getStartTime());
-                        dto.setEndTime(conv.getEndTime());
-                        dto.setIntent(conv.getIntent());
-                        dto.setChatSummary(conv.getChatSummary());
-                        dto.setChatHistory(conv.getChatHistory());
+                        dto.setClientName(conv.getClient().getName());
+                        dto.setUserId(conv.getUserAccount().getUserId());
+                        dto.setUserName(conv.getUserAccount().getUserName());
+                        // Set default values for removed fields
+                        dto.setStartTime(null);
+                        dto.setEndTime(null);
+                        dto.setIntent("SUPPORT");
+                        dto.setChatSummary("Chat conversation");
+                        dto.setChatHistory(null);
                         return dto;
                     })
                     .collect(Collectors.toList());

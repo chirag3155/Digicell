@@ -25,29 +25,4 @@ public class Conversation {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private UserAccount userAccount;
-
-    @Column(nullable = false)
-    private String intent;
-
-    @CreationTimestamp
-    @Column(nullable = false)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime startTime;
-
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime endTime;
-
-    /**
-     * Stores the chronological list of exchanged messages as JSON in DB using {@link ChatHistoryConverter}.
-     * The structure is List<List<ChatMessage>> where the outer list represents conversation sessions
-     * and the inner list contains the messages within each session.
-     */
-    @Convert(converter = ChatHistoryConverter.class)
-    @Column(columnDefinition = "json")
-    private List<List<ChatMessage>> chatHistory;
-
-
-    @Column(nullable = false)
-    private String chatSummary;
-
 } 

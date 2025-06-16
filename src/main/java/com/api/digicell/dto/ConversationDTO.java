@@ -14,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ConversationDTO {
+    private String conversationId;
     private String clientId;
     private Long userId;
     private String intent;

@@ -423,7 +423,7 @@ public class ChatModule {
                     
                     // Store conversation data in database
                     try {
-                        saveConversationData(conversationId, user.getUserId(), clientId, summary);
+                        saveConversationData(conversationId, user.getUserId(), clientId);
                     } catch (Exception e) {
                         log.error("Error saving conversation data for conversationId {}: {}", conversationId, e.getMessage(), e);
                     }
@@ -587,7 +587,7 @@ public class ChatModule {
      * Save conversation data in the database.
      * Links the conversation with the client and user.
      */
-    private void saveConversationData(String conversationId, String userId, String clientId, String summary) {
+    private void saveConversationData(String conversationId, String userId, String clientId) {
         if (conversationId == null || conversationId.trim().isEmpty()) {
             log.warn("Cannot save conversation data: conversationId is null or empty");
             return;
@@ -625,16 +625,11 @@ public class ChatModule {
                 return;
             }
             
-            // Create new conversation
+            // Create new conversation with only essential fields
             Conversation conversation = new Conversation();
             conversation.setConversationId(conversationId);
             conversation.setClient(client);
             conversation.setUserAccount(userAccount);
-            conversation.setIntent("SUPPORT"); // Default intent, can be updated later
-            conversation.setChatSummary(summary != null && !summary.trim().isEmpty() ? summary.trim() : "Chat conversation");
-            // startTime is automatically set by @CreationTimestamp
-            // endTime is null initially (conversation is ongoing)
-            // chatHistory is null initially (will be populated as messages are exchanged)
             
             conversationRepository.save(conversation);
             log.info("Created new conversation with conversationId: {} for user: {} and client: {}", 

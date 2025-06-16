@@ -19,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -59,35 +61,29 @@ public class ConversationService {
     @Transactional
     public Conversation createConversation(ConversationDTO dto) {
         Client client = clientRepository.findById(dto.getClientId())
-            .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + dto.getClientId()));
+            .orElseThrow(() -> new IllegalArgumentException("Client not found with id: " + dto.getClientId()));
 
         UserAccount userAccount = userRepository.findById(dto.getUserId())
-            .orElseThrow(() -> new IllegalArgumentException("Agent not found with id: " + dto.getUserId()));
+            .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + dto.getUserId()));
 
         // Check for existing conversation
-        Conversation existingConversation = conversationRepository.findByClientAndUserAccountAndEndTimeIsNull(client, userAccount)
-            .orElse(null); // If no conversation exists, return null
+        Optional<Conversation> existingConversation = conversationRepository.findByClientAndUserAccount(client, userAccount);
 
-
-        if (existingConversation != null) {
-            // Update existing conversation
-            existingConversation.setIntent(dto.getIntent());
-            existingConversation.setEndTime(dto.getEndTime());
-            if (dto.getChatHistory() != null) {
-                existingConversation.setChatHistory(dto.getChatHistory());
-            }
-            conversationRepository.save(existingConversation);
-            return existingConversation;
+        if (existingConversation.isPresent()) {
+            // Return existing conversation
+            return existingConversation.get();
         }
 
         // Create new conversation if none exists
         Conversation conversation = new Conversation();
+        // Use the conversationId from the DTO (from EVENT_AGENT_REQUEST)
+        if (dto.getConversationId() != null && !dto.getConversationId().trim().isEmpty()) {
+            conversation.setConversationId(dto.getConversationId());
+        } else {
+            throw new IllegalArgumentException("ConversationId is required and cannot be null or empty");
+        }
         conversation.setClient(client);
         conversation.setUserAccount(userAccount);
-        conversation.setIntent(dto.getIntent());
-        conversation.setStartTime(dto.getStartTime());
-        conversation.setEndTime(dto.getEndTime());
-        conversation.setChatHistory(dto.getChatHistory());
         conversationRepository.save(conversation);
         return conversation;
     }
@@ -96,9 +92,11 @@ public class ConversationService {
     public Conversation updateConversation(String id, Conversation updated) {
         Conversation existing = conversationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Conversation not found with id: " + id));
-        existing.setChatHistory(updated.getChatHistory());
-        existing.setEndTime(updated.getEndTime() != null ? updated.getEndTime() : LocalDateTime.now());
-        return existing;
+        
+        // Only update the fields that exist in the simplified entity
+        // The conversation entity now only has conversationId, client, and userAccount
+        // No other fields to update
+        return conversationRepository.save(existing);
     }
 
     public void deleteConversation(String id) {
@@ -123,27 +121,16 @@ public class ConversationService {
 
     private ChatHistoryDTO convertToChatHistoryDTO(Conversation conversation) {
         ChatHistoryDTO dto = new ChatHistoryDTO();
-        // dto.setConversationId(conversation.getConversationId());
+        // Note: The dtos.ChatHistoryDTO doesn't have conversationId field, so we skip it
         dto.setUserId(conversation.getUserAccount().getUserId());
         dto.setUserName(conversation.getUserAccount().getUserName());
-        dto.setIntent(conversation.getIntent());
-        dto.setChatSummary(conversation.getChatSummary());
         
-        // Convert chat history to the new format
-        List<List<ChatHistoryDTO.MessageDTO>> formattedHistory = conversation.getChatHistory().stream()
-            .map(messages -> messages.stream()
-                .map(msg -> {
-                    ChatHistoryDTO.MessageDTO messageDTO = new ChatHistoryDTO.MessageDTO();
-                    // Format timestamp to match "2024-03-20T18:01:00" format
-                    messageDTO.setTimestamp(msg.getTimestamp().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")));
-                    messageDTO.setContent(msg.getContent());
-                    messageDTO.setRole(msg.getRole());
-                    return messageDTO;
-                })
-                .collect(Collectors.toList()))  // Convert messages to MessageDTO                                                                                                                                                                                                                                                                                           
-            .collect(Collectors.toList());
-        // Set the formatted chat history       
-        dto.setChatHistory(formattedHistory);
+        // Since the conversation entity no longer has intent, chatSummary, or chatHistory fields,
+        // we'll set default values or leave them null
+        dto.setIntent("SUPPORT"); // Default value
+        dto.setChatSummary("Chat conversation"); // Default value
+        dto.setChatHistory(null); // No chat history available in simplified entity
+        
         return dto;
     }
 
@@ -165,11 +152,12 @@ public class ConversationService {
         );
         dto.setUserAccountResponseDTO(userDTO);
         
-        dto.setIntent(conversation.getIntent());
-        dto.setChatSummary(conversation.getChatSummary());
-        dto.setChatHistory(conversation.getChatHistory());
-        dto.setStartTime(conversation.getStartTime());
-        dto.setEndTime(conversation.getEndTime());
+        // Since the conversation entity no longer has these fields, set default values
+        dto.setIntent("SUPPORT"); // Default value
+        dto.setChatSummary("Chat conversation"); // Default value
+        dto.setChatHistory(null); // No chat history available in simplified entity
+        dto.setStartTime(null); // No start time in simplified entity
+        dto.setEndTime(null); // No end time in simplified entity
         return dto;
     }
 } 

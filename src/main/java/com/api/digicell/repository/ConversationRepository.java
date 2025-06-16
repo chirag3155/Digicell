@@ -23,7 +23,7 @@ public interface ConversationRepository extends JpaRepository<Conversation, Stri
 
     Optional<Conversation> findByConversationIdAndClient_ClientId(String conversationId, String clientId);
 
-    Optional<Conversation> findByClientAndUserAccountAndEndTimeIsNull(Client client, UserAccount userAccount);
+    Optional<Conversation> findByClientAndUserAccount(Client client, UserAccount userAccount);
 
     /**
      * Delete all conversations for a given user id.

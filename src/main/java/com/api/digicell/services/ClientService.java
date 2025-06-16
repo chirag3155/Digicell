@@ -119,11 +119,12 @@ public class ClientService {
                         dto.setConversationId(conv.getConversationId());
                         dto.setUserId(conv.getUserAccount().getUserId());
                         dto.setUserName(conv.getUserAccount().getUserName());
-                        dto.setStartTime(conv.getStartTime());
-                        dto.setEndTime(conv.getEndTime());
-                        dto.setIntent(conv.getIntent());
-                        dto.setChatSummary(conv.getChatSummary());
-                        dto.setChatHistory(conv.getChatHistory());
+                        // Set default values for removed fields
+                        dto.setStartTime(null);
+                        dto.setEndTime(null);
+                        dto.setIntent("SUPPORT");
+                        dto.setChatSummary("Chat conversation");
+                        dto.setChatHistory(null);
                         return dto;
                     })
                     .collect(Collectors.toList());
@@ -154,10 +155,11 @@ public class ClientService {
                     dto.setConversationId(conv.getConversationId());
                     dto.setUserId(conv.getUserAccount().getUserId());
                     dto.setUserName(conv.getUserAccount().getUserName());
-                    dto.setStartTime(conv.getStartTime());
-                    dto.setEndTime(conv.getEndTime());
-                    dto.setIntent(conv.getIntent());
-                    dto.setChatSummary(conv.getChatSummary());
+                    // Set default values for removed fields
+                    dto.setStartTime(null);
+                    dto.setEndTime(null);
+                    dto.setIntent("SUPPORT");
+                    dto.setChatSummary("Chat conversation");
                     return dto;
                 })
                 .collect(Collectors.toList());
