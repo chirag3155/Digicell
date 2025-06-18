@@ -8,7 +8,6 @@ import com.api.digicell.entities.UserAccountStatus;
 import com.api.digicell.entities.Client;
 import com.api.digicell.entities.Conversation;
 import com.api.digicell.services.UserAccountService;
-import com.api.digicell.services.ConversationService;
 import com.api.digicell.repository.ClientRepository;
 import com.api.digicell.repository.ConversationRepository;
 import com.api.digicell.repository.UserRepository;
@@ -18,18 +17,14 @@ import com.api.digicell.dto.UserMessageResponse;
 import com.api.digicell.dto.ChatModuleMessageResponse;
 import com.api.digicell.dto.UserCloseRequest;
 import com.api.digicell.dto.UserPingRequest;
-import com.api.digicell.dto.UserInfoResponse;
+import com.api.digicell.dto.ClientInfoResponse;
 import com.api.digicell.dto.ChatCloseRequest;
 import com.api.digicell.dto.UserCloseNotification;
 import com.api.digicell.config.SocketConfig;
 import com.api.digicell.services.SocketConnectionService;
 import com.corundumstudio.socketio.*;
-import com.corundumstudio.socketio.listener.ConnectListener;
-import com.corundumstudio.socketio.listener.DisconnectListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -104,12 +99,13 @@ public class ChatModule {
                 String clientName = (String) data.get("name");
                 String clientEmail = (String) data.get("email");
                 String clientPhone = (String) data.get("phone");
+                String clientLabel = (String) data.get("label");
 
                 log.info("Received user request from chat module - Client: {}, Conversation: {}", clientId, conversationId);
                 log.info("Client Data - Name: {}, Email: {}, Phone: {}", clientName, clientEmail, clientPhone);
                 log.info("Current Active Rooms: {}, User Queue Size: {}", chatRooms.size(), userQueue.size());
                 
-                handleUserRequest(socketClient, clientId, conversationId, summary, history, timestamp, clientName, clientEmail, clientPhone);
+                handleUserRequest(socketClient, clientId, conversationId, summary, history, timestamp, clientName, clientEmail, clientPhone, clientLabel);
             } catch (Exception e) {
                 log.error("Error handling user request: {}", e.getMessage(), e);
             }
@@ -367,7 +363,7 @@ public class ChatModule {
         });
     }
 
-    private void handleUserRequest(SocketIOClient socketClient, String clientId, String conversationId, String summary, String history, String timestamp, String clientName, String clientEmail, String clientPhone) {
+    private void handleUserRequest(SocketIOClient socketClient, String clientId, String conversationId, String summary, String history, String timestamp, String clientName, String clientEmail, String clientPhone, String clientLabel) {
         log.info("🔄 Processing user request - Conversation: {}, Client: {}", conversationId, clientId);
         
         // Check if this conversation ID already exists
@@ -432,12 +428,14 @@ public class ChatModule {
                 SocketIOClient userSocketClient = server.getClient(UUID.fromString(userSocketId));
                 if (userSocketClient != null) {
                     // Prepare user info data
-                    UserInfoResponse userInfo = new UserInfoResponse();
+                    ClientInfoResponse userInfo = new ClientInfoResponse();
                     userInfo.setStatus("online");
                     userInfo.setUserId(user.getUserId());
                     userInfo.setConversationId(conversationId);
-                    userInfo.setUserName(user.getUserName());
-                    userInfo.setUserLabel(user.getUserLabel());
+                    userInfo.setClientName(clientName);
+                    userInfo.setClientLabel(clientLabel);
+                    userInfo.setClientEmail(clientEmail);
+                    userInfo.setClientPhone(clientPhone);
                     
                     // Send acknowledgment to chat module
                     log.info("sending acknowledgment to chat module for user {}", userInfo);
@@ -468,12 +466,12 @@ public class ChatModule {
             log.warn("❌ NO USER AVAILABLE - Queue empty: {}, User limit reached: {}", 
                     userQueue.isEmpty(), user != null ? "Yes (current: " + user.getCurrentClientCount() + ")" : "N/A");
             
-            UserInfoResponse userInfo = new UserInfoResponse();
+            ClientInfoResponse userInfo = new ClientInfoResponse();
             userInfo.setStatus("unavailable");
             userInfo.setUserId("");
             userInfo.setConversationId(conversationId);
-            userInfo.setUserName("");
-            userInfo.setUserLabel("");
+            userInfo.setClientName("");
+            userInfo.setClientLabel("");
             
             log.info("📤 Sending unavailable response to chat module for client: {}", clientId);
             socketClient.sendEvent(socketConfig.EVENT_AGENT_ACK, userInfo);
