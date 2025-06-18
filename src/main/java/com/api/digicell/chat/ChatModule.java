@@ -139,7 +139,25 @@ public class ChatModule {
                 log.info("Forwarding message to user in room: {}", conversationId);
                 // Forward to user with the same format
                 log.info("Forwarding details to user with message: {}", messageRequest);
-                server.getRoomOperations(conversationId).sendEvent(socketConfig.EVENT_MESSAGE_REQ_AGENT, messageRequest);
+                
+                // Get the user socket ID and send directly to the user
+                String userSocketId = connectionService.getUserSocketId(chatRoom.getUserId());
+                log.info("🔍 Looking up user socket - UserId: {}, SocketId: {}", chatRoom.getUserId(), userSocketId);
+                
+                if (userSocketId != null) {
+                    SocketIOClient userSocketClient = server.getClient(UUID.fromString(userSocketId));
+                    if (userSocketClient != null) {
+                        userSocketClient.sendEvent(socketConfig.EVENT_MESSAGE_REQ_AGENT, messageRequest);
+                        log.info("📤 Message sent directly to user socket: {}", userSocketId);
+                    } else {
+                        log.warn("Socket client not found, using room operation");
+                        server.getRoomOperations(conversationId).sendEvent(socketConfig.EVENT_MESSAGE_REQ_AGENT, messageRequest);
+                    }
+                } else {
+                    log.warn("User socket not found, using room operation (clients: {})", 
+                            server.getRoomOperations(conversationId).getClients().size());
+                    server.getRoomOperations(conversationId).sendEvent(socketConfig.EVENT_MESSAGE_REQ_AGENT, messageRequest);
+                }
             } else {
                 log.warn("No chat room found for conversation: {}", conversationId);
             }
@@ -190,10 +208,10 @@ public class ChatModule {
                     server.getClient(UUID.fromString(chatModuleSocketId))
                           .sendEvent(socketConfig.EVENT_MESSAGE_RESP, chatModuleResponse);
                 } else {
-                    log.warn("⚠️ Chat module socket ID not found, cannot forward response");
+                    log.warn("Chat module socket not found");
                 }
             } else {
-                log.warn("⚠️ No chat room found for user response - Conversation: {}", conversationId);
+                log.warn("No chat room found for conversation: {}", conversationId);
             }
         });
 
@@ -204,8 +222,7 @@ public class ChatModule {
             String clientId = closeRequest.getClientId();
             String timestamp = closeRequest.getTimestamp();
             
-            log.info("🔴 EVENT_CLOSE_AGENT - User close request received");
-            log.info("🔐 Close Details - User: {}, Conversation: {}, Client: {}, Timestamp: {}", userId, conversationId, clientId, timestamp);
+            log.info("EVENT_CLOSE_AGENT - User: {}, Conversation: {}, Client: {}", userId, conversationId, clientId);
             
             // Find the chat room
             ChatRoom chatRoom = findChatRoomByConversationId(conversationId);
@@ -224,19 +241,12 @@ public class ChatModule {
                     // Remove the chat room
                     chatRooms.remove(conversationId);
 
-                    log.info("🗑️ Chat room removed for conversation: {}, User client count now: {}", conversationId, user.getCurrentClientCount());
-
-                    // If this was the last client, clean up the room
-                    if (user.getCurrentClientCount() == 0) {
-                        log.info("🏁 Last client left - User {} has no more active conversations", userId);
-                    } else {
-                        log.info("📊 Client {} left conversation {}, {} clients remaining for user {}", clientId, conversationId, user.getCurrentClientCount(), userId);
-                    }
+                    log.info("Chat room removed - User {} now has {} active clients", userId, user.getCurrentClientCount());
                 } else {
-                    log.warn("⚠️ User {} not found in userMap for conversation {}", userId, conversationId);
+                    log.warn("User {} not found in userMap", userId);
                 }
             } else {
-                log.warn("⚠️ No chat room found for conversation {} during close request", conversationId);
+                log.warn("No chat room found for conversation {}", conversationId);
             }
             
             // Get the chat module socket ID for this conversation
@@ -254,10 +264,10 @@ public class ChatModule {
                     // Send close event to chat module
                     chatModuleSocketClient.sendEvent(socketConfig.EVENT_CLOSE, chatCloseRequest);
                 } else {
-                    log.warn("⚠️ Chat module socket client not found for socket ID: {}", chatModuleSocketId);
+                    log.warn("Chat module socket client not found");
                 }
             } else {
-                log.warn("⚠️ No chat module socket ID found for close request");
+                log.warn("Chat module socket ID not found");
             }
         });
 
@@ -424,9 +434,16 @@ public class ChatModule {
             
             // Store socket ID mapping
             String userSocketId = connectionService.getUserSocketId(user.getUserId());
+            log.info("🔗 Socket mapping check - UserId: {}, SocketId: {}", user.getUserId(), userSocketId);
+            
             if (userSocketId != null) {
                 SocketIOClient userSocketClient = server.getClient(UUID.fromString(userSocketId));
+                log.info("🔌 Socket client lookup - SocketId: {}, Client found: {}", userSocketId, userSocketClient != null);
+                
                 if (userSocketClient != null) {
+                    // Join the user to the conversation room for message routing
+                    userSocketClient.joinRoom(conversationId);
+                    log.info("🏠 User {} joined room: {}", user.getUserId(), conversationId);
                     // Prepare user info data
                     ClientInfoResponse userInfo = new ClientInfoResponse();
                     userInfo.setStatus("online");
@@ -446,6 +463,11 @@ public class ChatModule {
                     userSocketClient.sendEvent(socketConfig.EVENT_NEW_CLIENT_REQ, userInfo);
                     
                     log.info("User {} assigned to client {} for conversation {}", user.getUserId(), clientId, conversationId);
+                    
+                    // Debug: Show current room memberships
+                    log.info("🏠 Room memberships for conversation {}: {}", conversationId, 
+                            server.getRoomOperations(conversationId).getClients().size());
+                    log.info("📊 Total connected clients: {}", server.getAllClients().size());
                     
                     // Store conversation data in database
                     try {
