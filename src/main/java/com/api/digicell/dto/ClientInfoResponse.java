@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserInfoResponse {
+public class ClientInfoResponse {
     private String status;
     
     @JsonProperty("user_id")
@@ -17,9 +17,15 @@ public class UserInfoResponse {
     @JsonProperty("conversation_id")
     private String conversationId;
     
-    @JsonProperty("agent_name")
-    private String userName;
+    @JsonProperty("client_name")
+    private String clientName;
     
-    @JsonProperty("agent_label")
-    private String userLabel;
-} 
+    @JsonProperty("client_label")
+    private String clientLabel;
+
+    @JsonProperty("client_email")
+    private String clientEmail;
+
+    @JsonProperty("client_phone")
+    private String clientPhone;
+}
