@@ -171,11 +171,8 @@
           "output_tokens": null,
           "cached_tokens": null,
           "real_agent_details": {
-            "agent_id": "agent_12345",
-            "agent_name": "Sarah Johnson",
-            "department": "Billing Support",
-            "experience_level": "senior",
-            "transfer_time": "2024-01-15T09:30:15.700Z"
+            "agent_id": "12345",
+            "agent_name": "Sarah Johnson"
           }
         }
       ],

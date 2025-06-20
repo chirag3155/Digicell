@@ -1,0 +1,379 @@
+{
+  "session_id": "sess_2024_001_abc123",
+  "tenant_id": "digicell_jamaica",
+  "assistant_id": "assistant_billing_v2.1",
+  "user_info": {
+    "id": "client_876543210",
+    "name": "Marcus Johnson",
+    "mobile": "+1-876-555-0123",
+    "email": "marcus.johnson@email.com"
+  },
+  "convesation_id": "conv_2024_03_15_001",
+  "convesation_start_time": "2024-03-15T14:30:00.000Z",
+  "connection_establish_time": "2024-03-15T14:30:02.150Z",
+  "connection_establish": true,
+  "channel_info": {
+    "type": "voice",
+    "provider": "twilio",
+    "interface_id": "twilio_voice_interface_001",
+    "direction": "inbound",
+    "additional_info": {
+      "caller_id": "+1-876-555-0123",
+      "call_sid": "CA1234567890abcdef1234567890abcdef",
+      "recording_url": "https://api.twilio.com/recordings/RE1234567890"
+    },
+    "protocol": "SIP"
+  },
+  "request_info": {
+    "ip_address": "192.168.1.100",
+    "isp": "Flow Jamaica",
+    "country": "Jamaica",
+    "region": "Kingston",
+    "city": "Kingston",
+    "network_type": "4G",
+    "device_info": {
+      "user_agent": "Twilio Voice SDK",
+      "device_type": "mobile",
+      "os": "Android",
+      "browser": "Chrome Mobile"
+    },
+    "msc_ip": "10.0.0.1",
+    "short_code": "1234"
+  },
+  "messages": [
+    {
+      "correlation_id": "msg_001_billing_inquiry",
+      "user_messsage": {
+        "text": "Hi, I'm calling about my bill. It seems much higher than usual this month.",
+        "audio_url": "https://storage.digicell.com/audio/msg_001.wav",
+        "confidence_score": 0.95
+      },
+      "content": "Hi, I'm calling about my bill. It seems much higher than usual this month.",
+      "request_time": "2024-03-15T14:30:05.000Z",
+      "response_time": "2024-03-15T14:30:08.500Z",
+      "system_response": [
+        {
+          "sys_query_time": "2024-03-15T14:30:05.100Z",
+          "sys_response_time": "2024-03-15T14:30:07.800Z",
+          "type": "AI Assistant",
+          "sys_response": "I understand you're concerned about your bill being higher than usual. Let me help you with that. I'm checking your account now to see what might have caused the increase.",
+          "first_chunk_time": "2024-03-15T14:30:06.200Z",
+          "llm_duration": 1500,
+          "llm_failure": {
+            "failure_code": "none",
+            "failure_message": "none"
+          },
+          "tools": [
+            {
+              "tool_id": "billing_lookup_tool",
+              "tool_version": 2,
+              "tool_name": "Account Billing Lookup",
+              "tool_result": "Account found. Current bill: $89.50. Previous bill: $45.25. Increase due to international roaming charges.",
+              "tool_failure": {
+                "error_code": "none",
+                "reason": "none"
+              },
+              "start_time": "2024-03-15T14:30:05.200Z",
+              "end_time": "2024-03-15T14:30:06.100Z"
+            }
+          ],
+          "work_flow": {
+            "id": "billing_inquiry_workflow",
+            "version": "v1.3",
+            "status": "completed",
+            "customAttributes": {
+              "escalation_threshold": 3,
+              "customer_tier": "premium"
+            }
+          },
+          "input_tokens": 45,
+          "output_tokens": 78,
+          "cached_tokens": 12,
+          "real_agent_details": {
+            "agent_id": "string",
+            "agent_name": "string"
+          }
+        }
+      ],
+      "language": {
+        "language": "English",
+        "code": "en",
+        "region": "US"
+      },
+      "props_llm": {
+        "provider": "OpenAI",
+        "model": "gpt-4-turbo",
+        "version": "2024-03-01",
+        "requestTime": "2024-03-15T14:30:05.100Z",
+        "responseTime": "2024-03-15T14:30:07.800Z",
+        "temperature": 0.7
+      },
+      "props_asr": {
+        "cached_tokens": {
+          "hit_count": 3,
+          "cache_duration": "2.5s"
+        },
+        "vendor": "Google Cloud Speech",
+        "lang_code": "en-US",
+        "lang_name": "English (US)",
+        "delay": 250,
+        "language": "English",
+        "code": "en-US"
+      },
+      "props_tts": {
+        "start_time": "2024-03-15T14:30:07.900Z",
+        "end_time": "2024-03-15T14:30:08.500Z",
+        "lang_code": "en-US",
+        "voice_name": "en-US-JennyNeural",
+        "speed": 1.0,
+        "response_format": "audio/wav",
+        "style": "friendly",
+        "duration": 600
+      },
+      "analysis": {
+        "sentiment": "concerned",
+        "emotion": "worried",
+        "purpose": "billing_inquiry",
+        "accuracy *": 0.92,
+        "sentiment_score*": -0.3,
+        "Satifcation_score*": 0.75,
+        "moderation": {
+          "flagged": false,
+          "categories": []
+        },
+        "additional_attribues": {
+          "urgency_level": "medium",
+          "customer_satisfaction_predicted": "neutral"
+        }
+      }
+    },
+    {
+      "correlation_id": "msg_002_escalation_request",
+      "user_messsage": {
+        "text": "That's a huge increase! I didn't travel internationally. Can I speak to a human agent please?",
+        "audio_url": "https://storage.digicell.com/audio/msg_002.wav",
+        "confidence_score": 0.97
+      },
+      "content": "That's a huge increase! I didn't travel internationally. Can I speak to a human agent please?",
+      "request_time": "2024-03-15T14:30:15.000Z",
+      "response_time": "2024-03-15T14:30:18.200Z",
+      "system_response": [
+        {
+          "sys_query_time": "2024-03-15T14:30:15.100Z",
+          "sys_response_time": "2024-03-15T14:30:16.500Z",
+          "type": "Real Agent",
+          "sys_response": "Hello Marcus, this is Sarah from Digicel customer service. I can see you're concerned about the billing increase. Let me review your account in detail and help resolve this for you.",
+          "first_chunk_time": "2024-03-15T14:30:16.000Z",
+          "llm_duration": 0,
+          "llm_failure": {
+            "failure_code": "none",
+            "failure_message": "none"
+          },
+          "tools": [
+            {
+              "tool_id": "agent_handoff_tool",
+              "tool_version": 1,
+              "tool_name": "Human Agent Handoff",
+              "tool_result": "Successfully connected to Agent Sarah (ID: 12345). Customer escalation completed.",
+              "tool_failure": {
+                "error_code": "none",
+                "reason": "none"
+              },
+              "start_time": "2024-03-15T14:30:15.200Z",
+              "end_time": "2024-03-15T14:30:16.000Z"
+            }
+          ],
+          "work_flow": {
+            "id": "human_escalation_workflow",
+            "version": "v2.1",
+            "status": "agent_connected",
+            "customAttributes": {
+              "agent_skill_set": ["billing", "technical_support"],
+              "escalation_reason": "customer_request"
+            }
+          },
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_tokens": 0,
+          "real_agent_details": {
+            "agent_id": "12345",
+            "agent_name": "Sarah Williams"
+          }
+        }
+      ],
+      "language": {
+        "language": "English",
+        "code": "en",
+        "region": "US"
+      },
+      "props_llm": {
+        "provider": "N/A",
+        "model": "N/A",
+        "version": "N/A",
+        "requestTime": "2024-03-15T14:30:15.100Z",
+        "responseTime": "2024-03-15T14:30:16.500Z",
+        "temperature": 0
+      },
+      "props_asr": {
+        "cached_tokens": {
+          "hit_count": 1,
+          "cache_duration": "1.2s"
+        },
+        "vendor": "Google Cloud Speech",
+        "lang_code": "en-US",
+        "lang_name": "English (US)",
+        "delay": 180,
+        "language": "English",
+        "code": "en-US"
+      },
+      "props_tts": {
+        "start_time": "2024-03-15T14:30:16.600Z",
+        "end_time": "2024-03-15T14:30:18.200Z",
+        "lang_code": "en-US",
+        "voice_name": "en-US-AriaNeural",
+        "speed": 0.9,
+        "response_format": "audio/wav",
+        "style": "professional",
+        "duration": 1600
+      },
+      "analysis": {
+        "sentiment": "frustrated",
+        "emotion": "angry",
+        "purpose": "escalation_request",
+        "accuracy *": 0.95,
+        "sentiment_score*": -0.7,
+        "Satifcation_score*": 0.4,
+        "moderation": {
+          "flagged": false,
+          "categories": []
+        },
+        "additional_attribues": {
+          "urgency_level": "high",
+          "escalation_triggered": true,
+          "customer_satisfaction_predicted": "dissatisfied"
+        }
+      }
+    },
+    {
+      "correlation_id": "msg_003_resolution",
+      "user_messsage": {
+        "text": "Thank you Sarah. Can you explain why there are these international charges?",
+        "audio_url": "https://storage.digicell.com/audio/msg_003.wav",
+        "confidence_score": 0.94
+      },
+      "content": "Thank you Sarah. Can you explain why there are these international charges?",
+      "request_time": "2024-03-15T14:30:25.000Z",
+      "response_time": "2024-03-15T14:30:28.800Z",
+      "system_response": [
+        {
+          "sys_query_time": "2024-03-15T14:30:25.100Z",
+          "sys_response_time": "2024-03-15T14:30:28.000Z",
+          "type": "Real Agent",
+          "sys_response": "I've reviewed your account and I can see the charges were applied in error. You're absolutely right - there's no record of international usage. I'm removing these charges immediately and you'll see a credit of $44.25 on your next bill. I apologize for this inconvenience.",
+          "first_chunk_time": "2024-03-15T14:30:26.500Z",
+          "llm_duration": 0,
+          "llm_failure": null,
+          "tools": [
+            {
+              "tool_id": "billing_adjustment_tool",
+              "tool_version": 3,
+              "tool_name": "Account Credit Adjustment",
+              "tool_result": "Credit applied: $44.25. Adjustment reason: Erroneous international charges. New balance: $45.25",
+              "tool_failure": null,
+              "start_time": "2024-03-15T14:30:26.000Z",
+              "end_time": "2024-03-15T14:30:27.500Z"
+            }
+          ],
+          "work_flow": {
+            "id": "billing_resolution_workflow",
+            "version": "v1.8",
+            "status": "resolved",
+            "customAttributes": {
+              "resolution_type": "credit_applied",
+              "customer_satisfaction_target": "satisfied"
+            }
+          },
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_tokens": 0,
+          "real_agent_details": {
+            "agent_id": "12345",
+            "agent_name": "Sarah Williams"
+          }
+        }
+      ],
+      "language": {
+        "language": "English",
+        "code": "en",
+        "region": "US"
+      },
+      "props_llm": {
+        "provider": "N/A",
+        "model": "N/A",
+        "version": "N/A",
+        "requestTime": "2024-03-15T14:30:25.100Z",
+        "responseTime": "2024-03-15T14:30:28.000Z",
+        "temperature": 0
+      },
+      "props_asr": {
+        "cached_tokens": {
+          "hit_count": 2,
+          "cache_duration": "1.8s"
+        },
+        "vendor": "Google Cloud Speech",
+        "lang_code": "en-US",
+        "lang_name": "English (US)",
+        "delay": 200,
+        "language": "English",
+        "code": "en-US"
+      },
+      "props_tts": {
+        "start_time": "2024-03-15T14:30:28.100Z",
+        "end_time": "2024-03-15T14:30:28.800Z",
+        "lang_code": "en-US",
+        "voice_name": "en-US-AriaNeural",
+        "speed": 0.9,
+        "response_format": "audio/wav",
+        "style": "professional",
+        "duration": 700
+      },
+      "analysis": {
+        "sentiment": "grateful",
+        "emotion": "relieved",
+        "purpose": "issue_resolution",
+        "accuracy *": 0.96,
+        "sentiment_score*": 0.8,
+        "Satifcation_score*": 0.95,
+        "moderation": {
+          "flagged": false,
+          "categories": []
+        },
+        "additional_attribues": {
+          "urgency_level": "low",
+          "issue_resolved": true,
+          "customer_satisfaction_predicted": "highly_satisfied"
+        }
+      }
+    }
+  ],
+  "conversaton_end_time": "2024-03-15T14:30:35.000Z",
+  "conversation_end_info": {
+    "end_reason": "customer_satisfied",
+    "duration_seconds": 35,
+    "resolution_status": "resolved",
+    "customer_rating": 5,
+    "agent_notes": "Customer billing issue resolved. Erroneous international charges removed. Customer very satisfied with resolution."
+  },
+  "type (user/system)": "user",
+  "conversation_analysis": {
+    "intent": [
+      "billing_inquiry",
+      "dispute_charges",
+      "request_human_agent"
+    ],
+    "summary": "Customer called about unexpectedly high bill due to erroneous international roaming charges. Issue escalated to human agent Sarah who identified the error and applied appropriate credit. Customer highly satisfied with resolution.",
+    "languages": [
+      "English"
+    ]
+  }
+} 

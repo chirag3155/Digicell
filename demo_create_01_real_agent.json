@@ -1,0 +1,162 @@
+{
+  "session_id": "sess_real_001",
+  "tenant_id": "tenant_digicell_001",
+  "assistant_id": "assist_v1_001",
+  "user_info": {
+    "id": "user_jamaica_001",
+    "name": "Sarah Williams",
+    "mobile": "+1876-555-1001",
+    "email": "sarah.williams@email.com"
+  },
+  "convesation_id": "conv_real_001_2024",
+  "convesation_start_time": "2024-01-15T09:00:00.000Z",
+  "connection_establish_time": "2024-01-15T09:00:02.500Z",
+  "connection_establish": true,
+  "channel_info": {
+    "type": "voice",
+    "provider": "digicell",
+    "interface_id": "voice_001",
+    "direction": "inbound",
+    "additional_info": {
+      "call_quality": "HD",
+      "originating_number": "+1876-555-1001"
+    },
+    "protocol": "SIP"
+  },
+  "request_info": {
+    "ip_address": "192.168.100.15",
+    "isp": "Digicel Jamaica",
+    "country": "Jamaica",
+    "region": "Kingston",
+    "city": "Kingston",
+    "network_type": "4G",
+    "device_info": {
+      "device_type": "mobile",
+      "os": "Android 13"
+    },
+    "msc_ip": "10.50.60.70",
+    "short_code": "1001"
+  },
+  "messages": [
+    {
+      "correlation_id": "msg_real_001",
+      "user_messsage": {
+        "text": "I need help canceling my data plan",
+        "audio_duration": 3.2,
+        "confidence_score": 0.95
+      },
+      "content": "I need help canceling my data plan",
+      "request_time": "2024-01-15T09:00:10.000Z",
+      "response_time": "2024-01-15T09:00:25.000Z",
+      "system_response": [
+        {
+          "sys_query_time": "2024-01-15T09:00:10.200Z",
+          "sys_response_time": "2024-01-15T09:00:25.000Z",
+          "type": "Real Agent",
+          "sys_response": "Hello Sarah! I'm Agent Marcus and I'll help you with canceling your data plan. Let me review your account first.",
+          "first_chunk_time": "2024-01-15T09:00:15.000Z",
+          "llm_duration": null,
+          "llm_failure": null,
+          "tools": [
+            {
+              "tool_id": "account_lookup",
+              "tool_version": 2.0,
+              "tool_name": "Customer Account Lookup",
+              "tool_result": "Account found: Premium Data Plan 50GB",
+              "tool_failure": null,
+              "start_time": "2024-01-15T09:00:12.000Z",
+              "end_time": "2024-01-15T09:00:18.000Z"
+            }
+          ],
+          "work_flow": {
+            "id": "plan_cancellation_workflow",
+            "version": "2.1.0",
+            "status": "in_progress",
+            "custom_attribues": {
+              "plan_type": "data",
+              "cancellation_reason": "customer_request"
+            }
+          },
+          "input_tokens": null,
+          "output_tokens": null,
+          "cached_tokens": null,
+          "real_agent_details": {
+            "agent_id": 12345,
+            "agent_name": "Marcus Johnson",
+            "department": "Customer Care",
+            "experience_level": "senior",
+            "specialization": "plan_management",
+            "languages": ["en", "es"],
+            "start_time": "2024-01-15T09:00:12.000Z",
+            "certification": "Senior Customer Care Specialist"
+          }
+        }
+      ],
+      "language": {
+        "language": "English",
+        "code": "en",
+        "region": "JM"
+      },
+      "props_llm": {
+        "provider": null,
+        "model": null,
+        "version": null,
+        "request_time": null,
+        "response_time": null,
+        "temprature*": null
+      },
+      "props_asr": {
+        "cached_tokens": {
+          "acoustic_model": "v2.1",
+          "language_model": "v1.8"
+        },
+        "vendor": "Google Speech-to-Text",
+        "lang_code": "en-JM",
+        "lang_name": "English (Jamaica)",
+        "delay*": 1.2,
+        "language": "English",
+        "code": "en"
+      },
+      "props_tts": {
+        "start_time": "2024-01-15T09:00:25.000Z",
+        "end_time": "2024-01-15T09:00:30.500Z",
+        "lang_code": "en-JM",
+        "voice_name": "Caribbean-Professional",
+        "speed": 1.0,
+        "response_format": "mp3",
+        "style": "friendly",
+        "duration": 5.5
+      },
+      "analysis": {
+        "sentiment": "neutral",
+        "emotion": "determined",
+        "purpose": "service_cancellation",
+        "accuracy *": 0.95,
+        "sentiment_score*": -0.1,
+        "Satifcation_score*": 0.7,
+        "moderation": {
+          "inappropriate_content": false,
+          "toxicity_score": 0.01
+        },
+        "additional_attribues": {
+          "urgency_level": "medium",
+          "topic_category": "plan_cancellation"
+        }
+      }
+    }
+  ],
+  "conversaton_end_time": "2024-01-15T09:15:00.000Z",
+  "conversation_end_info": {
+    "end_reason": "service_completed",
+    "satisfaction_rating": 4,
+    "resolution_status": "resolved",
+    "follow_up_required": false,
+    "total_duration": 900.0
+  },
+  "type (user/system)": "user",
+  "conversation_analysis": {
+    "intent": ["plan_cancellation", "data_plan", "customer_service"],
+    "summary": "Customer requested data plan cancellation. Real agent Marcus handled the request professionally and completed the cancellation process.",
+    "languages": ["en-JM"]
+  }
+} 

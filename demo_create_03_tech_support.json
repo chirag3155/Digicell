@@ -1,0 +1,175 @@
+{
+  "session_id": "sess_tech_003",
+  "tenant_id": "tenant_digicell_003",
+  "assistant_id": "assist_tech_v1",
+  "user_info": {
+    "id": "user_jamaica_003",
+    "name": "Jennifer Davis",
+    "mobile": "+1876-555-3003",
+    "email": "jennifer.davis@email.com"
+  },
+  "convesation_id": "conv_tech_003_2024",
+  "convesation_start_time": "2024-01-15T14:00:00.000Z",
+  "connection_establish_time": "2024-01-15T14:00:03.200Z",
+  "connection_establish": true,
+  "channel_info": {
+    "type": "video_call",
+    "provider": "digicell",
+    "interface_id": "video_support_003",
+    "direction": "inbound",
+    "additional_info": {
+      "video_quality": "1080p",
+      "screen_sharing": true,
+      "connection_type": "WebRTC"
+    },
+    "protocol": "WebRTC/HTTPS"
+  },
+  "request_info": {
+    "ip_address": "172.16.254.1",
+    "isp": "Digicel Business",
+    "country": "Jamaica",
+    "region": "Montego Bay",
+    "city": "Montego Bay",
+    "network_type": "5G",
+    "device_info": {
+      "device_type": "laptop",
+      "os": "macOS 14.2",
+      "browser": "Safari 17.2"
+    },
+    "msc_ip": "10.200.300.400",
+    "short_code": "3003"
+  },
+  "messages": [
+    {
+      "correlation_id": "msg_tech_003",
+      "user_messsage": {
+        "text": "My WiFi router keeps disconnecting every few minutes",
+        "video_enabled": true,
+        "screen_share_active": false
+      },
+      "content": "My WiFi router keeps disconnecting every few minutes",
+      "request_time": "2024-01-15T14:00:10.000Z",
+      "response_time": "2024-01-15T14:00:45.000Z",
+      "system_response": [
+        {
+          "sys_query_time": "2024-01-15T14:00:10.300Z",
+          "sys_response_time": "2024-01-15T14:00:45.000Z",
+          "type": "Real Agent",
+          "sys_response": "Hi Jennifer! I'm David from technical support. I can see you're having connection issues. Let me run a remote diagnostic on your router and check the signal strength in your area.",
+          "first_chunk_time": "2024-01-15T14:00:20.000Z",
+          "llm_duration": null,
+          "llm_failure": null,
+          "tools": [
+            {
+              "tool_id": "router_diagnostic_tool",
+              "tool_version": 4.2,
+              "tool_name": "Remote Router Diagnostics",
+              "tool_result": "Signal strength: -68dBm, Intermittent connection detected, Firmware update available",
+              "tool_failure": null,
+              "start_time": "2024-01-15T14:00:15.000Z",
+              "end_time": "2024-01-15T14:00:35.000Z"
+            },
+            {
+              "tool_id": "firmware_update_tool",
+              "tool_version": 2.8,
+              "tool_name": "Router Firmware Updater",
+              "tool_result": "Firmware updated successfully to version 2.4.1",
+              "tool_failure": null,
+              "start_time": "2024-01-15T14:00:36.000Z",
+              "end_time": "2024-01-15T14:00:42.000Z"
+            }
+          ],
+          "work_flow": {
+            "id": "router_troubleshooting_workflow",
+            "version": "3.0.0",
+            "status": "completed",
+            "custom_attribues": {
+              "issue_type": "connectivity",
+              "resolution_method": "firmware_update",
+              "remote_access": true
+            }
+          },
+          "input_tokens": null,
+          "output_tokens": null,
+          "cached_tokens": null,
+          "real_agent_details": {
+            "agent_id": 11111,
+            "agent_name": "David Rodriguez",
+            "department": "Technical Support",
+            "experience_level": "expert",
+            "specialization": "network_infrastructure",
+            "languages": ["en", "es"],
+            "start_time": "2024-01-15T14:00:12.000Z",
+            "certification": "Network+ Certified Technician"
+          }
+        }
+      ],
+      "language": {
+        "language": "English",
+        "code": "en",
+        "region": "JM"
+      },
+      "props_llm": {
+        "provider": null,
+        "model": null,
+        "version": null,
+        "request_time": null,
+        "response_time": null,
+        "temprature*": null
+      },
+      "props_asr": {
+        "cached_tokens": {
+          "acoustic_model": "v3.0_tech",
+          "language_model": "v2.5_support"
+        },
+        "vendor": "Azure Speech Services",
+        "lang_code": "en-JM",
+        "lang_name": "English (Jamaica)",
+        "delay*": 0.9,
+        "language": "English",
+        "code": "en"
+      },
+      "props_tts": {
+        "start_time": "2024-01-15T14:00:45.000Z",
+        "end_time": "2024-01-15T14:00:52.000Z",
+        "lang_code": "en-JM",
+        "voice_name": "Technical-Professional",
+        "speed": 0.95,
+        "response_format": "wav",
+        "style": "technical",
+        "duration": 7.0
+      },
+      "analysis": {
+        "sentiment": "neutral",
+        "emotion": "concerned",
+        "purpose": "technical_support",
+        "accuracy *": 0.93,
+        "sentiment_score*": -0.2,
+        "Satifcation_score*": 0.9,
+        "moderation": {
+          "inappropriate_content": false,
+          "toxicity_score": 0.01
+        },
+        "additional_attribues": {
+          "urgency_level": "medium",
+          "topic_category": "router_connectivity",
+          "technical_complexity": "intermediate"
+        }
+      }
+    }
+  ],
+  "conversaton_end_time": "2024-01-15T14:10:00.000Z",
+  "conversation_end_info": {
+    "end_reason": "issue_resolved",
+    "satisfaction_rating": 5,
+    "resolution_status": "resolved",
+    "follow_up_required": true,
+    "total_duration": 600.0
+  },
+  "type (user/system)": "user",
+  "conversation_analysis": {
+    "intent": ["technical_support", "router_issues", "connectivity_problems"],
+    "summary": "Customer experiencing WiFi router disconnections. Technical expert David performed remote diagnostics, identified firmware issue, and successfully updated router firmware resolving the connectivity problems.",
+    "languages": ["en-JM"]
+  }
+} 

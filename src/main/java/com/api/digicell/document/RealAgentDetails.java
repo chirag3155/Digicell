@@ -15,6 +15,7 @@ public class RealAgentDetails {
     @JsonProperty("agent_id")
     private String agentId;
     
+    
     @JsonProperty("agent_name")
     private String agentName;
 } 
