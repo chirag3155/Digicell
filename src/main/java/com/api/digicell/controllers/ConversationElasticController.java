@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/elastic/conversations")
+@RequestMapping("/api/v1/elastic/conversation/")
 @RequiredArgsConstructor
 public class ConversationElasticController {
    private static final Logger logger = LoggerFactory.getLogger(ConversationElasticController.class);
@@ -23,8 +23,9 @@ public class ConversationElasticController {
   @PostMapping
   public ResponseEntity<ApiResponse<ConversationDocument>> createConversation(@RequestBody ConversationDocument conversation) {
       try {
-          logger.info("Creating new conversation for user: {} and client: {}",
-              conversation.getUserId(), conversation.getClientId());
+          logger.info("Creating new conversation for client: {} and session: {}",
+              conversation.getUserInfo() != null ? conversation.getUserInfo().getId() : "unknown", 
+              conversation.getSessionId());
 
           ConversationDocument createdConversation = conversationElasticService.createConversation(conversation);
 
@@ -41,7 +42,7 @@ public class ConversationElasticController {
    public ResponseEntity<ApiResponse<List<ConversationDocument>>> getConversationsByUser(@PathVariable Long userId) {
     
        try {
-           logger.info("Retrieving conversations for user: {}", userId);
+           logger.info("Retrieving conversations for agent: {}", userId);
            List<ConversationDocument> conversations = conversationElasticService.getConversationsByUser(userId);
            ApiResponse<List<ConversationDocument>> response = new ApiResponse<List<ConversationDocument>>(true, "Conversations retrieved successfully", conversations);
            return ResponseEntity.ok(response);
@@ -55,7 +56,7 @@ public class ConversationElasticController {
    @GetMapping("/client/{clientId}")
        public ResponseEntity<ApiResponse<List<ConversationDocument>>> getConversationsByClient(@PathVariable String clientId) {
        try {
-           logger.info("Retrieving conversations for client: {}", clientId);
+           logger.info("Retrieving conversations for human client: {}", clientId);
            List<ConversationDocument> conversations = conversationElasticService.getConversationsByClient(clientId);
            ApiResponse<List<ConversationDocument>> response = new ApiResponse<List<ConversationDocument>>(true, "Conversations retrieved successfully", conversations);
            return ResponseEntity.ok(response);
@@ -71,7 +72,7 @@ public class ConversationElasticController {
            @PathVariable Long userId,
            @PathVariable String clientId) {
        try {
-           logger.info("Retrieving conversations for user: {} and client: {}", userId, clientId);
+           logger.info("Retrieving conversations for AI system: {} and human client: {}", userId, clientId);
            List<ConversationDocument> conversations = conversationElasticService.getConversationsByUserAndClient(userId, clientId);
            ApiResponse<List<ConversationDocument>> response = new ApiResponse<List<ConversationDocument>>(true, "Conversations retrieved successfully", conversations);
            return ResponseEntity.ok(response);
@@ -97,4 +98,22 @@ public class ConversationElasticController {
            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
        }
    }
+
+
+
+   @GetMapping("/real-agents")
+   public ResponseEntity<ApiResponse<List<ConversationDocument>>> getConversationsWithRealAgents() {
+       try {
+           logger.info("Retrieving conversations handled by real agents");
+           List<ConversationDocument> conversations = conversationElasticService.getConversationsWithRealAgents();
+           ApiResponse<List<ConversationDocument>> response = new ApiResponse<List<ConversationDocument>>(true, "Real agent conversations retrieved successfully", conversations);
+           return ResponseEntity.ok(response);
+       } catch (Exception e) {
+           logger.error("Error retrieving real agent conversations: {}", e.getMessage());
+           ApiResponse<List<ConversationDocument>> response = new ApiResponse<List<ConversationDocument>>(false, "Failed to retrieve real agent conversations: " + e.getMessage(), null);
+           return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+       }
+   }
+
+
 }

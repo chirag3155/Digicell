@@ -10,6 +10,8 @@ import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.api.digicell.document.ConversationDocument;
 import com.api.digicell.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -25,6 +27,9 @@ public class ConversationElasticService {
 
     private static final Logger logger = LoggerFactory.getLogger(ConversationElasticService.class);
     private final Optional<ElasticsearchClient> esClient;
+
+    @Value("${elasticsearch.index.name}")
+    private String indexName; // This will inject the value from application.properties
 
     // Constructor with lazy Elasticsearch client injection
     public ConversationElasticService(@Lazy Optional<ElasticsearchClient> esClient) {
@@ -42,10 +47,18 @@ public class ConversationElasticService {
                 throw new IllegalArgumentException("Invalid user ID: " + userId);
             }
 
-            // Build search request
+            // Build search request - searching for real agent conversations
+            // userId in controller refers to agent_id in real_agent_details
+            // Double nested query: messages[] -> system_response[] -> real_agent_details.agent_id
             SearchRequest searchRequest = new SearchRequest.Builder()
-                    .index("conversations")
-                    .query(QueryBuilders.term(q -> q.field("userId").value(userId))) // Elasticsearch query for userId
+                    .index(indexName)
+                    .query(QueryBuilders.nested(n -> n
+                            .path("messages")
+                            .query(QueryBuilders.nested(nested -> nested
+                                    .path("messages.system_response")
+                                    .query(QueryBuilders.term(t -> t.field("messages.system_response.real_agent_details.agent_id").value(userId.toString())))
+                            ))
+                    ))
                     .build();
 
             // Execute search
@@ -57,7 +70,7 @@ public class ConversationElasticService {
                     .collect(Collectors.toList());
 
             if (conversations.isEmpty()) {
-                throw new ResourceNotFoundException("No conversations found for user: " + userId);
+                throw new ResourceNotFoundException("No conversations found for agent: " + userId);
             }
 
             return conversations;
@@ -78,10 +91,10 @@ public class ConversationElasticService {
                 throw new IllegalArgumentException("Invalid client ID: " + clientId);
             }
 
-            // Build search request
+            // Build search request - searching for human user (client)
             SearchRequest searchRequest = new SearchRequest.Builder()
-                    .index("conversations")
-                    .query(QueryBuilders.term(q -> q.field("clientId").value(clientId))) // Elasticsearch query for clientId
+                    .index(indexName)
+                    .query(QueryBuilders.match(q -> q.field("user_info.id").query(clientId))) // Search by user_info.id (human client)
                     .build();
 
             // Execute search
@@ -93,7 +106,7 @@ public class ConversationElasticService {
                     .collect(Collectors.toList());
 
             if (conversations.isEmpty()) {
-                throw new ResourceNotFoundException("No conversations found for client: " + clientId);
+                throw new ResourceNotFoundException("No conversations found for human client: " + clientId);
             }
 
             return conversations;
@@ -117,12 +130,18 @@ public class ConversationElasticService {
                 throw new IllegalArgumentException("Invalid client ID: " + clientId);
             }
 
-            // Build search request
+            // Build search request - combining real agent and human client
             SearchRequest searchRequest = new SearchRequest.Builder()
-                    .index("conversations")
+                    .index(indexName)
                     .query(QueryBuilders.bool(q -> q
-                            .must(QueryBuilders.term(t -> t.field("userId").value(userId)))
-                            .must(QueryBuilders.term(t -> t.field("clientId").value(clientId)))
+                            .must(QueryBuilders.nested(n -> n
+                                    .path("messages")
+                                    .query(QueryBuilders.nested(nested -> nested
+                                            .path("messages.system_response")
+                                            .query(QueryBuilders.term(t -> t.field("messages.system_response.real_agent_details.agent_id").value(userId.toString())))
+                                    ))
+                            )) // Real agent
+                            .must(QueryBuilders.term(t -> t.field("user_info.id.keyword").value(clientId))) // Human client
                     ))
                     .build();
 
@@ -135,7 +154,7 @@ public class ConversationElasticService {
                     .collect(Collectors.toList());
 
             if (conversations.isEmpty()) {
-                throw new ResourceNotFoundException("No conversations found for user: " + userId + " and client: " + clientId);
+                throw new ResourceNotFoundException("No conversations found for agent: " + userId + " and human client: " + clientId);
             }
 
             return conversations;
@@ -160,12 +179,12 @@ public class ConversationElasticService {
                 throw new IllegalArgumentException("Invalid client ID: " + clientId);
             }
 
-            // Build search request
+            // Build search request - search by conversationId and human client
             SearchRequest searchRequest = new SearchRequest.Builder()
-                    .index("conversations")
+                    .index(indexName)
                     .query(QueryBuilders.bool(q -> q
-                            .must(QueryBuilders.term(t -> t.field("conversationId").value(conversationId)))
-                            .must(QueryBuilders.term(t -> t.field("clientId").value(clientId)))
+                            .must(QueryBuilders.term(t -> t.field("convesation_id.keyword").value(conversationId)))
+                            .must(QueryBuilders.term(t -> t.field("user_info.id.keyword").value(clientId))) // Human client
                     ))
                     .build();
 
@@ -183,8 +202,6 @@ public class ConversationElasticService {
         }
     }
 
-    // For creating conversation, you can add the manual save method, though we focus on retrieval here.
-
     public ConversationDocument createConversation(ConversationDocument conversation) {
         if (esClient.isEmpty()) {
             logger.warn("Elasticsearch client is not available");
@@ -195,14 +212,14 @@ public class ConversationElasticService {
             if (conversation == null) {
                 throw new IllegalArgumentException("Conversation cannot be null");
             }
-            if (conversation.getUserId() == null || conversation.getClientId() == null) {
-                throw new IllegalArgumentException("User ID and client ID must not be null");
+            if (conversation.getUserInfo() == null || conversation.getUserInfo().getId() == null) {
+                throw new IllegalArgumentException("User info and user ID must not be null");
             }
 
             // Create the index request to add the conversation to Elasticsearch
             IndexRequest<ConversationDocument> indexRequest = new IndexRequest.Builder<ConversationDocument>()
-                    .index("conversations") // Elasticsearch index name
-                    .id(conversation.getId()) // Optional: Set an explicit ID
+                    .index("convo") // Elasticsearch index name
+                    .id(conversation.getConversationId()) // Use conversation_id as document ID
                     .document(conversation) // The document to be indexed
                     .build();
 
@@ -216,6 +233,44 @@ public class ConversationElasticService {
         } catch (IOException e) {
             logger.error("Error creating conversation: {}", e.getMessage());
             throw new RuntimeException("Failed to create conversation: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Get all conversations that involved real agents (not just AI system)
+     */
+    public List<ConversationDocument> getConversationsWithRealAgents() {
+        if (esClient.isEmpty()) {
+            logger.warn("Elasticsearch client is not available");
+            throw new RuntimeException("Elasticsearch is not available");
+        }
+
+        try {
+            // Build search request - searching for conversations with real agent responses
+            // Double nested query: messages[] -> system_response[] -> type
+            SearchRequest searchRequest = new SearchRequest.Builder()
+                    .index(indexName)
+                    .query(QueryBuilders.nested(n -> n
+                            .path("messages")
+                            .query(QueryBuilders.nested(nested -> nested
+                                    .path("messages.system_response")
+                                    .query(QueryBuilders.term(t -> t.field("messages.system_response.type").value("Real Agent")))
+                            ))
+                    ))
+                    .build();
+
+            // Execute search
+            SearchResponse<ConversationDocument> searchResponse = esClient.get().search(searchRequest, ConversationDocument.class);
+
+            // Extract hits (conversation documents) from search response
+            List<ConversationDocument> conversations = searchResponse.hits().hits().stream()
+                    .map(Hit::source)
+                    .collect(Collectors.toList());
+
+            return conversations;
+        } catch (IOException e) {
+            logger.error("Error querying Elasticsearch: {}", e.getMessage());
+            throw new RuntimeException("Failed to fetch conversations with real agents: " + e.getMessage());
         }
     }
 }

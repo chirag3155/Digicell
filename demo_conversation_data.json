@@ -1,0 +1,249 @@
+{
+  "session_id": "sess_12345_67890",
+  "tenant_id": "tenant_digicell_001",
+  "assistant_id": "assist_ai_voice_001",
+  "user_info": {
+    "id": "user_jamaica_876123456",
+    "name": "John Smith",
+    "mobile": "+1876-555-0123",
+    "email": "john.smith@email.com"
+  },
+  "convesation_id": "conv_2024_001_abc123",
+  "convesation_start_time": "2024-01-15T09:30:00.000Z",
+  "connection_establish_time": "2024-01-15T09:30:02.150Z",
+  "connection_establish": true,
+  "channel_info": {
+    "type": "voice",
+    "provider": "digicell",
+    "interface_id": "voice_interface_001",
+    "direction": "inbound",
+    "additional_info": {
+      "call_quality": "HD",
+      "codec": "G.711",
+      "bandwidth": "64kbps"
+    },
+    "protocol": "SIP"
+  },
+  "request_info": {
+    "ip_address": "192.168.1.100",
+    "isp": "Digicel Jamaica",
+    "country": "Jamaica",
+    "region": "Kingston",
+    "city": "Kingston",
+    "network_type": "4G LTE",
+    "device_info": {
+      "device_type": "mobile",
+      "os": "Android 12",
+      "browser": "Chrome 96.0",
+      "user_agent": "Mozilla/5.0 (Android 12; Mobile)"
+    },
+    "msc_ip": "10.10.1.50",
+    "short_code": "1234"
+  },
+  "messages": [
+    {
+      "correlation_id": "msg_001_correlation",
+      "user_messsage": {
+        "text": "Hello, I need help with my bill",
+        "audio_duration": 2.5,
+        "confidence_score": 0.95
+      },
+      "content": "Hello, I need help with my bill",
+      "request_time": "2024-01-15T09:30:05.000Z",
+      "response_time": "2024-01-15T09:30:07.500Z",
+      "system_response": [
+        {
+          "sys_query_time": "2024-01-15T09:30:05.100Z",
+          "sys_response_time": "2024-01-15T09:30:07.400Z",
+          "type": "system",
+          "sys_response": "Hello! I'd be happy to help you with your bill. Let me pull up your account information.",
+          "first_chunk_time": "2024-01-15T09:30:06.200Z",
+          "llm_duration": 1.2,
+          "llm_failure": null,
+          "tools": [
+            {
+              "tool_id": "account_lookup_tool",
+              "tool_version": 2.1,
+              "tool_name": "Account Information Retrieval",
+              "tool_result": "Account found: Premium Plan, Current Balance: $85.50",
+              "tool_failure": null,
+              "start_time": "2024-01-15T09:30:05.500Z",
+              "end_time": "2024-01-15T09:30:06.100Z"
+            }
+          ],
+          "work_flow": {
+            "id": "billing_support_workflow",
+            "version": "1.5.0",
+            "status": "active",
+            "custom_attribues": {
+              "priority": "high",
+              "category": "billing"
+            }
+          },
+          "input_tokens": 150,
+          "output_tokens": 85,
+          "cached_tokens": 25,
+          "real_agent_details": null
+        }
+      ],
+      "language": {
+        "language": "English",
+        "code": "en",
+        "region": "JM"
+      },
+      "props_llm": {
+        "provider": "OpenAI",
+        "model": "gpt-4-turbo",
+        "version": "2024-01-01",
+        "request_time": "2024-01-15T09:30:05.100Z",
+        "response_time": "2024-01-15T09:30:07.400Z",
+        "temprature*": 0.7
+      },
+      "props_asr": {
+        "cached_tokens": {
+          "acoustic_model": "v3.2",
+          "language_model": "v2.1"
+        },
+        "vendor": "Google Cloud Speech",
+        "lang_code": "en-JM",
+        "lang_name": "English (Jamaica)",
+        "delay*": 0.8,
+        "language": "English",
+        "code": "en"
+      },
+      "props_tts": {
+        "start_time": "2024-01-15T09:30:07.400Z",
+        "end_time": "2024-01-15T09:30:09.200Z",
+        "lang_code": "en-JM",
+        "voice_name": "Nova-Caribbean",
+        "speed": 1.0,
+        "response_format": "mp3",
+        "style": "conversational",
+        "duration": 1.8
+      },
+      "analysis": {
+        "sentiment": "neutral",
+        "emotion": "concerned",
+        "purpose": "inquiry",
+        "accuracy *": 0.92,
+        "sentiment_score*": 0.15,
+        "Satifcation_score*": 0.85,
+        "moderation": {
+          "inappropriate_content": false,
+          "toxicity_score": 0.01
+        },
+        "additional_attribues": {
+          "urgency_level": "medium",
+          "topic_category": "billing"
+        }
+      }
+    },
+    {
+      "correlation_id": "msg_002_correlation",
+      "user_messsage": {
+        "text": "My bill seems too high this month",
+        "audio_duration": 3.1,
+        "confidence_score": 0.97
+      },
+      "content": "My bill seems too high this month",
+      "request_time": "2024-01-15T09:30:12.000Z",
+      "response_time": "2024-01-15T09:30:15.800Z",
+      "system_response": [
+        {
+          "sys_query_time": "2024-01-15T09:30:12.100Z",
+          "sys_response_time": "2024-01-15T09:30:15.700Z",
+          "type": "Real Agent",
+          "sys_response": "I understand your concern. Let me transfer you to our billing specialist who can review your charges in detail.",
+          "first_chunk_time": "2024-01-15T09:30:13.000Z",
+          "llm_duration": null,
+          "llm_failure": null,
+          "tools": [],
+          "work_flow": {
+            "id": "agent_transfer_workflow",
+            "version": "1.2.0",
+            "status": "completed",
+            "custom_attribues": {
+              "transfer_reason": "billing_inquiry",
+              "escalation_level": 1
+            }
+          },
+          "input_tokens": null,
+          "output_tokens": null,
+          "cached_tokens": null,
+          "real_agent_details": {
+            "agent_id": "agent_12345",
+            "agent_name": "Sarah Johnson",
+            "department": "Billing Support",
+            "experience_level": "senior",
+            "transfer_time": "2024-01-15T09:30:15.700Z"
+          }
+        }
+      ],
+      "language": {
+        "language": "English",
+        "code": "en",
+        "region": "JM"
+      },
+      "props_llm": {
+        "provider": null,
+        "model": null,
+        "version": null,
+        "request_time": null,
+        "response_time": null,
+        "temprature*": null
+      },
+      "props_asr": {
+        "cached_tokens": {
+          "acoustic_model": "v3.2",
+          "language_model": "v2.1"
+        },
+        "vendor": "Google Cloud Speech",
+        "lang_code": "en-JM",
+        "lang_name": "English (Jamaica)",
+        "delay*": 0.7,
+        "language": "English",
+        "code": "en"
+      },
+      "props_tts": {
+        "start_time": "2024-01-15T09:30:15.700Z",
+        "end_time": "2024-01-15T09:30:17.900Z",
+        "lang_code": "en-JM",
+        "voice_name": "Nova-Caribbean",
+        "speed": 1.0,
+        "response_format": "mp3",
+        "style": "professional",
+        "duration": 2.2
+      },
+      "analysis": {
+        "sentiment": "negative",
+        "emotion": "frustrated",
+        "purpose": "complaint",
+        "accuracy *": 0.89,
+        "sentiment_score*": -0.35,
+        "Satifcation_score*": 0.65,
+        "moderation": {
+          "inappropriate_content": false,
+          "toxicity_score": 0.02
+        },
+        "additional_attribues": {
+          "urgency_level": "high",
+          "topic_category": "billing_dispute"
+        }
+      }
+    }
+  ],
+  "conversaton_end_time": "2024-01-15T09:32:45.000Z",
+  "conversation_end_info": {
+    "end_reason": "agent_transfer",
+    "satisfaction_rating": 4,
+    "resolution_status": "transferred",
+    "follow_up_required": true,
+    "total_duration": 165.5
+  },
+  "type (user/system)": "user",
+  "conversation_analysis": {
+    "intent": ["billing_inquiry", "account_support", "complaint_resolution"],
+    "summary": "Customer contacted support regarding a high bill concern. Initial AI assistant provided account information and used billing tools. Due to complexity of billing dispute, conversation was escalated and transferred to a human billing specialist for detailed review.",
+    "languages": ["en-JM", "English"]
+  }
+} 

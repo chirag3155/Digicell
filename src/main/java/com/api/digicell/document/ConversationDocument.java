@@ -1,6 +1,6 @@
 package com.api.digicell.document;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -13,23 +13,48 @@ import java.util.List;
 @Builder
 public class ConversationDocument {
 
-    private String id; // Elasticsearch document ID (String)
+    @JsonProperty("session_id")
+    private String sessionId;
 
+    @JsonProperty("tenant_id")
+    private String tenantId;
+
+    @JsonProperty("assistant_id")
+    private String assistantId;
+
+    @JsonProperty("user_info")
+    private UserInfo userInfo;
+
+    @JsonProperty("convesation_id")
     private String conversationId;
-    private Long userId;
-    private String userName;
-    private String clientId;
-    private String clientName;
-    private String intent;
-    private List<String> labels;
-    private String chatSummary;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
-    private String startTime;
+    @JsonProperty("convesation_start_time")
+    private String conversationStartTime;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
-    private String endTime;
+    @JsonProperty("connection_establish_time")
+    private String connectionEstablishTime;
 
-    private List<ChatMessageDocument> chatHistory;  // Nested field
+    @JsonProperty("connection_establish")
+    private Boolean connectionEstablish;
 
+    @JsonProperty("channel_info")
+    private ChannelInfo channelInfo;
+
+    @JsonProperty("request_info")
+    private RequestInfo requestInfo;
+
+    @JsonProperty("messages")
+    private List<ConversationMessage> messages;
+
+    @JsonProperty("conversaton_end_time")
+    private String conversationEndTime;
+
+    @JsonProperty("conversation_end_info")
+    private Object conversationEndInfo;
+
+    @JsonProperty("type (user/system)")
+    private String type;
+
+    @JsonProperty("conversation_analysis")
+    private ConversationAnalysis conversationAnalysis;
 }
