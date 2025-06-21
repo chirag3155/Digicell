@@ -44,8 +44,11 @@ public class ElasticsearchConfig {
             // Log the Elasticsearch host and port being used
             logger.info("Connecting to Elasticsearch at {}:{}", elasticsearchHost, elasticsearchPort);
 
+            // Determine the scheme based on the host (localhost uses http, remote uses https)
+            String scheme = "localhost".equals(elasticsearchHost) ? "http" : "https";
+            
             // Create credentials provider if username and password are provided
-            RestClientBuilder builder = RestClient.builder(new HttpHost(elasticsearchHost, elasticsearchPort, "https"));
+            RestClientBuilder builder = RestClient.builder(new HttpHost(elasticsearchHost, elasticsearchPort, scheme));
 
             if (!elasticsearchUsername.isEmpty() && !elasticsearchPassword.isEmpty()) {
                 logger.info("Using authentication for Elasticsearch with username: {}", elasticsearchUsername);
@@ -56,15 +59,18 @@ public class ElasticsearchConfig {
                 builder.setHttpClientConfigCallback(httpClientBuilder -> {
                     httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
                     
-                    // Disable SSL verification for development (use with caution in production)
-                    try {
-                        SSLContext sslContext = SSLContexts.custom()
-                                .loadTrustMaterial(null, (x509Certificates, s) -> true)
-                                .build();
-                        httpClientBuilder.setSSLContext(sslContext);
-                        httpClientBuilder.setSSLHostnameVerifier((s, sslSession) -> true);
-                    } catch (Exception e) {
-                        logger.error("Error setting up SSL context: {}", e.getMessage());
+                    // Only configure SSL for HTTPS connections
+                    if ("https".equals(scheme)) {
+                        // Disable SSL verification for development (use with caution in production)
+                        try {
+                            SSLContext sslContext = SSLContexts.custom()
+                                    .loadTrustMaterial(null, (x509Certificates, s) -> true)
+                                    .build();
+                            httpClientBuilder.setSSLContext(sslContext);
+                            httpClientBuilder.setSSLHostnameVerifier((s, sslSession) -> true);
+                        } catch (Exception e) {
+                            logger.error("Error setting up SSL context: {}", e.getMessage());
+                        }
                     }
                     
                     return httpClientBuilder;
