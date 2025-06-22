@@ -25,6 +25,7 @@ import com.api.digicell.services.SocketConnectionService;
 import com.corundumstudio.socketio.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.io.FileInputStream;
@@ -51,6 +52,7 @@ public class ChatModule {
     private final ClientRepository clientRepository;
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
+    private final Environment environment;
     private static final int MAX_CLIENTS_PER_USER = 5;
 
     // SSL Configuration properties
@@ -64,7 +66,16 @@ public class ChatModule {
     private String keyStorePassword;
 
     public ChatModule(UserAccountService userAccountService, SocketConfig socketConfig, SocketConnectionService connectionService, 
-                     ClientRepository clientRepository, ConversationRepository conversationRepository, UserRepository userRepository) {
+                     ClientRepository clientRepository, ConversationRepository conversationRepository, UserRepository userRepository, Environment environment) {
+        
+        // Debug: Log the SSL property values at startup
+        log.info("=== SSL CONFIGURATION DEBUG ===");
+        log.info("Active Spring Profiles: {}", String.join(",", environment.getActiveProfiles()));
+        log.info("SSL Enabled: {}", sslEnabled);
+        log.info("SSL KeyStore Path: '{}'", keyStorePath);
+        log.info("SSL KeyStore Password: '{}'", keyStorePassword != null ? "***SET***" : "null");
+        log.info("==============================");
+        
         Configuration config = new Configuration();
         config.setHostname(socketConfig.getHost());
         config.setPort(socketConfig.getPort());
@@ -120,6 +131,7 @@ public class ChatModule {
         this.clientRepository = clientRepository;
         this.conversationRepository = conversationRepository;
         this.userRepository = userRepository;
+        this.environment = environment;
 
         initializeSocketListeners();
     }
