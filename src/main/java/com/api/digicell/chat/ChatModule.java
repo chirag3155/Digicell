@@ -83,6 +83,7 @@ public class ChatModule {
         log.info("socket.ssl.key-store-password = '{}'", environment.getProperty("socket.ssl.key-store-password") != null ? "***SET***" : "null");
         log.info("==============================");
         
+        // Create configuration with SSL if enabled
         Configuration config = new Configuration();
         config.setHostname(socketConfig.getHost());
         config.setPort(socketConfig.getPort());
@@ -92,7 +93,7 @@ public class ChatModule {
         config.setUpgradeTimeout(10000);
         config.setTransports(Transport.WEBSOCKET, Transport.POLLING);
 
-        // Configure SSL if enabled - Use Environment directly as fallback
+        // Configure SSL if enabled - Use Environment directly as fallback (safe version)
         boolean actualSslEnabled = sslEnabled || "true".equals(environment.getProperty("socket.ssl.enabled"));
         String actualKeyStorePath = keyStorePath != null ? keyStorePath : environment.getProperty("socket.ssl.key-store");
         String actualKeyStorePassword = keyStorePassword != null ? keyStorePassword : environment.getProperty("socket.ssl.key-store-password");
@@ -113,23 +114,23 @@ public class ChatModule {
                 
                 if (!keystoreFile.exists()) {
                     log.error("SSL Configuration FAILED: Keystore file does not exist at: {}", keystoreFile.getAbsolutePath());
-                    throw new RuntimeException("Keystore file not found: " + keystoreFile.getAbsolutePath());
+                    log.warn("SSL will be DISABLED - Server will run with HTTP only");
+                } else {
+                    log.info("Keystore file found: {} (size: {} bytes)", keystoreFile.getAbsolutePath(), keystoreFile.length());
+                    
+                    // For netty-socketio 2.0.11, SSL configuration
+                    try (FileInputStream keystoreStream = new FileInputStream(keystoreFile)) {
+                        config.setKeyStore(keystoreStream);
+                        config.setKeyStorePassword(actualKeyStorePassword);
+                        log.info("SSL keystore and password configured successfully");
+                    }
+                    
+                    log.info("SSL configured successfully for Socket.IO server on port {}", socketConfig.getPort());
                 }
-                
-                log.info("Keystore file found: {} (size: {} bytes)", keystoreFile.getAbsolutePath(), keystoreFile.length());
-                
-                // For netty-socketio 2.0.11, SSL configuration
-                try (FileInputStream keystoreStream = new FileInputStream(keystoreFile)) {
-                    config.setKeyStore(keystoreStream);
-                    config.setKeyStorePassword(actualKeyStorePassword);
-                    log.info("SSL keystore and password configured successfully");
-                }
-                
-                log.info("SSL configured successfully for Socket.IO server on port {}", socketConfig.getPort());
             } catch (Exception e) {
                 log.error("Failed to configure SSL for Socket.IO server: {}", e.getMessage(), e);
                 log.error("SSL will be DISABLED - Server will run with HTTP only");
-                // Continue without SSL rather than failing completely
+                // Continue without SSL rather than failing
             }
         } else {
             log.info("SSL disabled for Socket.IO server on port {} (enabled: {}, keystore: '{}')", 
