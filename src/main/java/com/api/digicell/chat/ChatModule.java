@@ -119,11 +119,11 @@ public class ChatModule {
                     log.info("Keystore file found: {} (size: {} bytes)", keystoreFile.getAbsolutePath(), keystoreFile.length());
                     
                     // For netty-socketio 2.0.11, SSL configuration
-                    try (FileInputStream keystoreStream = new FileInputStream(keystoreFile)) {
-                        config.setKeyStore(keystoreStream);
-                        config.setKeyStorePassword(actualKeyStorePassword);
-                        log.info("SSL keystore and password configured successfully");
-                    }
+                    // Note: Don't use try-with-resources here as netty-socketio needs the stream to remain open
+                    FileInputStream keystoreStream = new FileInputStream(keystoreFile);
+                    config.setKeyStore(keystoreStream);
+                    config.setKeyStorePassword(actualKeyStorePassword);
+                    log.info("SSL keystore and password configured successfully");
                     
                     log.info("SSL configured successfully for Socket.IO server on port {}", socketConfig.getPort());
                 }
@@ -653,8 +653,14 @@ public class ChatModule {
     }
 
     public void start() {
-        server.start();
-        log.info("Chat module started on port {}", socketConfig.getPort());
+        try {
+            log.info("Starting Socket.IO server on port {} with SSL enabled...", socketConfig.getPort());
+            server.start();
+            log.info("✅ Chat module started successfully on port {}", socketConfig.getPort());
+        } catch (Exception e) {
+            log.error("❌ Failed to start Socket.IO server: {}", e.getMessage(), e);
+            throw new RuntimeException("Socket.IO server startup failed", e);
+        }
     }
 
     public void stop() {
