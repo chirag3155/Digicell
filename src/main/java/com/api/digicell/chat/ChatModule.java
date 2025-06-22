@@ -79,17 +79,33 @@ public class ChatModule {
             try {
                 log.info("Configuring SSL for Socket.IO server - KeyStore: {}", keyStorePath);
                 
-                // For netty-socketio 2.0.11, SSL is configured using keyStore and keyStorePassword directly
-                config.setKeyStore(new FileInputStream(keyStorePath));
-                config.setKeyStorePassword(keyStorePassword);
+                // Remove "file:" prefix if present and create File object
+                String cleanPath = keyStorePath.replace("file:", "");
+                java.io.File keystoreFile = new java.io.File(cleanPath);
+                
+                if (!keystoreFile.exists()) {
+                    log.error("SSL Configuration FAILED: Keystore file does not exist at: {}", keystoreFile.getAbsolutePath());
+                    throw new RuntimeException("Keystore file not found: " + keystoreFile.getAbsolutePath());
+                }
+                
+                log.info("Keystore file found: {} (size: {} bytes)", keystoreFile.getAbsolutePath(), keystoreFile.length());
+                
+                // For netty-socketio 2.0.11, SSL configuration
+                try (FileInputStream keystoreStream = new FileInputStream(keystoreFile)) {
+                    config.setKeyStore(keystoreStream);
+                    config.setKeyStorePassword(keyStorePassword);
+                    log.info("SSL keystore and password configured successfully");
+                }
                 
                 log.info("SSL configured successfully for Socket.IO server on port {}", socketConfig.getPort());
             } catch (Exception e) {
                 log.error("Failed to configure SSL for Socket.IO server: {}", e.getMessage(), e);
-                throw new RuntimeException("SSL configuration failed", e);
+                log.error("SSL will be DISABLED - Server will run with HTTP only");
+                // Continue without SSL rather than failing completely
             }
         } else {
-            log.info("SSL disabled for Socket.IO server on port {}", socketConfig.getPort());
+            log.info("SSL disabled for Socket.IO server on port {} (enabled: {}, keystore: '{}')", 
+                    socketConfig.getPort(), sslEnabled, keyStorePath);
         }
 
         this.server = new SocketIOServer(config);
@@ -109,7 +125,15 @@ public class ChatModule {
     }
 
     private void initializeSocketListeners() {
-        server.addConnectListener(socketClient -> connectionService.handleConnection(socketClient));
+        server.addConnectListener(socketClient -> {
+            String remoteAddress = socketClient.getRemoteAddress().toString();
+            String sessionId = socketClient.getSessionId().toString();
+            boolean isSecure = socketClient.getHandshakeData().getUrl().startsWith("https://") || 
+                              socketClient.getHandshakeData().getUrl().startsWith("wss://");
+            
+            log.info("Socket client connected - IP: {}, SessionId: {}, Secure: {}", remoteAddress, sessionId, isSecure);
+            connectionService.handleConnection(socketClient);
+        });
 
         server.addDisconnectListener(socketClient -> {
             String socketId = socketClient.getSessionId().toString();

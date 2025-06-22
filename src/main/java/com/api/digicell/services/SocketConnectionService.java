@@ -24,10 +24,16 @@ public class SocketConnectionService {
 
     public void handleConnection(SocketIOClient socketClient) {
         String clientType = socketClient.getHandshakeData().getSingleUrlParam(socketConfig.PARAM_CLIENT_TYPE);
+        String userId = socketClient.getHandshakeData().getSingleUrlParam("userId");
+        String remoteAddress = socketClient.getRemoteAddress().toString();
+        String sessionId = socketClient.getSessionId().toString();
+        
+        log.info("Socket connection attempt - IP: {}, SessionId: {}, ClientType: {}, UserId: {}", 
+                remoteAddress, sessionId, clientType, userId);
         
         // Reject connection if no parameters are provided
         if (clientType == null || clientType.trim().isEmpty()) {
-            log.warn("Connection rejected: No parameters provided. SocketId: {}", socketClient.getSessionId());
+            log.warn("Connection rejected: No clientType parameter. IP: {}, SessionId: {}", remoteAddress, sessionId);
             socketClient.disconnect();
             return;
         }
@@ -37,7 +43,7 @@ public class SocketConnectionService {
         } else if (socketConfig.PARAM_AGENT.equals(clientType)) {
             handleUserConnection(socketClient, clientType);
         } else {
-            log.warn("Connection rejected: Invalid clientType: {}. SocketId: {}", clientType, socketClient.getSessionId());
+            log.warn("Connection rejected: Invalid clientType: '{}'. IP: {}, SessionId: {}", clientType, remoteAddress, sessionId);
             socketClient.disconnect();
         }
     }
