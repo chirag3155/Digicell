@@ -27,11 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
 import java.io.FileInputStream;
-import java.io.InputStream;
-import java.security.KeyStore;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -66,9 +62,6 @@ public class ChatModule {
     
     @Value("${socket.ssl.key-store-password:}")
     private String keyStorePassword;
-    
-    @Value("${socket.ssl.key-store-type:PKCS12}")
-    private String keyStoreType;
 
     public ChatModule(UserAccountService userAccountService, SocketConfig socketConfig, SocketConnectionService connectionService, 
                      ClientRepository clientRepository, ConversationRepository conversationRepository, UserRepository userRepository) {
@@ -86,22 +79,9 @@ public class ChatModule {
             try {
                 log.info("Configuring SSL for Socket.IO server - KeyStore: {}", keyStorePath);
                 
-                // Load keystore
-                KeyStore keyStore = KeyStore.getInstance(keyStoreType);
-                try (InputStream keyStoreStream = new FileInputStream(keyStorePath)) {
-                    keyStore.load(keyStoreStream, keyStorePassword.toCharArray());
-                }
-                
-                // Initialize KeyManagerFactory
-                KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-                keyManagerFactory.init(keyStore, keyStorePassword.toCharArray());
-                
-                // Create SSLContext
-                SSLContext sslContext = SSLContext.getInstance("TLS");
-                sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
-                
-                // Set SSL context in configuration
-                config.setSSLContext(sslContext);
+                // For netty-socketio 2.0.11, SSL is configured using keyStore and keyStorePassword directly
+                config.setKeyStore(new FileInputStream(keyStorePath));
+                config.setKeyStorePassword(keyStorePassword);
                 
                 log.info("SSL configured successfully for Socket.IO server on port {}", socketConfig.getPort());
             } catch (Exception e) {
