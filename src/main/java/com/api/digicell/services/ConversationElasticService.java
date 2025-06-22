@@ -157,7 +157,10 @@ public class ConversationElasticService {
 
             // Build search request - searching for human user (client)
             SearchRequest searchRequest = new SearchRequest.Builder()
-                    .index(indexName)
+                    .index(indexName + "*") // Use wildcard pattern to search multiple indices
+                    .ignoreUnavailable(true) // Skip indices that don't exist
+                    .allowNoIndices(true) // Allow the query even if no indices match the pattern
+                    .ignoreThrottled(true) // Skip throttled indices
                     .query(QueryBuilders.match(q -> q.field("user_info.id").query(clientId))) // Search by user_info.id (human client)
                     .build();
 
@@ -201,6 +204,7 @@ public class ConversationElasticService {
                     .index(indexName + "*") // Use wildcard pattern to search multiple indices
                     .ignoreUnavailable(true) // Skip indices that don't exist
                     .allowNoIndices(true) // Allow the query even if no indices match the pattern
+                    .ignoreThrottled(true) // Skip throttled indices
                     .query(QueryBuilders.bool(q -> q
                             .must(QueryBuilders.match(m -> m
                                     .field("user_info.id")
@@ -272,7 +276,10 @@ public class ConversationElasticService {
 
             // Build search request - search by conversationId and human client
             SearchRequest searchRequest = new SearchRequest.Builder()
-                    .index(indexName)
+                    .index(indexName + "*") // Use wildcard pattern to search multiple indices
+                    .ignoreUnavailable(true) // Skip indices that don't exist
+                    .allowNoIndices(true) // Allow the query even if no indices match the pattern
+                    .ignoreThrottled(true) // Skip throttled indices
                     .query(QueryBuilders.bool(q -> q
                             .must(QueryBuilders.term(t -> t.field("convesation_id.keyword").value(conversationId)))
                             .must(QueryBuilders.term(t -> t.field("user_info.id.keyword").value(clientId))) // Human client
@@ -340,7 +347,10 @@ public class ConversationElasticService {
             // Build search request - searching for conversations with real agent responses
             // Double nested query: messages[] -> system_response[] -> type
             SearchRequest searchRequest = new SearchRequest.Builder()
-                    .index(indexName)
+                    .index(indexName + "*") // Use wildcard pattern to search multiple indices
+                    .ignoreUnavailable(true) // Skip indices that don't exist
+                    .allowNoIndices(true) // Allow the query even if no indices match the pattern
+                    .ignoreThrottled(true) // Skip throttled indices
                     .query(QueryBuilders.nested(n -> n
                             .path("messages")
                             .query(QueryBuilders.nested(nested -> nested
