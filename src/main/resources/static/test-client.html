@@ -185,7 +185,15 @@
         let currentClientId = null;
 
         function connect() {
-            socket = io('http://localhost:9092');
+            // Determine protocol and port based on environment
+            const protocol = window.location.protocol === 'https:' ? 'https' : 'http';
+            const port = window.location.protocol === 'https:' ? '8099' : '8099';
+            const serverUrl = `${protocol}://${window.location.hostname}:${port}`;
+
+            log(`Connecting to: ${serverUrl}`, 'info');
+            socket = io(serverUrl, {
+                transports: ['websocket', 'polling']
+            });
 
             socket.on('connect', () => {
                 log('Connected to server', 'success');

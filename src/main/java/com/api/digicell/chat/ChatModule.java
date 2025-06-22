@@ -24,8 +24,14 @@ import com.api.digicell.config.SocketConfig;
 import com.api.digicell.services.SocketConnectionService;
 import com.corundumstudio.socketio.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.security.KeyStore;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,6 +57,19 @@ public class ChatModule {
     private final UserRepository userRepository;
     private static final int MAX_CLIENTS_PER_USER = 5;
 
+    // SSL Configuration properties
+    @Value("${socket.ssl.enabled:false}")
+    private boolean sslEnabled;
+    
+    @Value("${socket.ssl.key-store:}")
+    private String keyStorePath;
+    
+    @Value("${socket.ssl.key-store-password:}")
+    private String keyStorePassword;
+    
+    @Value("${socket.ssl.key-store-type:PKCS12}")
+    private String keyStoreType;
+
     public ChatModule(UserAccountService userAccountService, SocketConfig socketConfig, SocketConnectionService connectionService, 
                      ClientRepository clientRepository, ConversationRepository conversationRepository, UserRepository userRepository) {
         Configuration config = new Configuration();
@@ -61,6 +80,37 @@ public class ChatModule {
         config.setAllowCustomRequests(true);
         config.setUpgradeTimeout(10000);
         config.setTransports(Transport.WEBSOCKET, Transport.POLLING);
+
+        // Configure SSL if enabled
+        if (sslEnabled && keyStorePath != null && !keyStorePath.trim().isEmpty()) {
+            try {
+                log.info("Configuring SSL for Socket.IO server - KeyStore: {}", keyStorePath);
+                
+                // Load keystore
+                KeyStore keyStore = KeyStore.getInstance(keyStoreType);
+                try (InputStream keyStoreStream = new FileInputStream(keyStorePath)) {
+                    keyStore.load(keyStoreStream, keyStorePassword.toCharArray());
+                }
+                
+                // Initialize KeyManagerFactory
+                KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+                keyManagerFactory.init(keyStore, keyStorePassword.toCharArray());
+                
+                // Create SSLContext
+                SSLContext sslContext = SSLContext.getInstance("TLS");
+                sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
+                
+                // Set SSL context in configuration
+                config.setSSLContext(sslContext);
+                
+                log.info("SSL configured successfully for Socket.IO server on port {}", socketConfig.getPort());
+            } catch (Exception e) {
+                log.error("Failed to configure SSL for Socket.IO server: {}", e.getMessage(), e);
+                throw new RuntimeException("SSL configuration failed", e);
+            }
+        } else {
+            log.info("SSL disabled for Socket.IO server on port {}", socketConfig.getPort());
+        }
 
         this.server = new SocketIOServer(config);
         this.clientUserMapping = new ConcurrentHashMap<>();
