@@ -71,9 +71,16 @@ public class ChatModule {
         // Debug: Log the SSL property values at startup
         log.info("=== SSL CONFIGURATION DEBUG ===");
         log.info("Active Spring Profiles: {}", String.join(",", environment.getActiveProfiles()));
+        log.info("Default Profiles: {}", String.join(",", environment.getDefaultProfiles()));
         log.info("SSL Enabled: {}", sslEnabled);
         log.info("SSL KeyStore Path: '{}'", keyStorePath);
         log.info("SSL KeyStore Password: '{}'", keyStorePassword != null ? "***SET***" : "null");
+        
+        // Test direct property resolution
+        log.info("=== DIRECT PROPERTY RESOLUTION ===");
+        log.info("socket.ssl.enabled = '{}'", environment.getProperty("socket.ssl.enabled"));
+        log.info("socket.ssl.key-store = '{}'", environment.getProperty("socket.ssl.key-store"));
+        log.info("socket.ssl.key-store-password = '{}'", environment.getProperty("socket.ssl.key-store-password") != null ? "***SET***" : "null");
         log.info("==============================");
         
         Configuration config = new Configuration();
@@ -85,13 +92,23 @@ public class ChatModule {
         config.setUpgradeTimeout(10000);
         config.setTransports(Transport.WEBSOCKET, Transport.POLLING);
 
-        // Configure SSL if enabled
-        if (sslEnabled && keyStorePath != null && !keyStorePath.trim().isEmpty()) {
+        // Configure SSL if enabled - Use Environment directly as fallback
+        boolean actualSslEnabled = sslEnabled || "true".equals(environment.getProperty("socket.ssl.enabled"));
+        String actualKeyStorePath = keyStorePath != null ? keyStorePath : environment.getProperty("socket.ssl.key-store");
+        String actualKeyStorePassword = keyStorePassword != null ? keyStorePassword : environment.getProperty("socket.ssl.key-store-password");
+        
+        log.info("=== FINAL SSL VALUES ===");
+        log.info("Final SSL Enabled: {}", actualSslEnabled);
+        log.info("Final KeyStore Path: '{}'", actualKeyStorePath);
+        log.info("Final KeyStore Password: '{}'", actualKeyStorePassword != null ? "***SET***" : "null");
+        log.info("========================");
+        
+        if (actualSslEnabled && actualKeyStorePath != null && !actualKeyStorePath.trim().isEmpty()) {
             try {
-                log.info("Configuring SSL for Socket.IO server - KeyStore: {}", keyStorePath);
+                log.info("Configuring SSL for Socket.IO server - KeyStore: {}", actualKeyStorePath);
                 
                 // Remove "file:" prefix if present and create File object
-                String cleanPath = keyStorePath.replace("file:", "");
+                String cleanPath = actualKeyStorePath.replace("file:", "");
                 java.io.File keystoreFile = new java.io.File(cleanPath);
                 
                 if (!keystoreFile.exists()) {
@@ -104,7 +121,7 @@ public class ChatModule {
                 // For netty-socketio 2.0.11, SSL configuration
                 try (FileInputStream keystoreStream = new FileInputStream(keystoreFile)) {
                     config.setKeyStore(keystoreStream);
-                    config.setKeyStorePassword(keyStorePassword);
+                    config.setKeyStorePassword(actualKeyStorePassword);
                     log.info("SSL keystore and password configured successfully");
                 }
                 
@@ -116,7 +133,7 @@ public class ChatModule {
             }
         } else {
             log.info("SSL disabled for Socket.IO server on port {} (enabled: {}, keystore: '{}')", 
-                    socketConfig.getPort(), sslEnabled, keyStorePath);
+                    socketConfig.getPort(), actualSslEnabled, actualKeyStorePath);
         }
 
         this.server = new SocketIOServer(config);
