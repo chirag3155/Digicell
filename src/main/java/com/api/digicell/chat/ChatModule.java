@@ -33,6 +33,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -167,6 +169,18 @@ public class ChatModule {
 
         server.addDisconnectListener(socketClient -> {
             String socketId = socketClient.getSessionId().toString();
+            String userId = connectionService.getUserIdBySocketId(socketId);
+            
+            // Check if this is a user disconnection with active conversations
+            if (userId != null) {
+                Set<String> activeConversations = connectionService.getUserActiveConversations(userId);
+                if (activeConversations != null && !activeConversations.isEmpty()) {
+                    log.info("🔔 User {} with {} active conversations disconnected unexpectedly", userId, activeConversations.size());
+                    // Send notifications after a short delay to allow for immediate reconnection
+                    scheduleDisconnectionNotifications(userId, activeConversations);
+                }
+            }
+            
             connectionService.removeConnection(socketId);
             log.debug("Socket client disconnected: {}", socketId);
         });
@@ -178,15 +192,26 @@ public class ChatModule {
                 String summary = (String) data.get("summary");
                 String history = (String) data.get("history");
                 String timestamp = (String) data.get("timestamp");
+                String assistantId = (String) data.get("assistant_id");
+                String tenantId = (String) data.get("tenant_id");
                 
-                // Extract client data for database storage
-                String clientName = (String) data.get("name");
-                String clientEmail = (String) data.get("email");
-                String clientPhone = (String) data.get("phone");
-                String clientLabel = (String) data.get("label");
+                // Extract customer details from nested object
+                Map<String, Object> customerDetails = (Map<String, Object>) data.get("customer_details");
+                String clientName = null;
+                String clientEmail = null;
+                String clientPhone = null;
+                String clientLabel = null;
+                
+                if (customerDetails != null) {
+                    clientName = (String) customerDetails.get("name");
+                    clientEmail = (String) customerDetails.get("email");
+                    clientPhone = (String) customerDetails.get("phoneNumber");
+                    clientLabel = (String) customerDetails.get("label");
+                }
 
-                log.info("Received user request from chat module - Client: {}, Conversation: {}", clientId, conversationId);
-                log.info("Client Data - Name: {}, Email: {}, Phone: {}", clientName, clientEmail, clientPhone);
+                log.info("Received user request from chat module - Client: {}, Conversation: {}, Assistant: {}, Tenant: {}", 
+                        clientId, conversationId, assistantId, tenantId);
+                log.info("Customer Details - Name: {}, Email: {}, Phone: {}", clientName, clientEmail, clientPhone);
                 log.info("Current Active Rooms: {}, User Queue Size: {}", chatRooms.size(), userQueue.size());
                 
                 handleUserRequest(socketClient, clientId, conversationId, summary, history, timestamp, clientName, clientEmail, clientPhone, clientLabel);
@@ -324,6 +349,9 @@ public class ChatModule {
                     
                     // Remove the chat room
                     chatRooms.remove(conversationId);
+                    
+                    // Remove conversation from tracking
+                    connectionService.removeUserConversation(userId, conversationId);
 
                     log.info("Chat room removed - User {} now has {} active clients", userId, user.getCurrentClientCount());
                 } else {
@@ -379,6 +407,9 @@ public class ChatModule {
                     
                     // Remove the chat room
                     chatRooms.remove(conversationId);
+                    
+                    // Remove conversation from tracking
+                    connectionService.removeUserConversation(userId, conversationId);
 
                     log.info("Chat conversation {} removed as client {} closes", conversationId, clientId);
 
@@ -509,6 +540,9 @@ public class ChatModule {
             // Create and store the chat room using conversationId as the key
             ChatRoom chatRoom = new ChatRoom(conversationId, user.getUserId(), clientId, summary, history);
             chatRooms.put(conversationId, chatRoom);
+            
+            // Track this conversation for the user to preserve it during reconnections
+            connectionService.addUserConversation(user.getUserId(), conversationId);
 
             log.info("Chat room {} on available as for client req for user {}", conversationId, chatRoom);
             
@@ -528,6 +562,12 @@ public class ChatModule {
                     // Join the user to the conversation room for message routing
                     userSocketClient.joinRoom(conversationId);
                     log.info("🏠 User {} joined room: {}", user.getUserId(), conversationId);
+                    
+                    // Check if user has any preserved conversations to restore
+                    restoreUserConversations(user.getUserId(), userSocketClient);
+                    
+                    // Send reconnection notifications if user had active conversations
+                    sendUserReconnectionNotifications(user.getUserId());
                     // Prepare user info data
                     ClientInfoResponse userInfo = new ClientInfoResponse();
                     userInfo.setStatus("online");
@@ -651,6 +691,176 @@ public class ChatModule {
         }
         return null;
     }
+    
+    /**
+     * Schedule disconnection notifications after a brief delay to allow for quick reconnections
+     */
+    private void scheduleDisconnectionNotifications(String userId, Set<String> activeConversations) {
+        // Schedule notifications after 10 seconds to allow for quick reconnections
+        CompletableFuture.delayedExecutor(10, TimeUnit.SECONDS).execute(() -> {
+            try {
+                // Check if user has reconnected in the meantime
+                String currentSocketId = connectionService.getUserSocketId(userId);
+                if (currentSocketId != null) {
+                    // User has reconnected, don't send disconnection notifications
+                    log.info("User {} reconnected before notification delay - skipping disconnection notifications", userId);
+                    return;
+                }
+                
+                // User still disconnected, send notifications
+                sendUserDisconnectionNotifications(userId, activeConversations);
+                sendChatModuleDisconnectionNotifications();
+                
+            } catch (Exception e) {
+                log.error("Error in scheduled disconnection notifications for user {}: {}", userId, e.getMessage(), e);
+            }
+        });
+    }
+    
+    /**
+     * Send disconnection notifications to chat module about user disconnection
+     */
+    private void sendUserDisconnectionNotifications(String userId, Set<String> activeConversations) {
+        String chatModuleSocketId = connectionService.getChatModuleSocketId();
+        if (chatModuleSocketId == null) {
+            log.warn("Cannot send user disconnection notifications - Chat module not connected");
+            return;
+        }
+        
+        try {
+            SocketIOClient chatModuleClient = server.getClient(UUID.fromString(chatModuleSocketId));
+            if (chatModuleClient == null) {
+                log.warn("Chat module socket client not found for notifications");
+                return;
+            }
+            
+            // Send notification for each active conversation
+            for (String conversationId : activeConversations) {
+                Map<String, Object> notification = connectionService.getUserDisconnectionNotification(userId, conversationId);
+                
+                chatModuleClient.sendEvent("AGENT_DISCONNECTED_NOTIFICATION", notification);
+                log.info("📤 Sent agent disconnection notification to chat module - User: {}, Conversation: {}", 
+                        userId, conversationId);
+            }
+            
+            log.info("✅ Sent {} disconnection notifications to chat module for user {}", 
+                    activeConversations.size(), userId);
+                    
+        } catch (Exception e) {
+            log.error("❌ Error sending user disconnection notifications for user {}: {}", userId, e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Send notifications to all connected users about chat module unavailability
+     */
+    private void sendChatModuleDisconnectionNotifications() {
+        if (!connectionService.isChatModuleConnected()) {
+            Map<String, Object> notification = connectionService.getChatModuleDisconnectionNotification();
+            
+            // Send to all connected users
+            connectionService.getAllUserActiveConversations().forEach((userId, conversations) -> {
+                String userSocketId = connectionService.getUserSocketId(userId);
+                if (userSocketId != null) {
+                    try {
+                        SocketIOClient userClient = server.getClient(UUID.fromString(userSocketId));
+                        if (userClient != null) {
+                            userClient.sendEvent("CHAT_MODULE_DISCONNECTED_NOTIFICATION", notification);
+                            log.info("📤 Sent chat module disconnection notification to user {}", userId);
+                        }
+                    } catch (Exception e) {
+                        log.error("Error sending chat module disconnection notification to user {}: {}", userId, e.getMessage());
+                    }
+                }
+            });
+        }
+         }
+     
+     /**
+      * Send reconnection notifications when user comes back online
+      */
+     private void sendUserReconnectionNotifications(String userId) {
+         Set<String> activeConversations = connectionService.getUserActiveConversations(userId);
+         if (activeConversations == null || activeConversations.isEmpty()) {
+             return; // No active conversations to notify about
+         }
+         
+         String chatModuleSocketId = connectionService.getChatModuleSocketId();
+         if (chatModuleSocketId == null) {
+             log.warn("Cannot send user reconnection notifications - Chat module not connected");
+             return;
+         }
+         
+         try {
+             SocketIOClient chatModuleClient = server.getClient(UUID.fromString(chatModuleSocketId));
+             if (chatModuleClient == null) {
+                 log.warn("Chat module socket client not found for reconnection notifications");
+                 return;
+             }
+             
+             // Send reconnection notification for each active conversation
+             for (String conversationId : activeConversations) {
+                 Map<String, Object> notification = new HashMap<>();
+                 notification.put("event_type", "AGENT_RECONNECTED");
+                 notification.put("user_id", userId);
+                 notification.put("conversation_id", conversationId);
+                 notification.put("status", "available");
+                 notification.put("message", "Agent reconnected - conversation resumed");
+                 notification.put("timestamp", LocalDateTime.now().toString());
+                 
+                 chatModuleClient.sendEvent("AGENT_RECONNECTED_NOTIFICATION", notification);
+                 log.info("📤 Sent agent reconnection notification to chat module - User: {}, Conversation: {}", 
+                         userId, conversationId);
+             }
+             
+             log.info("✅ Sent {} reconnection notifications to chat module for user {}", 
+                     activeConversations.size(), userId);
+                     
+         } catch (Exception e) {
+             log.error("❌ Error sending user reconnection notifications for user {}: {}", userId, e.getMessage(), e);
+         }
+     }
+     
+     /**
+      * Restore user conversations when they reconnect within the preservation window
+      */
+    private void restoreUserConversations(String userId, SocketIOClient userSocketClient) {
+        Set<String> preservedConversations = connectionService.getUserActiveConversations(userId);
+        
+        if (preservedConversations != null && !preservedConversations.isEmpty()) {
+            log.info("🔄 Restoring {} preserved conversations for reconnected user {}: {}", 
+                    preservedConversations.size(), userId, preservedConversations);
+            
+            // Re-join all preserved conversation rooms
+            for (String conversationId : preservedConversations) {
+                try {
+                    userSocketClient.joinRoom(conversationId);
+                    log.info("🏠 User {} rejoined preserved room: {}", userId, conversationId);
+                    
+                    // Send notification that conversation is restored
+                    ClientInfoResponse restoreInfo = new ClientInfoResponse();
+                    restoreInfo.setStatus("restored");
+                    restoreInfo.setUserId(userId);
+                    restoreInfo.setConversationId(conversationId);
+                    
+                    // Find the chat room to get client details
+                    ChatRoom chatRoom = chatRooms.get(conversationId);
+                    if (chatRoom != null) {
+                        restoreInfo.setClientName("Conversation Restored");
+                        restoreInfo.setClientLabel("active");
+                        userSocketClient.sendEvent(socketConfig.EVENT_NEW_CLIENT_REQ, restoreInfo);
+                        log.info("📤 Sent conversation restore notification to user {} for conversation {}", 
+                                userId, conversationId);
+                    }
+                } catch (Exception e) {
+                    log.error("❌ Error restoring conversation {} for user {}: {}", 
+                            conversationId, userId, e.getMessage(), e);
+                }
+            }
+        } else {
+            log.debug("No preserved conversations to restore for user {}", userId);
+        }
+    }
 
     public void start() {
         try {
@@ -680,7 +890,7 @@ public class ChatModule {
         
         try {
             // Check if client already exists
-            Client existingClient = clientRepository.findById(clientId).orElse(null);
+            Client existingClient = clientRepository.findByEmail(clientId).orElse(null);
             
             if (existingClient != null) {
                 // Update existing client if new data is provided
