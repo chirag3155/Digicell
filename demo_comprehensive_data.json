@@ -3,12 +3,12 @@
   "tenant_id": "digicell_jamaica",
   "assistant_id": "assistant_billing_v2.1",
   "user_info": {
-    "id": "client_876543210",
+    "id": "1",
     "name": "Marcus Johnson",
     "mobile": "+1-876-555-0123",
     "email": "marcus.johnson@email.com"
   },
-  "convesation_id": "conv_2024_03_15_001",
+  "convesation_id": "1",
   "convesation_start_time": "2024-03-15T14:30:00.000Z",
   "connection_establish_time": "2024-03-15T14:30:02.150Z",
   "connection_establish": true,
@@ -196,7 +196,7 @@
           "output_tokens": 0,
           "cached_tokens": 0,
           "real_agent_details": {
-            "agent_id": "12345",
+            "agent_id": "1",
             "agent_name": "Sarah Williams"
           }
         }

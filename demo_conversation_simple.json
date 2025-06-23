@@ -3,12 +3,12 @@
   "tenant_id": "tenant_001",
   "assistant_id": "ai_assistant_001",
   "user_info": {
-    "id": "user_001",
+    "id": "1",
     "name": "Jane Doe",
     "mobile": "+1876-555-0100",
     "email": "jane.doe@example.com"
   },
-  "convesation_id": "conv_simple_001",
+  "convesation_id": "1",
   "convesation_start_time": "2024-01-15T10:00:00.000Z",
   "connection_establish_time": "2024-01-15T10:00:01.000Z",
   "connection_establish": true,
