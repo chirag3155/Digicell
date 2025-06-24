@@ -539,6 +539,11 @@ public class ChatModule {
                     log.warn("   Found userId: {}", connectedUserId);
                     log.warn("   Socket registered: {}", connectedUserId != null);
                     log.warn("   UserIds match: {}", connectedUserId != null && connectedUserId.equals(userId));
+                    
+                    // Debug socket mapping consistency to help troubleshoot
+                    log.warn("🔍 RUNNING SOCKET MAPPING CONSISTENCY CHECK...");
+                    connectionService.logSocketMappingConsistency();
+                    
                     log.warn("⚠️ Ping from unregistered user: {} (socket: {}), rejecting", userId, socketId);
                     return;
                 }
