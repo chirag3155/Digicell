@@ -1322,8 +1322,11 @@ public class ChatModule {
                 UserAccount userAccount = userAccountOpt.get();
                 
                 log.info("🔍 Looking up user organization permissions...");
-                Set<UserOrgPermissions> permissions = userOrgPermissionsRepository.findByUser(userAccount);
-                log.info("📊 Organization permissions found: {}", permissions.size());
+                List<UserOrgPermissions> permissionsList = userOrgPermissionsRepository.findByUser(userAccount);
+                log.info("📊 Organization permissions found: {}", permissionsList.size());
+                
+                // Convert to Set to remove any duplicates
+                Set<UserOrgPermissions> permissions = new HashSet<>(permissionsList);
                 
                 if (permissions.isEmpty()) {
                     log.warn("⚠️ No organization permissions found for user: {}", userId);

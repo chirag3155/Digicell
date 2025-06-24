@@ -14,9 +14,9 @@ import java.util.Set;
 @Repository
 public interface UserOrgPermissionsRepository extends JpaRepository<UserOrgPermissions, Long> {
     
-    Set<UserOrgPermissions> findByUser(UserAccount userAccount);
+    List<UserOrgPermissions> findByUser(UserAccount userAccount);
     
-    Set<UserOrgPermissions> findByUserUserId(Long userId);
+    List<UserOrgPermissions> findByUserUserId(Long userId);
     
     @Query("SELECT DISTINCT uop.organization FROM UserOrgPermissions uop WHERE uop.user = :userAccount")
     List<Organization> findDistinctOrganizationsByUserAccount(@Param("userAccount") UserAccount userAccount);
