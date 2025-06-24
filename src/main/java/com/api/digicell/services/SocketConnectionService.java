@@ -79,21 +79,35 @@ public class SocketConnectionService {
         String remoteAddress = socketClient.getRemoteAddress().toString();
         String sessionId = socketClient.getSessionId().toString();
         
-        log.info("Socket connection attempt - IP: {}, SessionId: {}, ClientType: {}, UserId: {}", 
+        log.info("🔗 SOCKET CONNECTION ATTEMPT - Starting connection validation...");
+        log.info("📡 Connection details - IP: {}, SessionId: {}, ClientType: '{}', UserId: '{}'", 
                 remoteAddress, sessionId, clientType, userId);
+        
+        // Debug: Log all received parameters
+        log.info("🔍 ALL URL PARAMETERS RECEIVED:");
+        socketClient.getHandshakeData().getUrlParams().forEach((key, values) -> {
+            log.info("   {} = {}", key, values);
+        });
         
         // Reject connection if no parameters are provided
         if (clientType == null || clientType.trim().isEmpty()) {
-            log.warn("Connection rejected: No clientType parameter. IP: {}, SessionId: {}", remoteAddress, sessionId);
+            log.warn("❌ CONNECTION REJECTED - No clientType parameter. IP: {}, SessionId: {}", remoteAddress, sessionId);
             socketClient.disconnect();
             return;
         }
 
+        log.info("🔀 ROUTING CONNECTION - Determining connection type...");
+        
         if (socketConfig.PARAM_CHAT_MODULE.equals(clientType)) {
+            log.info("📱 CHAT MODULE CONNECTION - Routing to chat module handler");
             handleChatModuleConnection(socketClient);
         } else if (socketConfig.PARAM_AGENT.equals(clientType)) {
+            log.info("👤 AGENT CONNECTION - Routing to user connection handler");
             handleUserConnection(socketClient, clientType);
         } else {
+            log.warn("❌ INVALID CLIENT TYPE - Rejecting connection");
+            log.warn("   Received clientType: '{}'", clientType);
+            log.warn("   Expected: '{}' or '{}'", socketConfig.PARAM_CHAT_MODULE, socketConfig.PARAM_AGENT);
             log.warn("Connection rejected: Invalid clientType: '{}'. IP: {}, SessionId: {}", clientType, remoteAddress, sessionId);
             socketClient.disconnect();
         }
@@ -169,14 +183,49 @@ public class SocketConnectionService {
                     newSocketId, userId, clientType);
         } else {
             // No user mapping exists - this is a new user connection
-            log.info("👤 New user connection. SocketId: {}, UserId: {}, Type: {}", 
+            log.info("👤 NEW USER CONNECTION - Creating socket mappings...");
+            log.info("📋 Connection details - SocketId: {}, UserId: {}, Type: {}", 
                     newSocketId, userId, clientType);
+            
+            log.info("🗂️ CREATING SOCKET MAPPINGS...");
+            log.info("   BEFORE - userSocketMap size: {}, contains socketId: {}", 
+                    userSocketMap.size(), userSocketMap.containsKey(newSocketId));
+            log.info("   BEFORE - userSocketIds size: {}, contains userId: {}", 
+                    userSocketIds.size(), userSocketIds.containsKey(userId));
             
             userSocketMap.put(newSocketId, userId);
             userSocketIds.put(userId, newSocketId);
             
-            log.info("New user connected successfully. SocketId: {}, UserId: {}, Type: {}", 
+            log.info("   AFTER - userSocketMap size: {}, contains socketId: {}", 
+                    userSocketMap.size(), userSocketMap.containsKey(newSocketId));
+            log.info("   AFTER - userSocketIds size: {}, contains userId: {}", 
+                    userSocketIds.size(), userSocketIds.containsKey(userId));
+            
+            log.info("✅ SOCKET MAPPINGS CREATED:");
+            log.info("   userSocketMap['{}'] = '{}'", newSocketId, userId);
+            log.info("   userSocketIds['{}'] = '{}'", userId, newSocketId);
+            
+            // Verify mappings were created
+            String verifyUserId = userSocketMap.get(newSocketId);
+            String verifySocketId = userSocketIds.get(userId);
+            log.info("🔍 MAPPING VERIFICATION:");
+            log.info("   userSocketMap.get('{}') = '{}' (matches userId: {})", 
+                    newSocketId, verifyUserId, userId.equals(verifyUserId));
+            log.info("   userSocketIds.get('{}') = '{}' (matches socketId: {})", 
+                    userId, verifySocketId, newSocketId.equals(verifySocketId));
+            
+            if (!userId.equals(verifyUserId) || !newSocketId.equals(verifySocketId)) {
+                log.error("❌ CRITICAL: MAPPING VERIFICATION FAILED!");
+                log.error("   Expected userSocketMap['{}'] = '{}', got '{}'", newSocketId, userId, verifyUserId);
+                log.error("   Expected userSocketIds['{}'] = '{}', got '{}'", userId, newSocketId, verifySocketId);
+                log.error("   This will cause 'Ping from unregistered user' errors!");
+            } else {
+                log.info("✅ MAPPING VERIFICATION PASSED - All mappings created correctly");
+            }
+            
+            log.info("✅ NEW USER CONNECTION COMPLETED - SocketId: {}, UserId: {}, Type: {}", 
                     newSocketId, userId, clientType);
+            log.info("   🏓 USER CAN NOW SEND PING MESSAGES TO REGISTER IN TENANT POOLS");
         }
     }
 
@@ -185,7 +234,32 @@ public class SocketConnectionService {
     }
 
     public String getUserIdBySocketId(String socketId) {
-        return userSocketMap.get(socketId);
+        String result = userSocketMap.get(socketId);
+        log.info("🔍 getUserIdBySocketId('{}') = '{}' (total mappings: {})", socketId, result, userSocketMap.size());
+        
+        if (result == null) {
+            log.warn("❌ SOCKET ID NOT FOUND - Socket '{}' not registered in userSocketMap", socketId);
+            
+            if (!userSocketMap.isEmpty()) {
+                log.info("   Available socket mappings ({} total):", userSocketMap.size());
+                userSocketMap.forEach((key, value) -> {
+                    log.info("     '{}' -> '{}'", key, value);
+                    if (key.equals(socketId)) {
+                        log.error("   ❌ EXACT MATCH FOUND BUT GET FAILED - This should not happen!");
+                    }
+                });
+            } else {
+                log.warn("   userSocketMap is EMPTY - No socket connections registered");
+                log.warn("   This means either:");
+                log.warn("   1. No users have connected");
+                log.warn("   2. Connection failed before socket mapping creation");
+                log.warn("   3. Connection parameters missing (clientType=agent&userId=X)");
+            }
+        } else {
+            log.info("✅ SOCKET FOUND - Socket '{}' is registered to user '{}'", socketId, result);
+        }
+        
+        return result;
     }
 
     public void removeConnection(String socketId) {

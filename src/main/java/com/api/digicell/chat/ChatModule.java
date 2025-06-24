@@ -511,12 +511,34 @@ public class ChatModule {
             try {
                 String userId = pingRequest.getUserId();
                 String socketId = socketClient.getSessionId().toString();
-                log.info("📍 Ping details - UserId: {}, SocketId: {}", userId, socketId);
+                log.info("📍 Ping details - UserId: '{}', SocketId: '{}'", userId, socketId);
+                log.info("📍 Ping request object - Class: {}, UserId from object: '{}'", 
+                        pingRequest.getClass().getSimpleName(), pingRequest.getUserId());
+                
+                // Debug socket client details
+                log.info("🔌 Socket client details:");
+                log.info("   Remote address: {}", socketClient.getRemoteAddress());
+                log.info("   Session ID: {}", socketClient.getSessionId());
+                log.info("   Connected: {}", socketClient.isChannelOpen());
+                log.info("   Handshake params: {}", socketClient.getHandshakeData().getUrlParams());
                 
                 log.info("🔍 Verifying socket registration for user...");
                 // Verify this socket is actually connected with this user ID
                 String connectedUserId = connectionService.getUserIdBySocketId(socketId);
+                log.info("🔍 SOCKET VERIFICATION RESULT:");
+                log.info("   Ping UserId: '{}'", userId);
+                log.info("   Ping SocketId: '{}'", socketId);
+                log.info("   Found UserId: '{}'", connectedUserId);
+                log.info("   Socket Registered: {}", connectedUserId != null);
+                log.info("   UserIds Match: {}", connectedUserId != null && connectedUserId.equals(userId));
+                
                 if (connectedUserId == null || !connectedUserId.equals(userId)) {
+                    log.warn("❌ PING VERIFICATION FAILED - Socket not registered or userId mismatch");
+                    log.warn("   Ping socketId: {}", socketId);
+                    log.warn("   Expected userId: {}", userId);
+                    log.warn("   Found userId: {}", connectedUserId);
+                    log.warn("   Socket registered: {}", connectedUserId != null);
+                    log.warn("   UserIds match: {}", connectedUserId != null && connectedUserId.equals(userId));
                     log.warn("⚠️ Ping from unregistered user: {} (socket: {}), rejecting", userId, socketId);
                     return;
                 }
