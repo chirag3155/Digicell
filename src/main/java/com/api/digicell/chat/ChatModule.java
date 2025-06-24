@@ -584,6 +584,7 @@ public class ChatModule {
                     log.info("🔄 Existing user found, updating ping time...");
                     // User already in queue, just update ping time
                     user.updatePingTime();
+                    addUserToTenantPools(userId);
                     log.info("✅ get ping for user: {}, last ping time: {}", user.getUserId(), user.getLastPingTime());
                     
                 }
