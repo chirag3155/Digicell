@@ -1325,28 +1325,22 @@ public class ChatModule {
                 log.info("✅ User account found for userId: {}", userId);
                 UserAccount userAccount = userAccountOpt.get();
                 
-                log.info("🔍 Looking up user organization permissions...");
-                List<UserOrgPermissions> permissions = userOrgPermissionsRepository.findDistinctByUser(userAccount);
-                log.info("📊 Distinct organization permissions found: {}", permissions.size());
+                log.info("🔍 Looking up user tenant IDs directly...");
+                List<String> tenantIds = userOrgPermissionsRepository.findDistinctTenantIdsByUser(userAccount);
+                log.info("📊 Distinct tenant IDs found: {} - {}", tenantIds.size(), tenantIds);
                 
-                if (permissions.isEmpty()) {
-                    log.warn("⚠️ No organization permissions found for user: {}", userId);
+                if (tenantIds.isEmpty()) {
+                    log.warn("⚠️ No tenant IDs found for user: {}", userId);
                     return;
                 }
                 
                 log.info("🏢 Processing tenant associations...");
-                for (UserOrgPermissions permission : permissions) {
-                    Organization org = permission.getOrganization();
-                    if (org != null && org.getTenantId() != null) {
-                        String tenantId = org.getTenantId();
-                        log.info("🔗 Adding user {} to tenant pool: {}", userId, tenantId);
-                        
-                        tenantUserPools.computeIfAbsent(tenantId, k -> ConcurrentHashMap.newKeySet()).add(userId);
-                        log.info("✅ User added to tenant pool - Tenant: {}, Pool size now: {}", 
-                                tenantId, tenantUserPools.get(tenantId).size());
-                    } else {
-                        log.warn("⚠️ Organization or tenant ID is null for permission: {}", permission.getId());
-                    }
+                for (String tenantId : tenantIds) {
+                    log.info("🔗 Adding user {} to tenant pool: {}", userId, tenantId);
+                    
+                    tenantUserPools.computeIfAbsent(tenantId, k -> ConcurrentHashMap.newKeySet()).add(userId);
+                    log.info("✅ User added to tenant pool - Tenant: {}, Pool size now: {}", 
+                            tenantId, tenantUserPools.get(tenantId).size());
                 }
                 
                 log.info("📊 Initializing client count tracking for user: {}", userId);
