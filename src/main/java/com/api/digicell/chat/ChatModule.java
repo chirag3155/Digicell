@@ -46,6 +46,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.function.Function;
+import java.util.Comparator;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -1056,21 +1058,93 @@ public class ChatModule {
     }
     
     /**
-     * Debug method to log current system capacity and user status
+     * Debug method to log current system capacity and user status with load balancing insights
      */
     public void logSystemCapacity() {
-        log.info("📊 SYSTEM CAPACITY STATUS:");
+        log.info("📊 SYSTEM CAPACITY STATUS WITH LOAD BALANCING:");
         log.info("   Total users in system: {}", userMap.size());
         log.info("   Active chat rooms: {}", chatRooms.size());
         log.info("   Max clients per user: {}", MAX_CLIENTS_PER_USER);
         
         if (!userMap.isEmpty()) {
-            log.info("   User capacity details:");
+            log.info("   📊 LOAD BALANCING ANALYSIS:");
+            
+            // Calculate load distribution statistics
+            Map<Integer, Long> loadDistribution = userMap.values().stream()
+                .collect(Collectors.groupingBy(
+                    user -> user.getCurrentClientCount(),
+                    Collectors.counting()
+                ));
+            
+            log.info("   📈 Load Distribution:");
+            for (int i = 0; i <= MAX_CLIENTS_PER_USER; i++) {
+                long count = loadDistribution.getOrDefault(i, 0L);
+                if (count > 0) {
+                    log.info("     {} clients: {} users", i, count);
+                }
+            }
+            
+            // Find users with minimum load for next assignment
+            int minLoad = userMap.values().stream()
+                .filter(user -> user.getCurrentClientCount() < MAX_CLIENTS_PER_USER)
+                .mapToInt(ChatUser::getCurrentClientCount)
+                .min()
+                .orElse(-1);
+            
+            if (minLoad >= 0) {
+                List<String> nextAssignmentCandidates = userMap.entrySet().stream()
+                    .filter(entry -> entry.getValue().getCurrentClientCount() == minLoad)
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toList());
+                
+                log.info("   🎯 Next Assignment Candidates (load: {}): {}", minLoad, nextAssignmentCandidates);
+            } else {
+                log.info("   ❌ All users at capacity - no assignment candidates available");
+            }
+            
+            log.info("   📋 Individual User Details:");
             userMap.forEach((userId, user) -> {
                 int clientCount = user.getCurrentClientCount();
                 String status = clientCount >= MAX_CLIENTS_PER_USER ? "AT CAPACITY" : "AVAILABLE";
-                log.info("     User {} → {}/{} clients ({})", userId, clientCount, MAX_CLIENTS_PER_USER, status);
+                String loadLevel = clientCount == 0 ? "IDLE" : 
+                                 clientCount <= 2 ? "LOW" : 
+                                 clientCount <= 4 ? "MEDIUM" : "HIGH";
+                log.info("     User {} → {}/{} clients ({}, {})", userId, clientCount, MAX_CLIENTS_PER_USER, status, loadLevel);
             });
+        }
+        
+        // Log tenant-specific load balancing details
+        log.info("   🏢 TENANT-SPECIFIC LOAD BALANCING:");
+        if (!tenantUserPools.isEmpty()) {
+            tenantUserPools.forEach((tenantId, userIds) -> {
+                log.info("     Tenant '{}' has {} users:", tenantId, userIds.size());
+                
+                // Calculate load distribution for this tenant
+                Map<Integer, Long> tenantLoadDistribution = userIds.stream()
+                    .filter(userId -> userMap.containsKey(userId))
+                    .map(userId -> userMap.get(userId).getCurrentClientCount())
+                    .collect(Collectors.groupingBy(
+                        count -> count,
+                        Collectors.counting()
+                    ));
+                
+                // Find next assignment candidate for this tenant
+                Optional<String> nextCandidate = userIds.stream()
+                    .filter(userId -> userMap.containsKey(userId))
+                    .filter(userId -> userMap.get(userId).getCurrentClientCount() < MAX_CLIENTS_PER_USER)
+                    .min(Comparator.comparingInt(userId -> userMap.get(userId).getCurrentClientCount()));
+                
+                if (nextCandidate.isPresent()) {
+                    String candidateId = nextCandidate.get();
+                    int candidateLoad = userMap.get(candidateId).getCurrentClientCount();
+                    log.info("       📊 Load distribution: {}", tenantLoadDistribution);
+                    log.info("       🎯 Next assignment: User {} (load: {}/{})", candidateId, candidateLoad, MAX_CLIENTS_PER_USER);
+                } else {
+                    log.info("       ❌ All users at capacity for tenant '{}'", tenantId);
+                }
+            });
+        } else {
+            log.info("     No tenant pools configured");
         }
         
         // Also log connection status
@@ -1273,11 +1347,11 @@ public class ChatModule {
     }
     
     /**
-     * Efficiently find user for tenant without blocking other tenant requests
-     * Uses pre-computed tenant pools for O(1) lookup
+     * Find user for tenant with MINIMUM CLIENT COUNT load balancing
+     * Ensures even distribution of workload across available agents
      */
     private ChatUser findUserForTenantEfficiently(String tenantId) {
-        log.info("🔍 FINDING USER FOR TENANT - Tenant: {}", tenantId);
+        log.info("🔍 FINDING USER FOR TENANT WITH LOAD BALANCING - Tenant: {}", tenantId);
         
         if (tenantId == null || tenantId.trim().isEmpty()) {
             log.warn("⚠️ Invalid tenant ID provided: '{}'", tenantId);
@@ -1293,29 +1367,58 @@ public class ChatModule {
             return null;
         }
         
-        log.info("🔍 Scanning tenant users for availability...");
-        // Find first available user in this tenant with capacity
+        log.info("⚖️ LOAD BALANCING: Finding user with minimum current clients...");
+        
+        String bestUserId = null;
+        int minClientCount = Integer.MAX_VALUE;
+        
+        // Track all available users for debugging
+        Map<String, Integer> userLoadMap = new HashMap<>();
+        
         for (String userId : tenantUsers) {
-            log.debug("⚡ Checking user capacity - User: {}", userId);
+            log.debug("⚡ Analyzing user load - User: {}", userId);
             AtomicInteger userCount = userClientCounts.get(userId);
             int currentCount = userCount != null ? userCount.get() : 0;
             
+            userLoadMap.put(userId, currentCount);
             log.debug("📊 User {} current clients: {}/{}", userId, currentCount, MAX_CLIENTS_PER_USER);
             
+            // Only consider users with available capacity
             if (currentCount < MAX_CLIENTS_PER_USER) {
-                log.info("✅ Available user found - User: {}, Current clients: {}/{}", userId, currentCount, MAX_CLIENTS_PER_USER);
                 ChatUser user = userMap.get(userId);
                 if (user != null) {
-                    log.info("🎯 Returning user for assignment: {}", userId);
-                    return user;
+                    // Find user with minimum client count for best load balancing  
+                    if (currentCount < minClientCount) {
+                        minClientCount = currentCount;
+                        bestUserId = userId;
+                        log.debug("🎯 New best candidate - User: {}, Load: {}/{}", userId, currentCount, MAX_CLIENTS_PER_USER);
+                    }
                 } else {
                     log.warn("⚠️ User object not found in userMap for userId: {}", userId);
                 }
+            } else {
+                log.debug("❌ User {} at capacity ({}/{})", userId, currentCount, MAX_CLIENTS_PER_USER);
             }
         }
         
-        log.info("❌ No available users in tenant pool for: {}", tenantId);
-        return null;
+        // Log load balancing decision details
+        log.info("📊 LOAD BALANCING ANALYSIS:");
+        userLoadMap.forEach((userId, count) -> {
+            String status = count >= MAX_CLIENTS_PER_USER ? "AT CAPACITY" : "AVAILABLE";
+            log.info("   User {} → {}/{} clients ({})", userId, count, MAX_CLIENTS_PER_USER, status);
+        });
+        
+        if (bestUserId != null) {
+            ChatUser selectedUser = userMap.get(bestUserId);
+            log.info("✅ OPTIMAL USER SELECTED - User: {}, Current load: {}/{} (minimum among available)", 
+                    bestUserId, minClientCount, MAX_CLIENTS_PER_USER);
+            log.info("🎯 Load balancing successful - Selected user with lowest workload");
+            return selectedUser;
+        } else {
+            log.info("❌ NO AVAILABLE USERS - All users in tenant pool are at capacity");
+            log.info("💡 Consider adding more agents for tenant: {}", tenantId);
+            return null;
+        }
     }
     
     /**
