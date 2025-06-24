@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.FileInputStream;
 import java.time.LocalDateTime;
@@ -43,6 +44,8 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.function.Function;
 
 @Slf4j
 @Component
@@ -1311,6 +1314,7 @@ public class ChatModule {
      * Add user to tenant pools when they come online
      * Called during ping processing
      */
+    @Transactional
     private void addUserToTenantPools(String userId) {
         log.info("🏢 ADDING USER TO TENANT POOLS - User: {}", userId);
         try {
@@ -1322,11 +1326,8 @@ public class ChatModule {
                 UserAccount userAccount = userAccountOpt.get();
                 
                 log.info("🔍 Looking up user organization permissions...");
-                List<UserOrgPermissions> permissionsList = userOrgPermissionsRepository.findByUser(userAccount);
-                log.info("📊 Organization permissions found: {}", permissionsList.size());
-                
-                // Convert to Set to remove any duplicates
-                Set<UserOrgPermissions> permissions = new HashSet<>(permissionsList);
+                List<UserOrgPermissions> permissions = userOrgPermissionsRepository.findDistinctByUser(userAccount);
+                log.info("📊 Distinct organization permissions found: {}", permissions.size());
                 
                 if (permissions.isEmpty()) {
                     log.warn("⚠️ No organization permissions found for user: {}", userId);
