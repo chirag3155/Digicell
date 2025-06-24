@@ -275,7 +275,7 @@ public class ChatModule {
                 } else {
                     log.warn("⚠️ No customer details found in request data");
                 }
-
+                log.info("🔍 Client info: {}", history, summary, timestamp, clientName, clientEmail, clientPhone, clientLabel, tenantId);
                 log.info("📈 Current system status - Active Rooms: {}, Total Online Users: {}", chatRooms.size(), userMap.size());
                 
                 log.info("🔄 Delegating to handleUserRequest for conversation assignment...");
@@ -728,12 +728,17 @@ public class ChatModule {
                     userInfo.setStatus("online");
                     userInfo.setUserId(user.getUserId());
                     userInfo.setConversationId(conversationId);
+                    userInfo.setTenantId(tenantId);
+                    userInfo.setHistory(history);
+                    userInfo.setSummary(summary);
+                    userInfo.setClientId(clientId);
                     userInfo.setClientName(clientName);
                     userInfo.setClientLabel(clientLabel);
                     userInfo.setClientEmail(clientEmail);
                     userInfo.setClientPhone(clientPhone);
+            
                     
-                    log.info("📤 Sending acknowledgment to chat module...");
+                    log.info("📤 Sending acknowledgment to chat module...  {}", userInfo);
                     // Send acknowledgment to chat module
                     socketClient.sendEvent(socketConfig.EVENT_AGENT_ACK, userInfo);
                     log.info("✅ Acknowledgment sent to chat module");
