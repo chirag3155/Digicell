@@ -568,7 +568,25 @@ public class ChatModule {
         });
 
         server.addEventListener(socketConfig.EVENT_OFFLINE_REQ, UserPingRequest.class, (socketClient, offlineRequest, ackSender) -> {
-            handleOfflineRequest(offlineRequest.getUserId(), socketClient);
+            log.info("📴 EVENT_OFFLINE_REQ RECEIVED - Starting offline request processing...");
+            try {
+                if (offlineRequest == null) {
+                    log.error("❌ OFFLINE REQUEST VALIDATION FAILED - Received null offline request object");
+                    return;
+                }
+                
+                String userId = offlineRequest.getUserId();
+                if (userId == null || userId.trim().isEmpty()) {
+                    log.error("❌ OFFLINE REQUEST VALIDATION FAILED - Missing or empty userId in offline request");
+                    return;
+                }
+                
+                log.info("👤 Offline request details - UserId: {}, SocketId: {}", userId, socketClient.getSessionId());
+                handleOfflineRequest(userId, socketClient);
+                log.info("✅ EVENT_OFFLINE_REQ processing completed for user: {}", userId);
+            } catch (Exception e) {
+                log.error("❌ Error in EVENT_OFFLINE_REQ processing: {}", e.getMessage(), e);
+            }
         });
     }
 
@@ -601,6 +619,13 @@ public class ChatModule {
         }
         
         log.info("🔍 Looking for available user - Current users: {}, Max clients per user: {}", userMap.size(), MAX_CLIENTS_PER_USER);
+        
+        // Debug: Log current system state
+        log.info("🔍 SYSTEM DEBUG - Current online users: {}", userMap.keySet());
+        log.info("🏢 TENANT POOLS DEBUG - Available tenant pools: {}", tenantUserPools.keySet());
+        tenantUserPools.forEach((tenant, users) -> {
+            log.info("   Tenant '{}' has {} users: {}", tenant, users.size(), users);
+        });
         
         log.info("🎯 Starting efficient tenant-aware user lookup...");
         // Use efficient tenant-aware assignment instead of blocking queue processing
@@ -744,24 +769,61 @@ public class ChatModule {
     // }
 
     private void handleOfflineRequest(String userId, SocketIOClient socketClient) {
+        log.info("📴 HANDLE_OFFLINE_REQUEST STARTED - Processing offline request...");
+        log.info("👤 Offline request details - UserId: {}, SocketId: {}", userId, socketClient.getSessionId());
+        
+        log.info("🔍 LOOKING UP USER - Checking if user exists in userMap...");
         ChatUser user = userMap.get(userId);
+        
         if (user != null) {
-            // Check if user has any active chats
-            Set<String> userActiveRooms = userRooms.get(userId);
-            if (userActiveRooms == null || userActiveRooms.isEmpty()) {
+            log.info("✅ USER FOUND - User exists in system, checking active chats...");
+            log.info("📊 User current status - ClientCount: {}, OfflineRequested: {}", user.getCurrentClientCount(), user.isOfflineRequested());
+            
+            // Check if user has any active chats using active conversations instead of userRooms
+            Set<String> activeConversations = connectionService.getUserActiveConversations(userId);
+            log.info("🔍 CHECKING ACTIVE CONVERSATIONS - Found {} active conversations", activeConversations != null ? activeConversations.size() : 0);
+            
+            if (activeConversations == null || activeConversations.isEmpty()) {
+                log.info("✅ NO ACTIVE CHATS - User can go offline safely");
+                
+                log.info("📊 UPDATING USER STATUS - Setting status to OFFLINE...");
                 // No active chats, can go offline
                 updateUserStatus(userId, UserAccountStatus.OFFLINE);
                 
+                log.info("🏢 REMOVING FROM TENANT POOLS - Cleaning up user assignments...");
                 // Remove from tenant pools
                 removeUserFromTenantPools(userId);
                 
-                log.info("User {} status updated to OFFLINE and removed from tenant pools", userId);
+                log.info("✅ OFFLINE REQUEST COMPLETED - User {} status updated to OFFLINE and removed from tenant pools", userId);
             } else {
-                // Has active chats, can't go offline yet
-                log.warn("User {} has active chats, cannot go offline", userId);
+                log.warn("⚠️ OFFLINE REQUEST REJECTED - User {} has {} active chats, cannot go offline yet", userId, activeConversations.size());
+                log.info("📋 Active conversations: {}", activeConversations);
                 // TODO: Implement notification to user UI about pending chats
+                
+                // Send response to user about pending chats
+                Map<String, Object> response = Map.of(
+                    "status", "offline_rejected",
+                    "reason", "active_conversations",
+                    "active_conversations", activeConversations.size(),
+                    "message", "Cannot go offline while having active conversations"
+                );
+                socketClient.sendEvent("offline_response", response);
+                log.info("📤 Sent offline rejection response to user: {}", userId);
             }
+        } else {
+            log.warn("❌ USER NOT FOUND - User {} not found in userMap, cannot process offline request", userId);
+            
+            // Send error response to user
+            Map<String, Object> response = Map.of(
+                "status", "error", 
+                "reason", "user_not_found",
+                "message", "User not found in system"
+            );
+            socketClient.sendEvent("offline_response", response);
+            log.info("📤 Sent error response to user: {}", userId);
         }
+        
+        log.info("✅ HANDLE_OFFLINE_REQUEST COMPLETED for user: {}", userId);
     }
 
     private void updateUserStatus(String userId, UserAccountStatus status) {
