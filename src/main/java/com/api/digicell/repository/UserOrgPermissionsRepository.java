@@ -19,5 +19,5 @@ public interface UserOrgPermissionsRepository extends JpaRepository<UserOrgPermi
     Set<UserOrgPermissions> findByUserUserId(Long userId);
     
     @Query("SELECT DISTINCT uop.organization FROM UserOrgPermissions uop WHERE uop.user = :userAccount")
-    Set<Organization> findDistinctOrganizationsByUserAccount(@Param("userAccount") UserAccount userAccount);
+    List<Organization> findDistinctOrganizationsByUserAccount(@Param("userAccount") UserAccount userAccount);
 } 

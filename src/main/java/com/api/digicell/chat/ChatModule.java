@@ -945,18 +945,21 @@ public class ChatModule {
      */
     private boolean checkUserOrganizationTenants(UserAccount userAccount, String targetTenantId) {
         try {
-            // Repository already returns Set<Organization> - use it directly
-            Set<Organization> userOrganizations = userOrgPermissionsRepository.findDistinctOrganizationsByUserAccount(userAccount);
+            // Repository returns List<Organization> - convert to Set to remove duplicates
+            List<Organization> userOrganizationsList = userOrgPermissionsRepository.findDistinctOrganizationsByUserAccount(userAccount);
             
-            if (userOrganizations == null || userOrganizations.isEmpty()) {
+            if (userOrganizationsList == null || userOrganizationsList.isEmpty()) {
                 log.debug("User {} has no organizations", userAccount.getUserId());
                 return false;
             }
             
+            // Convert to Set to ensure uniqueness (though DISTINCT should handle this)
+            Set<Organization> userOrganizations = new HashSet<>(userOrganizationsList);
+            
             for (Organization org : userOrganizations) {
                 String orgTenantId = org.getTenantId();
                 if (targetTenantId.equals(orgTenantId)) {
-                    log.debug("User {} belongs to organization with matching tenant {}", 
+                    log.info("User {} belongs to organization with matching tenant {}", 
                              userAccount.getUserId(), targetTenantId);
                     return true;
                 }
