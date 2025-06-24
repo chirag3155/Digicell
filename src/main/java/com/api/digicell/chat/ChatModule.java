@@ -54,8 +54,8 @@ import java.util.Optional;
 public class ChatModule {
     private final SocketIOServer server;
     private final Map<String, String> clientUserMapping;
-    private final Map<String, Set<String>> userRooms;
-    private final Map<String, ChatUser> userMap;
+    private static Map<String, Set<String>> userRooms;
+    private static Map<String, ChatUser> userMap;
     private final Map<String, ChatRoom> chatRooms;
     private final UserAccountService userAccountService;
     private final SocketConfig socketConfig;
@@ -561,7 +561,8 @@ public class ChatModule {
                     user = new ChatUser(userId);
                     user.setOfflineRequested(false);  // Set as online
                     userMap.put(userId, user);
-                    log.info("✅ User object created and added to userMap");
+                    user.updatePingTime();
+                    log.info("✅ get ping for user: {}, last ping time: {}", user.getUserId(), user.getLastPingTime());
                     
                     log.info("🏢 Adding user to relevant tenant pools...");
                     // Add user to relevant tenant pools for efficient assignment
@@ -583,7 +584,8 @@ public class ChatModule {
                     log.info("🔄 Existing user found, updating ping time...");
                     // User already in queue, just update ping time
                     user.updatePingTime();
-                    log.info("✅ Ping time updated for user: {}", userId);
+                    log.info("✅ get ping for user: {}, last ping time: {}", user.getUserId(), user.getLastPingTime());
+                    
                 }
 
                 log.info("📤 Sending PONG response to user...");
@@ -1387,11 +1389,23 @@ public class ChatModule {
             if (currentCount < MAX_CLIENTS_PER_USER) {
                 ChatUser user = userMap.get(userId);
                 if (user != null) {
-                    // Find user with minimum client count for best load balancing  
-                    if (currentCount < minClientCount) {
+                    // Check if user's last ping time is under 7 seconds (recent activity)
+                    long currentTime = System.currentTimeMillis();
+                    long timeSinceLastPing = currentTime - user.getLastPingTime();
+                    boolean isRecentlyActive = timeSinceLastPing < 7000; // 7 seconds in milliseconds
+                    
+                    log.debug("⏰ User {} ping status - Time since last ping: {}ms, Recently active: {}", 
+                             userId, timeSinceLastPing, isRecentlyActive);
+                    
+                    // Find user with minimum client count for best load balancing, but only if recently active
+                    if (currentCount < minClientCount && isRecentlyActive) {
                         minClientCount = currentCount;
                         bestUserId = userId;
-                        log.debug("🎯 New best candidate - User: {}, Load: {}/{}", userId, currentCount, MAX_CLIENTS_PER_USER);
+                        log.debug("🎯 New best candidate - User: {}, Load: {}/{}, Recently active: {}ms ago", 
+                                 userId, currentCount, MAX_CLIENTS_PER_USER, timeSinceLastPing);
+                    } else if (!isRecentlyActive) {
+                        log.debug("⏰ User {} skipped - Last ping {}ms ago (over 7 second threshold)", 
+                                 userId, timeSinceLastPing);
                     }
                 } else {
                     log.warn("⚠️ User object not found in userMap for userId: {}", userId);
