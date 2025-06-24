@@ -1195,7 +1195,7 @@ public class ChatModule {
                 UserAccount userAccount = userAccountOpt.get();
                 
                 log.info("🔍 Looking up user organization permissions...");
-                Set<UserOrgPermissions> permissions = userOrgPermissionsRepository.findByUserAccount(userAccount);
+                Set<UserOrgPermissions> permissions = userOrgPermissionsRepository.findByUser(userAccount);
                 log.info("📊 Organization permissions found: {}", permissions.size());
                 
                 if (permissions.isEmpty()) {
