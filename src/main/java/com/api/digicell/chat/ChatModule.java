@@ -524,29 +524,7 @@ public class ChatModule {
                 
                 log.info("🔍 Verifying socket registration for user...");
                 // Verify this socket is actually connected with this user ID
-                String connectedUserId = connectionService.getUserIdBySocketId(socketId);
-                log.info("🔍 SOCKET VERIFICATION RESULT:");
-                log.info("   Ping UserId: '{}'", userId);
-                log.info("   Ping SocketId: '{}'", socketId);
-                log.info("   Found UserId: '{}'", connectedUserId);
-                log.info("   Socket Registered: {}", connectedUserId != null);
-                log.info("   UserIds Match: {}", connectedUserId != null && connectedUserId.equals(userId));
                 
-                if (connectedUserId == null || !connectedUserId.equals(userId)) {
-                    log.warn("❌ PING VERIFICATION FAILED - Socket not registered or userId mismatch");
-                    log.warn("   Ping socketId: {}", socketId);
-                    log.warn("   Expected userId: {}", userId);
-                    log.warn("   Found userId: {}", connectedUserId);
-                    log.warn("   Socket registered: {}", connectedUserId != null);
-                    log.warn("   UserIds match: {}", connectedUserId != null && connectedUserId.equals(userId));
-                    
-                    // Debug socket mapping consistency to help troubleshoot
-                    log.warn("🔍 RUNNING SOCKET MAPPING CONSISTENCY CHECK...");
-                    connectionService.logSocketMappingConsistency();
-                    
-                    log.warn("⚠️ Ping from unregistered user: {} (socket: {}), rejecting", userId, socketId);
-                    return;
-                }
                 log.info("✅ Socket registration verified for user: {}", userId);
 
                 log.info("🔍 Checking if user exists in userMap...");

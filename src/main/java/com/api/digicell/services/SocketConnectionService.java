@@ -11,8 +11,6 @@ import jakarta.annotation.PreDestroy;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Set;
-import java.util.List;
-import java.util.ArrayList;
 import java.util.concurrent.*;
 import java.util.HashMap;
 
@@ -21,8 +19,7 @@ import java.util.HashMap;
 public class SocketConnectionService {
     private final SocketConfig socketConfig;
     private String chatModuleSocketId;
-    private final Map<String, String> userSocketMap;  // socketId → userId (supports multiple sockets per user)
-    private Map<String, String> userSocketIds = new ConcurrentHashMap<>();  // userId → primary socketId (latest connection)
+    private Map<String, String> userSocketIds = new ConcurrentHashMap<>();  // userId → socketId
     
     // New maps to track active conversations per user
     private final Map<String, Set<String>> userActiveConversations = new ConcurrentHashMap<>();
@@ -41,7 +38,6 @@ public class SocketConnectionService {
 
     public SocketConnectionService(SocketConfig socketConfig) {
         this.socketConfig = socketConfig;
-        this.userSocketMap = new ConcurrentHashMap<>();
         this.chatModuleSocketId = null;
     }
     
@@ -84,8 +80,6 @@ public class SocketConnectionService {
         log.info("🔗 SOCKET CONNECTION ATTEMPT - Starting connection validation...");
         log.info("📡 Connection details - IP: {}, SessionId: {}, ClientType: '{}', UserId: '{}'", 
                 remoteAddress, sessionId, clientType, userId);
-        log.info("🔍 CRITICAL DEBUG - This socket MUST be registered or ping will fail!");
-        log.info("   Socket that will send pings: {}", sessionId);
         
         // Debug: Log all received parameters
         log.info("🔍 ALL URL PARAMETERS RECEIVED:");
@@ -151,30 +145,17 @@ public class SocketConnectionService {
 
         String newSocketId = socketClient.getSessionId().toString();
         
-        // Allow multiple socket connections per user (multi-client support)
-        log.info("🔗 MULTI-CLIENT SUPPORT - Allowing multiple connections for user: {}", userId);
+        // Check if user mapping exists (indicates reconnection attempt)
+        String existingSocketId = userSocketIds.get(userId);
         
-        // Check if user has existing socket connections (indicates additional connection)
-        Set<String> existingSocketIds = userSocketIds.get(userId);
-        
-        if (existingSocketIds != null && !existingSocketIds.isEmpty()) {
+        if (existingSocketId != null) {
             // User mapping exists - this is a reconnection attempt
             log.info("🔄 User {} reconnection detected. Old SocketId: {}, New SocketId: {}", 
                     userId, existingSocketId, newSocketId);
             
-            // Always remove old socket mapping when user reconnects with different socket
-            if (!existingSocketId.equals(newSocketId)) {
-                log.info("🧹 CLEANING OLD SOCKET MAPPING - Removing old socketId: {}", existingSocketId);
-                userSocketMap.remove(existingSocketId);
-                log.info("✅ Old socket mapping removed successfully");
-                log.info("ℹ️ Old socket will be cleaned up automatically when it disconnects");
-            }
-            
-            // Update with new socket ID
-            log.info("🔄 UPDATING SOCKET MAPPINGS - Registering new socket");
-            userSocketMap.put(newSocketId, userId);
+            // Update socket ID for this user
+            log.info("🔄 Updating user {} socket mapping: {} → {}", userId, existingSocketId, newSocketId);
             userSocketIds.put(userId, newSocketId);
-            log.info("✅ Socket mappings updated successfully");
             
             // Remove disconnection timestamp as user is now connected
             LocalDateTime disconnectionTime = userDisconnectionTime.remove(userId);
@@ -198,45 +179,19 @@ public class SocketConnectionService {
             log.info("📋 Connection details - SocketId: {}, UserId: {}, Type: {}", 
                     newSocketId, userId, clientType);
             
-            log.info("🗂️ CREATING SOCKET MAPPINGS...");
-            log.info("   BEFORE - userSocketMap size: {}, contains socketId: {}", 
-                    userSocketMap.size(), userSocketMap.containsKey(newSocketId));
-            log.info("   BEFORE - userSocketIds size: {}, contains userId: {}", 
-                    userSocketIds.size(), userSocketIds.containsKey(userId));
-            
-            userSocketMap.put(newSocketId, userId);
+            log.info("🗂️ CREATING SOCKET MAPPING...");
             userSocketIds.put(userId, newSocketId);
             
-            log.info("   AFTER - userSocketMap size: {}, contains socketId: {}", 
-                    userSocketMap.size(), userSocketMap.containsKey(newSocketId));
-            log.info("   AFTER - userSocketIds size: {}, contains userId: {}", 
-                    userSocketIds.size(), userSocketIds.containsKey(userId));
-            
-            log.info("✅ SOCKET MAPPINGS CREATED:");
-            log.info("   userSocketMap['{}'] = '{}'", newSocketId, userId);
+            log.info("✅ SOCKET MAPPING CREATED:");
             log.info("   userSocketIds['{}'] = '{}'", userId, newSocketId);
             
-            // Verify mappings were created
-            String verifyUserId = userSocketMap.get(newSocketId);
+            // Verify mapping was created
             String verifySocketId = userSocketIds.get(userId);
             log.info("🔍 MAPPING VERIFICATION:");
-            log.info("   userSocketMap.get('{}') = '{}' (matches userId: {})", 
-                    newSocketId, verifyUserId, userId.equals(verifyUserId));
-            log.info("   userSocketIds.get('{}') = '{}' (matches socketId: {})", 
-                    userId, verifySocketId, newSocketId.equals(verifySocketId));
-            
-            if (!userId.equals(verifyUserId) || !newSocketId.equals(verifySocketId)) {
-                log.error("❌ CRITICAL: MAPPING VERIFICATION FAILED!");
-                log.error("   Expected userSocketMap['{}'] = '{}', got '{}'", newSocketId, userId, verifyUserId);
-                log.error("   Expected userSocketIds['{}'] = '{}', got '{}'", userId, newSocketId, verifySocketId);
-                log.error("   This will cause 'Ping from unregistered user' errors!");
-            } else {
-                log.info("✅ MAPPING VERIFICATION PASSED - All mappings created correctly");
-            }
+            log.info("   userSocketIds.get('{}') = '{}'", userId, verifySocketId);
             
             log.info("✅ NEW USER CONNECTION COMPLETED - SocketId: {}, UserId: {}, Type: {}", 
                     newSocketId, userId, clientType);
-            log.info("   🏓 USER CAN NOW SEND PING MESSAGES TO REGISTER IN TENANT POOLS");
         }
     }
 
@@ -245,31 +200,20 @@ public class SocketConnectionService {
     }
 
     public String getUserIdBySocketId(String socketId) {
-        String result = userSocketMap.get(socketId);
-        log.info("🔍 getUserIdBySocketId('{}') = '{}' (total mappings: {})", socketId, result, userSocketMap.size());
-        
-        if (result == null) {
-            log.warn("❌ SOCKET ID NOT FOUND - Socket '{}' not registered in userSocketMap", socketId);
-            
-            if (!userSocketMap.isEmpty()) {
-                log.info("   Available socket mappings ({} total):", userSocketMap.size());
-                userSocketMap.forEach((key, value) -> {
-                    log.info("     '{}' -> '{}'", key, value);
-                    if (key.equals(socketId)) {
-                        log.error("   ❌ EXACT MATCH FOUND BUT GET FAILED - This should not happen!");
-                    }
-                });
-            } else {
-                log.warn("   userSocketMap is EMPTY - No socket connections registered");
-                log.warn("   This means either:");
-                log.warn("   1. No users have connected");
-                log.warn("   2. Connection failed before socket mapping creation");
-                log.warn("   3. Connection parameters missing (clientType=agent&userId=X)");
+        // Reverse lookup: find userId where userSocketIds[userId] == socketId
+        String result = null;
+        for (Map.Entry<String, String> entry : userSocketIds.entrySet()) {
+            if (socketId.equals(entry.getValue())) {
+                result = entry.getKey();
+                break;
             }
-        } else {
-            log.info("✅ SOCKET FOUND - Socket '{}' is registered to user '{}'", socketId, result);
         }
         
+        log.info("🔍 getUserIdBySocketId('{}') = '{}' (total user mappings: {})", socketId, result, userSocketIds.size());
+        if (result == null && !userSocketIds.isEmpty()) {
+            log.info("   Available user mappings:");
+            userSocketIds.forEach((userId, currentSocketId) -> log.info("     User '{}' -> Socket '{}'", userId, currentSocketId));
+        }
         return result;
     }
 
@@ -281,10 +225,9 @@ public class SocketConnectionService {
             // Notify all connected users about chat module disconnection
             notifyUsersAboutChatModuleDisconnection();
         } else {
-            String userId = userSocketMap.remove(socketId);
+            // Find userId by reverse lookup in userSocketIds
+            String userId = getUserIdBySocketId(socketId);
             if (userId != null) {
-                // Keep user mapping (userSocketIds) until configurable timeout
-                // Only remove socket-to-user mapping (userSocketMap)
                 // Record disconnection time for cleanup scheduling
                 userDisconnectionTime.put(userId, LocalDateTime.now());
                 
@@ -400,9 +343,9 @@ public class SocketConnectionService {
             if (conversations.isEmpty()) {
                 userActiveConversations.remove(userId);
                 // Only remove user socket mapping if user is not currently connected
-                if (!userSocketMap.containsValue(userId)) {
-                    userSocketIds.remove(userId);
-                    log.info("🧹 Removed last conversation {} for user {}. User mapping cleaned up.", conversationId, userId);
+                String currentSocketId = userSocketIds.get(userId);
+                if (currentSocketId == null) {
+                    log.info("🧹 Removed last conversation {} for user {}. User mapping already cleaned up.", conversationId, userId);
                 } else {
                     log.info("🗑️ Removed last conversation {} for user {}. User still connected, mapping preserved.", conversationId, userId);
                 }
@@ -541,79 +484,5 @@ public class SocketConnectionService {
         notification.put("timestamp", LocalDateTime.now().toString());
         notification.put("active_conversations_preserved", true);
         return notification;
-    }
-    
-    /**
-     * Clean up stale socket mappings for a user to prevent socket ID mismatches
-     */
-    private void cleanupStaleSocketMappings(String userId, String newSocketId) {
-        log.info("🧹 CLEANING STALE MAPPINGS - Checking for orphaned socket mappings for user: {}", userId);
-        
-        // Find any socket IDs in userSocketMap that point to this user but are not the current socket
-        List<String> staleSocketIds = new ArrayList<>();
-        userSocketMap.forEach((socketId, mappedUserId) -> {
-            if (userId.equals(mappedUserId) && !socketId.equals(newSocketId)) {
-                staleSocketIds.add(socketId);
-            }
-        });
-        
-        if (!staleSocketIds.isEmpty()) {
-            log.warn("🗑️ FOUND STALE MAPPINGS - Removing {} stale socket mappings for user {}: {}", 
-                    staleSocketIds.size(), userId, staleSocketIds);
-            
-            for (String staleSocketId : staleSocketIds) {
-                userSocketMap.remove(staleSocketId);
-                log.info("   Removed stale mapping: '{}' -> '{}'", staleSocketId, userId);
-            }
-            
-            log.info("✅ STALE CLEANUP COMPLETED - Removed all stale mappings for user: {}", userId);
-        } else {
-            log.debug("✅ NO STALE MAPPINGS - No cleanup needed for user: {}", userId);
-        }
-        
-        // Also verify userSocketIds consistency
-        String currentSocketId = userSocketIds.get(userId);
-        if (currentSocketId != null && !currentSocketId.equals(newSocketId)) {
-            log.info("🔄 UPDATING userSocketIds - Old: {}, New: {}", currentSocketId, newSocketId);
-        }
-    }
-    
-    /**
-     * Debug method to log socket mapping consistency for troubleshooting
-     */
-    public void logSocketMappingConsistency() {
-        log.info("🔍 SOCKET MAPPING CONSISTENCY CHECK");
-        log.info("   userSocketMap size: {}", userSocketMap.size());
-        log.info("   userSocketIds size: {}", userSocketIds.size());
-        
-        // Check for orphaned mappings in userSocketMap
-        List<String> orphanedSockets = new ArrayList<>();
-        userSocketMap.forEach((socketId, userId) -> {
-            String expectedSocketId = userSocketIds.get(userId);
-            if (expectedSocketId == null || !expectedSocketId.equals(socketId)) {
-                orphanedSockets.add(socketId + " -> " + userId);
-            }
-        });
-        
-        if (!orphanedSockets.isEmpty()) {
-            log.warn("⚠️ ORPHANED SOCKET MAPPINGS FOUND ({} total):", orphanedSockets.size());
-            orphanedSockets.forEach(mapping -> log.warn("   Orphaned: {}", mapping));
-        } else {
-            log.info("✅ NO ORPHANED MAPPINGS - All socket mappings are consistent");
-        }
-        
-        // Check for missing reverse mappings
-        List<String> missingReverse = new ArrayList<>();
-        userSocketIds.forEach((userId, socketId) -> {
-            String mappedUserId = userSocketMap.get(socketId);
-            if (mappedUserId == null || !mappedUserId.equals(userId)) {
-                missingReverse.add(userId + " -> " + socketId);
-            }
-        });
-        
-        if (!missingReverse.isEmpty()) {
-            log.warn("⚠️ MISSING REVERSE MAPPINGS FOUND ({} total):", missingReverse.size());
-            missingReverse.forEach(mapping -> log.warn("   Missing reverse: {}", mapping));
-        }
     }
 } 
