@@ -240,7 +240,6 @@ public class ChatModule {
             log.info("✅ Disconnect handling completed for socket: {}", socketId);
         });
 
-        log.info("📋 Setting up EVENT_AGENT_REQUEST listener...");
         server.addEventListener(socketConfig.EVENT_AGENT_REQUEST, Map.class, (socketClient, data, ackSender) -> {
             log.info("🎯 EVENT_AGENT_REQUEST RECEIVED - Starting request processing...");
             try {
@@ -275,7 +274,7 @@ public class ChatModule {
                 } else {
                     log.warn("⚠️ No customer details found in request data");
                 }
-                log.info("🔍 Client info: {}", history, summary, timestamp, clientName, clientEmail, clientPhone, clientLabel, tenantId);
+                log.info("🔍 Client info from chat module: {}", history, summary, timestamp, clientName, clientEmail, clientPhone, clientLabel, tenantId);
                 log.info("📈 Current system status - Active Rooms: {}, Total Online Users: {}", chatRooms.size(), userMap.size());
                 
                 log.info("🔄 Delegating to handleUserRequest for conversation assignment...");
@@ -752,6 +751,7 @@ public class ChatModule {
                             conversationId, server.getRoomOperations(conversationId).getClients().size(), 
                             server.getAllClients().size());
                     
+                            
                     // Store conversation data in database
                     try {
                         log.info("💾 Saving conversation data to database...");
