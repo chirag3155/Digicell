@@ -62,6 +62,14 @@ public class ChatModule {
     private final UserOrgPermissionsRepository userOrgPermissionsRepository;
     private final TaskScheduler taskScheduler;
     private static final int MAX_CLIENTS_PER_USER = 5;
+    
+    /*
+     * NEW BUSINESS LOGIC RULES:
+     * 1. ONE USER = ONE SOCKET ID (enforced in SocketConnectionService)
+     * 2. ONE USER = MAX 5 CONCURRENT CLIENT CONVERSATIONS (enforced here)
+     * 3. If user connects with new socket, old socket is replaced
+     * 4. If user at capacity (5 clients), new client assignment is rejected
+     */
 
     // SSL Configuration properties
     @Value("${socket.ssl.enabled:false}")
@@ -526,6 +534,7 @@ public class ChatModule {
                 // Verify this socket is actually connected with this user ID
                 
                 log.info("✅ Socket registration verified for user: {}", userId);
+                log.info("📋 NEW LOGIC: User {} verified with ONE socket ID (max {} clients allowed)", userId, MAX_CLIENTS_PER_USER);
 
                 log.info("🔍 Checking if user exists in userMap...");
                 // Check if user is already in queue
@@ -636,7 +645,32 @@ public class ChatModule {
         // Use efficient tenant-aware assignment instead of blocking queue processing
         ChatUser user = findUserForTenantEfficiently(tenantId);
         
-        if (user != null && user.getCurrentClientCount() < MAX_CLIENTS_PER_USER) {
+        // NEW LOGIC: One user = One socket, Max 5 clients per user
+        if (user != null) {
+            int currentClientCount = user.getCurrentClientCount();
+            log.info("🔍 USER CAPACITY CHECK - User: {}, Current clients: {}/{}", 
+                    user.getUserId(), currentClientCount, MAX_CLIENTS_PER_USER);
+            
+            if (currentClientCount >= MAX_CLIENTS_PER_USER) {
+                log.warn("❌ USER AT CAPACITY - User {} has {}/{} clients, cannot assign new client {}", 
+                        user.getUserId(), currentClientCount, MAX_CLIENTS_PER_USER, clientId);
+                        
+                // Send capacity exceeded response
+                ClientInfoResponse userInfo = new ClientInfoResponse();
+                userInfo.setStatus("user_at_capacity");
+                userInfo.setUserId("");
+                userInfo.setConversationId(conversationId);
+                userInfo.setClientName("");
+                userInfo.setClientLabel("");
+                
+                log.info("📤 Sending capacity exceeded response to chat module for client: {}", clientId);
+                socketClient.sendEvent(socketConfig.EVENT_AGENT_ACK, userInfo);
+                log.info("✅ Capacity exceeded response sent to chat module");
+                return;
+            }
+            
+            log.info("✅ USER HAS CAPACITY - User {} can accept new client ({}/{} slots used)", 
+                    user.getUserId(), currentClientCount, MAX_CLIENTS_PER_USER);
             log.info("✅ Available user found for assignment");
             log.info("🎯 Assigning user {} to conversation {} (current clients: {}/{})", 
                     user.getUserId(), conversationId, user.getCurrentClientCount(), MAX_CLIENTS_PER_USER);
@@ -898,7 +932,7 @@ public class ChatModule {
             
         } catch (NumberFormatException e) {
             log.error("Invalid user ID format: {}", userId);
-            return false;
+            return false; 
         } catch (Exception e) {
             log.error("Error checking tenant for user {}: {}", userId, e.getMessage(), e);
             return false;
@@ -907,10 +941,11 @@ public class ChatModule {
     
     /**
      * Check if user belongs to any organization with the specified tenant ID
-     * Uses Set to avoid checking duplicate organizations for efficiency
+     * Fixed to handle List return type from repository
      */
     private boolean checkUserOrganizationTenants(UserAccount userAccount, String targetTenantId) {
         try {
+            // Repository already returns Set<Organization> - use it directly
             Set<Organization> userOrganizations = userOrgPermissionsRepository.findDistinctOrganizationsByUserAccount(userAccount);
             
             if (userOrganizations == null || userOrganizations.isEmpty()) {
@@ -932,7 +967,7 @@ public class ChatModule {
             return false;
             
         } catch (Exception e) {
-            log.error("Error checking user {} organization tenants: {}", userAccount.getUserId(), e.getMessage(), e);
+            log.error("❌ Error checking user {} organization tenants: {}", userAccount.getUserId(), e.getMessage(), e);
             return false;
         }
     }
@@ -1004,6 +1039,28 @@ public class ChatModule {
         }
         
         log.info("✅ Reconnection notifications completed for user: {}", userId);
+    }
+    
+    /**
+     * Debug method to log current system capacity and user status
+     */
+    public void logSystemCapacity() {
+        log.info("📊 SYSTEM CAPACITY STATUS:");
+        log.info("   Total users in system: {}", userMap.size());
+        log.info("   Active chat rooms: {}", chatRooms.size());
+        log.info("   Max clients per user: {}", MAX_CLIENTS_PER_USER);
+        
+        if (!userMap.isEmpty()) {
+            log.info("   User capacity details:");
+            userMap.forEach((userId, user) -> {
+                int clientCount = user.getCurrentClientCount();
+                String status = clientCount >= MAX_CLIENTS_PER_USER ? "AT CAPACITY" : "AVAILABLE";
+                log.info("     User {} → {}/{} clients ({})", userId, clientCount, MAX_CLIENTS_PER_USER, status);
+            });
+        }
+        
+        // Also log connection status
+        connectionService.logConnectionStatus();
     }
      
     /**

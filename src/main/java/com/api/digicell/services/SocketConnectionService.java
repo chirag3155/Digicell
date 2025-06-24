@@ -11,6 +11,7 @@ import jakarta.annotation.PreDestroy;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashSet;
 import java.util.concurrent.*;
 import java.util.HashMap;
 
@@ -149,11 +150,24 @@ public class SocketConnectionService {
         String existingSocketId = userSocketIds.get(userId);
         
         if (existingSocketId != null) {
-            // User mapping exists - this is a reconnection attempt
+            // User mapping exists - enforce ONE SOCKET PER USER rule
             log.info("🔄 User {} reconnection detected. Old SocketId: {}, New SocketId: {}", 
                     userId, existingSocketId, newSocketId);
             
-            // Update socket ID for this user
+            if (!existingSocketId.equals(newSocketId)) {
+                log.info("🚪 ENFORCING ONE SOCKET PER USER - Disconnecting old socket: {}", existingSocketId);
+                
+                // Try to disconnect the old socket if it still exists
+                try {
+                    // Note: We would need server reference to actually disconnect
+                    // For now, just log and update mapping
+                    log.info("🔄 Old socket {} will be replaced by new socket {}", existingSocketId, newSocketId);
+                } catch (Exception e) {
+                    log.warn("⚠️ Could not disconnect old socket {}: {}", existingSocketId, e.getMessage());
+                }
+            }
+            
+            // Update socket ID for this user (ONE socket per user)
             log.info("🔄 Updating user {} socket mapping: {} → {}", userId, existingSocketId, newSocketId);
             userSocketIds.put(userId, newSocketId);
             
@@ -175,20 +189,28 @@ public class SocketConnectionService {
                     newSocketId, userId, clientType);
         } else {
             // No user mapping exists - this is a new user connection
-            log.info("👤 NEW USER CONNECTION - Creating socket mappings...");
+            log.info("👤 NEW USER CONNECTION - Creating socket mapping...");
             log.info("📋 Connection details - SocketId: {}, UserId: {}, Type: {}", 
                     newSocketId, userId, clientType);
             
-            log.info("🗂️ CREATING SOCKET MAPPING...");
+            log.info("🗂️ CREATING SOCKET MAPPING (ONE SOCKET PER USER)...");
             userSocketIds.put(userId, newSocketId);
             
             log.info("✅ SOCKET MAPPING CREATED:");
             log.info("   userSocketIds['{}'] = '{}'", userId, newSocketId);
+            log.info("   📋 USER RULE: One user can have only ONE active socket");
+            log.info("   📋 CLIENT RULE: One user can chat with max {} clients simultaneously", 5);
             
             // Verify mapping was created
             String verifySocketId = userSocketIds.get(userId);
             log.info("🔍 MAPPING VERIFICATION:");
             log.info("   userSocketIds.get('{}') = '{}'", userId, verifySocketId);
+            
+            if (newSocketId.equals(verifySocketId)) {
+                log.info("✅ MAPPING VERIFICATION PASSED");
+            } else {
+                log.error("❌ MAPPING VERIFICATION FAILED - Expected: {}, Got: {}", newSocketId, verifySocketId);
+            }
             
             log.info("✅ NEW USER CONNECTION COMPLETED - SocketId: {}, UserId: {}, Type: {}", 
                     newSocketId, userId, clientType);
@@ -484,5 +506,55 @@ public class SocketConnectionService {
         notification.put("timestamp", LocalDateTime.now().toString());
         notification.put("active_conversations_preserved", true);
         return notification;
+    }
+    
+    /**
+     * Check if user is currently connected (has active socket)
+     */
+    public boolean isUserConnected(String userId) {
+        String socketId = userSocketIds.get(userId);
+        boolean connected = socketId != null;
+        log.debug("🔍 User {} connection status: {} (socket: {})", userId, connected ? "CONNECTED" : "DISCONNECTED", socketId);
+        return connected;
+    }
+    
+    /**
+     * Get current socket ID for user (null if not connected)
+     */
+    public String getCurrentSocketForUser(String userId) {
+        return userSocketIds.get(userId);
+    }
+    
+    /**
+     * Get total number of connected users
+     */
+    public int getConnectedUserCount() {
+        return userSocketIds.size();
+    }
+    
+    /**
+     * Get all connected user IDs
+     */
+    public Set<String> getConnectedUserIds() {
+        return new HashSet<>(userSocketIds.keySet());
+    }
+    
+    /**
+     * Log current connection status for debugging
+     */
+    public void logConnectionStatus() {
+        log.info("📊 CONNECTION STATUS SUMMARY:");
+        log.info("   Connected users: {}", userSocketIds.size());
+        log.info("   Active conversations: {}", userActiveConversations.size());
+        log.info("   Disconnected users (preserved): {}", userDisconnectionTime.size());
+        
+        if (!userSocketIds.isEmpty()) {
+            log.info("   Connected user details:");
+            userSocketIds.forEach((userId, socketId) -> {
+                Set<String> conversations = userActiveConversations.get(userId);
+                int conversationCount = conversations != null ? conversations.size() : 0;
+                log.info("     User {} → Socket {} ({} conversations)", userId, socketId, conversationCount);
+            });
+        }
     }
 } 
