@@ -1014,7 +1014,7 @@ public class ChatModule {
         try {
             log.info("🔍 CHECKING EXISTING CLIENT - Looking up client by email...");
             // Check if client already exists
-            Client existingClient = clientRepository.findByEmail(clientId).orElse(null);
+            Client existingClient = clientRepository.findById(clientId).orElse(null);
             
             if (existingClient != null) {
                 log.info("✅ EXISTING CLIENT FOUND - Updating client data if needed...");
