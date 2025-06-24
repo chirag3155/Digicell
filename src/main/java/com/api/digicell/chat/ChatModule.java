@@ -537,6 +537,17 @@ public class ChatModule {
                 
                 log.info("✅ Socket registration verified for user: {}", userId);
                 log.info("📋 NEW LOGIC: User {} verified with ONE socket ID (max {} clients allowed)", userId, MAX_CLIENTS_PER_USER);
+                
+                log.info("🔄 Checking if user reconnected with preserved conversations...");
+                // Check if this user reconnected with preserved conversations
+                boolean hadPreservedConversations = connectionService.checkAndClearUserReconnectedFlag(userId);
+                if (hadPreservedConversations) {
+                    log.info("🔄 User {} reconnected with preserved conversations - triggering restoration", userId);
+                    restoreUserConversations(userId, socketClient);
+                    sendUserReconnectionNotifications(userId);
+                } else {
+                    log.debug("ℹ️ User {} has no preserved conversations to restore", userId);
+                }
 
                 log.info("🔍 Checking if user exists in userMap...");
                 // Check if user is already in queue
@@ -693,9 +704,9 @@ public class ChatModule {
             user.addClient(clientId);
             user.setCurrentClientCount(user.getCurrentClientCount() + 1);
             
-            // Update atomic client count for efficient tracking
-            incrementUserClientCount(user.getUserId());
-            log.info("✅ User client count updated - User: {}, New count: {}", user.getUserId(), user.getCurrentClientCount());
+                                // Update atomic client count for efficient tracking
+                    incrementUserClientCount(user.getUserId());
+                    log.info("✅ User client count updated - User: {}, New count: {}, Maximum: {}", user.getUserId(), user.getCurrentClientCount(), MAX_CLIENTS_PER_USER);
             
             log.info("🔗 Looking up user socket for room joining...");
             // Store socket ID mapping
@@ -712,14 +723,6 @@ public class ChatModule {
                     // Join the user to the conversation room for message routing
                     userSocketClient.joinRoom(conversationId);
                     log.info("✅ User {} joined room: {}", user.getUserId(), conversationId);
-                    
-                    log.info("🔄 Checking for preserved conversations to restore...");
-                    // Check if user has any preserved conversations to restore
-                    restoreUserConversations(user.getUserId(), userSocketClient);
-                    
-                    log.info("📤 Sending reconnection notifications...");
-                    // Send reconnection notifications if user had active conversations
-                    sendUserReconnectionNotifications(user.getUserId());
                     
                     log.info("📝 Preparing user info response...");
                     // Prepare user info data

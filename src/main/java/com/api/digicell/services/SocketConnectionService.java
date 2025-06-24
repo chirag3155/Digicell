@@ -30,6 +30,9 @@ public class SocketConnectionService {
     private final Map<String, LocalDateTime> userDisconnectionTime = new ConcurrentHashMap<>();
     private final ScheduledExecutorService cleanupScheduler = Executors.newScheduledThreadPool(2);
     
+    // Track users who reconnected with preserved conversations (for restoration)
+    private final Set<String> usersWithPreservedConversations = ConcurrentHashMap.newKeySet();
+    
     // Configurable conversation preservation timeout (in minutes)
     @Value("${socket.conversation.preservation.timeout:3}")
     private int conversationPreservationTimeoutMinutes;
@@ -180,8 +183,12 @@ public class SocketConnectionService {
                 // Log preserved conversations for this user
                 Set<String> preservedConversations = userActiveConversations.get(userId);
                 if (preservedConversations != null && !preservedConversations.isEmpty()) {
-                    log.info("🔄 Restored {} active conversations for reconnecting user {}: {}", 
+                    log.info("🔄 Found {} preserved conversations for reconnecting user {}: {}", 
                             preservedConversations.size(), userId, preservedConversations);
+                    
+                    // Mark user as having reconnected with preserved conversations
+                    log.info("🏷️ Marking user {} as reconnected with preserved conversations", userId);
+                    markUserAsReconnectedWithConversations(userId);
                 }
             }
             
@@ -556,5 +563,24 @@ public class SocketConnectionService {
                 log.info("     User {} → Socket {} ({} conversations)", userId, socketId, conversationCount);
             });
         }
+    }
+
+    /**
+     * Mark user as having reconnected with preserved conversations
+     */
+    public void markUserAsReconnectedWithConversations(String userId) {
+        usersWithPreservedConversations.add(userId);
+        log.info("🏷️ User {} marked as reconnected with preserved conversations", userId);
+    }
+    
+    /**
+     * Check if user reconnected with preserved conversations and clear the flag
+     */
+    public boolean checkAndClearUserReconnectedFlag(String userId) {
+        boolean hadPreservedConversations = usersWithPreservedConversations.remove(userId);
+        if (hadPreservedConversations) {
+            log.info("🔄 User {} had preserved conversations - restoration needed", userId);
+        }
+        return hadPreservedConversations;
     }
 } 
