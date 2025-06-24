@@ -28,4 +28,20 @@ public class ClientInfoResponse {
 
     @JsonProperty("client_phone")
     private String clientPhone;
+
+    @JsonProperty("tenant_id")
+    private String tenantId;
+
+    @JsonProperty("history")
+    private String history;
+
+    @JsonProperty("summary")
+    private String summary;
+
+    @JsonProperty("client_id")
+    private String clientId;
+
+
+    
+
 }
