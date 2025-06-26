@@ -227,8 +227,7 @@ public class ChatModule {
             
             // Check if this is a user disconnection with active conversations
             if (userId != null) {
-                log.info("👤 User {} identified for disconnection, checking active conversations...", 
-                        userId);
+                log.info("👤 User {} identified for disconnection, checking active conversations...", userId);
                 Set<String> activeConversations = connectionService.getUserActiveConversations(userId);
                 if (activeConversations != null && !activeConversations.isEmpty()) {
                     log.info("🔔 User {} has {} active conversations, scheduling disconnection notifications...", 
@@ -239,7 +238,7 @@ public class ChatModule {
                     log.info("📭 User {} has no active conversations, no notifications needed", userId);
                 }
             } else {
-                log.info("❓ No user found for disconnecting socket: {}", socketId);
+                log.info("❓ No user found for disconnecting socket: {}. This is expected if the user reconnected with a new socket.", socketId);
             }
             
             log.info("🔄 Delegating to SocketConnectionService for connection cleanup...");
