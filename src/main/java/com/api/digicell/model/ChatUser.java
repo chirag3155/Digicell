@@ -8,6 +8,8 @@ import java.util.Set;
 @Data
 public class ChatUser {
     private String userId;
+    private String email;
+    private String ipAddress;
     private String userName;
     private String userLabel;
     private int currentClientCount;

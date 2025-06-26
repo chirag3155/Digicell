@@ -25,6 +25,7 @@ import com.api.digicell.dto.ChatCloseRequest;
 import com.api.digicell.dto.UserCloseNotification;
 import com.api.digicell.config.SocketConfig;
 import com.api.digicell.services.SocketConnectionService;
+import com.api.digicell.services.ZendeskService;
 import com.corundumstudio.socketio.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -67,6 +68,7 @@ public class ChatModule {
     private final UserOrgPermissionsRepository userOrgPermissionsRepository;
     private final TaskScheduler taskScheduler;
     private static final int MAX_CLIENTS_PER_USER = 5;
+    private final ZendeskService zendeskService;
     
     /*
      * NEW BUSINESS LOGIC RULES:
@@ -91,7 +93,7 @@ public class ChatModule {
     private final Map<String, AtomicInteger> userClientCounts = new ConcurrentHashMap<>();
 
     public ChatModule(UserAccountService userAccountService, SocketConfig socketConfig, SocketConnectionService connectionService, 
-                     ClientRepository clientRepository, ConversationRepository conversationRepository, UserRepository userRepository, Environment environment, UserOrgPermissionsRepository userOrgPermissionsRepository, TaskScheduler taskScheduler) {
+                     ClientRepository clientRepository, ConversationRepository conversationRepository, UserRepository userRepository, Environment environment, UserOrgPermissionsRepository userOrgPermissionsRepository, TaskScheduler taskScheduler, ZendeskService zendeskService) {
         
         log.info("🚀 CHATMODULE CONSTRUCTOR STARTED - Initializing chat module with dependencies...");
         
@@ -192,6 +194,7 @@ public class ChatModule {
         this.environment = environment;
         this.userOrgPermissionsRepository = userOrgPermissionsRepository;
         this.taskScheduler = taskScheduler;
+        this.zendeskService = zendeskService;
 
         log.info("🎧 INITIALIZING SOCKET LISTENERS - Setting up event handlers...");
         initializeSocketListeners();
@@ -223,7 +226,8 @@ public class ChatModule {
             
             // Check if this is a user disconnection with active conversations
             if (userId != null) {
-                log.info("👤 User {} identified for disconnection, checking active conversations...", userId);
+                log.info("👤 User {} identified for disconnection, checking active conversations...", 
+                        userId);
                 Set<String> activeConversations = connectionService.getUserActiveConversations(userId);
                 if (activeConversations != null && !activeConversations.isEmpty()) {
                     log.info("🔔 User {} has {} active conversations, scheduling disconnection notifications...", 
@@ -287,7 +291,6 @@ public class ChatModule {
             }
         });
 
-        log.info("📋 Setting up EVENT_MESSAGE_REQ listener...");
         server.addEventListener(socketConfig.EVENT_MESSAGE_REQ, ChatMessageRequest.class, (socketClient, messageRequest, ackSender) -> {
             log.info("💬 EVENT_MESSAGE_REQ RECEIVED - Starting message processing...");
             String conversationId = messageRequest.getConversationId();
@@ -529,15 +532,11 @@ public class ChatModule {
                 
                 // Debug socket client details
                 log.info("🔌 Socket client details:");
-                log.info("   Remote address: {}", socketClient.getRemoteAddress());
-                log.info("   Session ID: {}", socketClient.getSessionId());
-                log.info("   Connected: {}", socketClient.isChannelOpen());
-                log.info("   Handshake params: {}", socketClient.getHandshakeData().getUrlParams());
+                log.info("   Remote address: {}, Session ID: {}, connected: {}, handshake params: {}", socketClient.getRemoteAddress(), socketClient.getSessionId(), socketClient.isChannelOpen(), socketClient.getHandshakeData().getUrlParams());
+              
                 
-                log.info("🔍 Verifying socket registration for user...");
-                // Verify this socket is actually connected with this user ID
                 
-                log.info("✅ Socket registration verified for user: {}", userId);
+                
                 log.info("📋 NEW LOGIC: User {} verified with ONE socket ID (max {} clients allowed)", userId, MAX_CLIENTS_PER_USER);
                 
                 log.info("🔄 Checking if user reconnected with preserved conversations...");
@@ -570,16 +569,16 @@ public class ChatModule {
                     log.info("✅ User added to tenant pools");
                     
                     log.info("userMap: {}", userMap);
-                    log.info("Attempting to set user {} to ONLINE", userId);
+                    
                     // Update user status in database
-                    try {
-                        log.info("💾 Updating user status to ONLINE in database...");
-                        Long userIdLong = Long.parseLong(userId);
-                        userAccountService.setUserONLINE(userIdLong);
-                        log.info("✅ User {} status set to ONLINE in database", userId);
-                    } catch (NumberFormatException e) {
-                        log.error("❌ Invalid user ID format for database update: {}", userId);
-                    }
+                    // try {
+                    //     log.info("💾 Updating user status to ONLINE in database...");
+                    //     Long userIdLong = Long.parseLong(userId);
+                    //     // userAccountService.setUserONLINE(userIdLong);
+                    //     log.info("✅ User {} status set to ONLINE in database", userId);
+                    // } catch (NumberFormatException e) {
+                    //     log.error("❌ Invalid user ID format for database update: {}", userId);
+                    // }
                 } else {
                     log.info("🔄 Existing user found, updating ping time...");
                     // User already in queue, just update ping time
@@ -596,6 +595,63 @@ public class ChatModule {
                 log.info("✅ EVENT_PING processing completed for user: {}", userId);
             } catch (Exception e) {
                 log.error("❌ Error in EVENT_PING processing: {}", e.getMessage(), e);
+            }
+        });
+
+        server.addEventListener("go_online", Map.class, (socketClient, data, ackSender) -> {
+            log.info("👋 EVENT_GO_ONLINE RECEIVED - Starting online request processing...");
+            try {
+                if (data == null) {
+                    log.error("❌ GO_ONLINE VALIDATION FAILED - Received null data object");
+                    return;
+                }
+        
+                Object userIdObj = data.get("user_id");
+                String email = (String) data.get("email");
+                String ipAddress = (String) data.get("ip_address");
+        
+                if (userIdObj == null) {
+                    log.error("❌ GO_ONLINE VALIDATION FAILED - Missing user_id");
+                    return;
+                }
+        
+                String userId = String.valueOf(userIdObj);
+                log.info("👤 Go online request details - UserId: {}, Email: {}, IP: {}", userId, email, ipAddress);
+        
+                ChatUser user = userMap.get(userId);
+                if (user == null) {
+                    log.info("👤 New user detected for go_online, creating user object...");
+                    user = new ChatUser(userId);
+                    userMap.put(userId, user);
+                }
+        
+                // Store new info
+                user.setEmail(email);
+                user.setIpAddress(ipAddress);
+                user.setOfflineRequested(false); // Set as online
+                user.updatePingTime(); // Also update ping time as this is an activity
+        
+                log.info("✅ User {} details updated: email={}, ip={}", userId, user.getEmail(), user.getIpAddress());
+        
+                // Add user to tenant pools
+                addUserToTenantPools(userId);
+        
+                // Update user status to ONLINE in database
+                try {
+                    log.info("💾 Updating user status to ONLINE in database...");
+                    Long userIdLong = Long.parseLong(userId);
+                    userAccountService.setUserONLINE(userIdLong);
+                    log.info("✅ User {} status set to ONLINE in database", userId);
+                } catch (NumberFormatException e) {
+                    log.error("❌ Invalid user ID format for database update: {}", userId);
+                } catch (Exception e) {
+                    log.error("❌ Error setting user ONLINE: {}", e.getMessage(), e);
+                }
+        
+                log.info("✅ EVENT_GO_ONLINE processing completed for user: {}", userId);
+        
+            } catch (Exception e) {
+                log.error("❌ Error in EVENT_GO_ONLINE processing: {}", e.getMessage(), e);
             }
         });
 
@@ -745,16 +801,24 @@ public class ChatModule {
                     userInfo.setClientPhone(clientPhone);
             
                     
-                    log.info("📤 Sending acknowledgment to chat module...  {}", userInfo);
-                    // Send acknowledgment to chat module
+                
+                    // Send acknowledgment to chat module, user and zendesk WRAPPER
+                    log.info("📤 Sending acknowledgment to CHAT MODULE, USER and ZENDESK WRAPPER, {}", userInfo);
                     socketClient.sendEvent(socketConfig.EVENT_AGENT_ACK, userInfo);
-                    log.info("✅ Acknowledgment sent to chat module");
+            
                     
-                    log.info("📤 Sending notification to assigned user...");
-                    // Notify the user with the same user info format
+                
+    
                     userSocketClient.sendEvent(socketConfig.EVENT_NEW_CLIENT_REQ, userInfo);
-                    log.info("✅ Notification sent to user");
-                    
+                
+                     // Notify Zendesk
+                    if (user.getEmail() != null) {
+                        zendeskService.assignAgentToTicket(conversationId, user.getEmail(), summary)
+                            .subscribe(); // Subscribe to trigger the call
+                    } else {
+                        log.warn("User email is null for userId: {}. Cannot notify Zendesk.", user.getUserId());
+                    }
+
                     log.info("📊 Current room statistics - Conversation {}: {} members, Total clients: {}", 
                             conversationId, server.getRoomOperations(conversationId).getClients().size(), 
                             server.getAllClients().size());
@@ -845,11 +909,15 @@ public class ChatModule {
                 // No active chats, can go offline
                 updateUserStatus(userId, UserAccountStatus.OFFLINE);
                 
-                log.info("🏢 REMOVING FROM TENANT POOLS - Cleaning up user assignments...");
-                // Remove from tenant pools
-                removeUserFromTenantPools(userId);
+                Map<String, Object> response = Map.of(
+                    "status", "offline_success",
+                    "reason", "user_not_in_memory_forced_offline",
+                    "message", "User status set to OFFLINE."
+                );
+                socketClient.sendEvent("offline_response", response);
+                log.info("User free of chat, Sent offline success response to user: {}", userId);
                 
-                log.info("✅ OFFLINE REQUEST COMPLETED - User {} status updated to OFFLINE and removed from tenant pools", userId);
+                // log.info("✅ OFFLINE REQUEST COMPLETED - User {} status updated to OFFLINE and removed from tenant pools", userId);
             } else {
                 log.warn("⚠️ OFFLINE REQUEST REJECTED - User {} has {} active chats, cannot go offline yet", userId, activeConversations.size());
                 log.info("📋 Active conversations: {}", activeConversations);
@@ -866,16 +934,20 @@ public class ChatModule {
                 log.info("📤 Sent offline rejection response to user: {}", userId);
             }
         } else {
-            log.warn("❌ USER NOT FOUND - User {} not found in userMap, cannot process offline request", userId);
+            log.warn("User {} not found in userMap. This can happen if the server restarted. Forcing user to OFFLINE.", userId);
             
-            // Send error response to user
+            // If user is not in memory, we can still process the offline request
+            // to ensure the database status is correct.
+            updateUserStatus(userId, UserAccountStatus.OFFLINE);
+
+            // Send a success response
             Map<String, Object> response = Map.of(
-                "status", "error", 
-                "reason", "user_not_found",
-                "message", "User not found in system"
+                "status", "offline_success",
+                "reason", "user_not_in_memory_forced_offline",
+                "message", "User status set to OFFLINE."
             );
             socketClient.sendEvent("offline_response", response);
-            log.info("📤 Sent error response to user: {}", userId);
+            log.info("Sent forced offline success response to user: {}", userId);
         }
         
         log.info("✅ HANDLE_OFFLINE_REQUEST COMPLETED for user: {}", userId);
