@@ -49,6 +49,7 @@ import java.util.stream.Collectors;
 import java.util.function.Function;
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -1591,6 +1592,22 @@ public class ChatModule {
             }
         } else {
             log.warn("⚠️ No client count tracking found for user: {}", userId);
+        }
+    }
+
+    public void disconnectClient(String socketId) {
+        if (socketId == null || socketId.trim().isEmpty()) return;
+        try {
+            UUID sessionId = UUID.fromString(socketId);
+            SocketIOClient client = server.getClient(sessionId);
+            if (client != null) {
+                log.info("🔌 Actively disconnecting client with socketId: {}", socketId);
+                client.disconnect();
+            } else {
+                log.warn("🔍 Client to disconnect not found for socketId: {}", socketId);
+            }
+        } catch (IllegalArgumentException e) {
+            log.error("❌ Invalid format for socketId UUID: {}", socketId, e);
         }
     }
 } 

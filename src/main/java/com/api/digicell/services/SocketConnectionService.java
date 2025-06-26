@@ -5,6 +5,8 @@ import com.corundumstudio.socketio.SocketIOClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import com.api.digicell.chat.ChatModule;
+import jakarta.inject.Provider;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -19,6 +21,7 @@ import java.util.HashMap;
 @Service
 public class SocketConnectionService {
     private final SocketConfig socketConfig;
+    private final Provider<ChatModule> chatModuleProvider;
     private String chatModuleSocketId;
     private Map<String, String> userSocketIds = new ConcurrentHashMap<>();  // userId → socketId
     
@@ -40,8 +43,9 @@ public class SocketConnectionService {
     @Value("${socket.conversation.cleanup.interval:1}")
     private int cleanupIntervalMinutes;
 
-    public SocketConnectionService(SocketConfig socketConfig) {
+    public SocketConnectionService(SocketConfig socketConfig, Provider<ChatModule> chatModuleProvider) {
         this.socketConfig = socketConfig;
+        this.chatModuleProvider = chatModuleProvider;
         this.chatModuleSocketId = null;
     }
     
@@ -162,9 +166,7 @@ public class SocketConnectionService {
                 
                 // Try to disconnect the old socket if it still exists
                 try {
-                    // Note: We would need server reference to actually disconnect
-                    // For now, just log and update mapping
-                    log.info("🔄 Old socket {} will be replaced by new socket {}", existingSocketId, newSocketId);
+                    chatModuleProvider.get().disconnectClient(existingSocketId);
                 } catch (Exception e) {
                     log.warn("⚠️ Could not disconnect old socket {}: {}", existingSocketId, e.getMessage());
                 }
