@@ -25,7 +25,7 @@ public class ZendeskService {
     }
 
     public Mono<String> assignAgentToTicket(String conversationId, String agentEmail, String summary) {
-        String url = zendeskApiUrl + "/assign";
+        String url = zendeskApiUrl.trim() + "/assign";
         
         Map<String, String> body = new HashMap<>();
         body.put("conversationId", conversationId);

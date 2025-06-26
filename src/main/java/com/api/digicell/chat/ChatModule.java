@@ -247,7 +247,7 @@ public class ChatModule {
         });
 
         server.addEventListener(socketConfig.EVENT_AGENT_REQUEST, Map.class, (socketClient, data, ackSender) -> {
-            log.info("🎯 EVENT_AGENT_REQUEST RECEIVED - Starting request processing...");
+            log.info("🎯 --------->  EVENT_AGENT_REQUEST RECEIVED - Starting request processing...");
             try {
                 log.info("🔍 Extracting request data from incoming event...");
                 String clientId = (String) data.get("client_id");
@@ -292,7 +292,7 @@ public class ChatModule {
         });
 
         server.addEventListener(socketConfig.EVENT_MESSAGE_REQ, ChatMessageRequest.class, (socketClient, messageRequest, ackSender) -> {
-            log.info("💬 EVENT_MESSAGE_REQ RECEIVED - Starting message processing...");
+            log.info("💬 --------->  EVENT_MESSAGE_REQ RECEIVED - Starting message processing...");
             String conversationId = messageRequest.getConversationId();
         
             log.info("📝 Message request details - Conversation: {}, Client: {}, Content length: {}, Timestamp: {}", 
@@ -353,7 +353,7 @@ public class ChatModule {
         server.addEventListener(socketConfig.EVENT_MESSAGE_RESP_AGENT, UserMessageResponse.class, (socketClient, userResponse, ackSender) -> {
             String conversationId = userResponse.getConversationId();
             
-            log.info("User Response Details - Client: {}, Message: {}, Timestamp: {}", 
+            log.info(" --------->  EVENT_MESSAGE_RESP_AGENT - User Response Details - Client: {}, Message: {}, Timestamp: {}", 
                     userResponse.getClientId(),
                     userResponse.getMessage() != null ? userResponse.getMessage().substring(0, Math.min(100, userResponse.getMessage().length())) + "..." : "null",
                     userResponse.getTimestamp());
@@ -409,7 +409,7 @@ public class ChatModule {
             String clientId = closeRequest.getClientId();
             String timestamp = closeRequest.getTimestamp();
             
-            log.info("EVENT_CLOSE_AGENT - User: {}, Conversation: {}, Client: {}", userId, conversationId, clientId);
+            log.info(" --------->  EVENT_CLOSE_AGENT - User: {}, Conversation: {}, Client: {}", userId, conversationId, clientId);
             
             // Find the chat room
             ChatRoom chatRoom = findChatRoomByConversationId(conversationId);
@@ -466,6 +466,7 @@ public class ChatModule {
 
         // Listen for client close/disconnect events
         server.addEventListener(socketConfig.EVENT_CLIENT_CLOSE, Map.class, (socketClient, data, ackSender) -> {
+            log.info(" --------->  EVENT_CLIENT_CLOSE - Client close event received");
             String conversationId = null;
             String clientId = null;
             try {
@@ -522,7 +523,7 @@ public class ChatModule {
         // Handle ping from user
         log.info("📋 Setting up EVENT_PING listener...");
         server.addEventListener(SocketConfig.EVENT_PING, UserPingRequest.class, (socketClient, pingRequest, ackSender) -> {
-            log.info("🏓 EVENT_PING RECEIVED - Starting ping processing...");
+            log.info("🏓 --------->  EVENT_PING RECEIVED - Starting ping processing...");
             try {
                 String userId = pingRequest.getUserId();
                 String socketId = socketClient.getSessionId().toString();
@@ -561,7 +562,7 @@ public class ChatModule {
                     user.setOfflineRequested(false);  // Set as online
                     userMap.put(userId, user);
                     user.updatePingTime();
-                    log.info("✅ get ping for user: {}, last ping time: {}", user.getUserId(), user.getLastPingTime());
+                    log.info("✅ get ping for user: {}, last ping time: {}, email: {}, ip: {}", user.getUserId(), user.getLastPingTime(), user.getEmail(), user.getIpAddress());
                     
                     log.info("🏢 Adding user to relevant tenant pools...");
                     // Add user to relevant tenant pools for efficient assignment
@@ -599,7 +600,7 @@ public class ChatModule {
         });
 
         server.addEventListener("go_online", Map.class, (socketClient, data, ackSender) -> {
-            log.info("👋 EVENT_GO_ONLINE RECEIVED - Starting online request processing...");
+            log.info("👋 --------->  EVENT_GO_ONLINE RECEIVED - Starting online request processing...");
             try {
                 if (data == null) {
                     log.error("❌ GO_ONLINE VALIDATION FAILED - Received null data object");
@@ -656,7 +657,7 @@ public class ChatModule {
         });
 
         server.addEventListener(socketConfig.EVENT_OFFLINE_REQ, UserPingRequest.class, (socketClient, offlineRequest, ackSender) -> {
-            log.info("📴 EVENT_OFFLINE_REQ RECEIVED - Starting offline request processing...");
+            log.info("📴 --------->  EVENT_OFFLINE_REQ RECEIVED - Starting offline request processing...");
             try {
                 if (offlineRequest == null) {
                     log.error("❌ OFFLINE REQUEST VALIDATION FAILED - Received null offline request object");
