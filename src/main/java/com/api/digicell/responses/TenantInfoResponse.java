@@ -1,5 +1,6 @@
 package com.api.digicell.responses;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,9 +15,31 @@ import java.util.List;
 @AllArgsConstructor
 public class TenantInfoResponse {
     
-    /** The tenant ID */
+    @JsonProperty("assistant_id")
+    private Integer assistantId;
+    
+    @JsonProperty("name")
+    private String name;
+    
+    @JsonProperty("tenant_id")
     private String tenantId;
     
-    /** List of quickation items */
-    private List<String> quickationItems;
+    @JsonProperty("options")
+    private List<String> options;
+    
+    // Alternative constructor for backward compatibility
+    public TenantInfoResponse(String tenantId, List<String> options) {
+        this.tenantId = tenantId;
+        this.options = options;
+    }
+    
+    // Helper method to check if options are empty
+    public boolean hasOptions() {
+        return options != null && !options.isEmpty();
+    }
+    
+    // Helper method to get options count
+    public int getOptionsCount() {
+        return options != null ? options.size() : 0;
+    }
 } 
