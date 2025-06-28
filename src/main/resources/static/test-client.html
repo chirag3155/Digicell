@@ -187,12 +187,16 @@
         function connect() {
             // Determine protocol and port based on environment
             const protocol = window.location.protocol === 'https:' ? 'https' : 'http';
-            const port = window.location.protocol === 'https:' ? '8099' : '8099';
+            const port = window.location.port || '8080'; // Use actual server port
             const serverUrl = `${protocol}://${window.location.hostname}:${port}`;
 
             log(`Connecting to: ${serverUrl}`, 'info');
             socket = io(serverUrl, {
-                transports: ['websocket', 'polling']
+                transports: ['websocket', 'polling'],
+                query: {
+                    clientType: 'agent',  // Required parameter for agent connections
+                    userId: 211  // Generate a test user ID
+                }
             });
 
             socket.on('connect', () => {
