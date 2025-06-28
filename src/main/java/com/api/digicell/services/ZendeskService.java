@@ -24,13 +24,20 @@ public class ZendeskService {
         this.webClient = webClientBuilder.build();
     }
 
-    public Mono<String> assignAgentToTicket(String conversationId, String agentEmail, String summary) {
+    public Mono<String> assignAgentToTicket(String conversationId, String agentEmail, String summary, String clientName, String clientEmail, String clientPhone) {
         String url = zendeskApiUrl.trim() + "/assign";
         
-        Map<String, String> body = new HashMap<>();
+        Map<String, Object> body = new HashMap<>();
         body.put("conversationId", conversationId);
         body.put("agentEmail", agentEmail);
         body.put("summary", summary);
+        
+        // Add client details in the required format
+        Map<String, String> userDetails = new HashMap<>();
+        userDetails.put("name", clientName != null ? clientName : "Unknown");
+        userDetails.put("email", clientEmail != null ? clientEmail : "unknown@example.com");
+        userDetails.put("phoneNumber", clientPhone != null ? clientPhone : "N/A");
+        body.put("userDetails", userDetails);
 
         log.info("📞 Calling Zendesk API to assign agent. URL: {}, Body: {}", url, body);
 

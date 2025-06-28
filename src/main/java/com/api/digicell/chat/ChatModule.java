@@ -877,7 +877,7 @@ public class ChatModule {
                 
                      // Notify Zendesk
                     if (user.getEmail() != null) {
-                        zendeskService.assignAgentToTicket(conversationId, user.getEmail(), summary)
+                        zendeskService.assignAgentToTicket(conversationId, user.getEmail(), summary, clientName, clientEmail, clientPhone)
                             .subscribe(); // Subscribe to trigger the call
                     } else {
                         log.warn("User email is null for userId: {}. Cannot notify Zendesk.", user.getUserId());
