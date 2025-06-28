@@ -25,7 +25,7 @@ public class SocketConnectionService {
     private final Provider<ChatModule> chatModuleProvider;
     private final RedisUserService redisUserService;
     private String chatModuleSocketId;
-    private Map<String, String> userSocketIds = new ConcurrentHashMap<>();  // userId → socketId
+    // private Map<String, String> userSocketIds = new ConcurrentHashMap<>();  // userId → socketId // COMMENTED OUT - Using Redis instead
     
     // New maps to track active conversations per user
     private final Map<String, Set<String>> userActiveConversations = new ConcurrentHashMap<>();
@@ -157,7 +157,13 @@ public class SocketConnectionService {
         String newSocketId = socketClient.getSessionId().toString();
         
         // Check if user mapping exists (indicates reconnection attempt)
-        String existingSocketId = userSocketIds.get(userId);
+        // String existingSocketId = userSocketIds.get(userId); // COMMENTED OUT - Using Redis instead
+        String existingSocketId = null;
+        try {
+            existingSocketId = redisUserService.getUserSocket(userId);
+        } catch (Exception e) {
+            log.warn("⚠️ Could not get socket for user {} from Redis: {}", userId, e.getMessage());
+        }
         
         if (existingSocketId != null) {
             // User mapping exists - enforce ONE SOCKET PER USER rule
@@ -176,17 +182,16 @@ public class SocketConnectionService {
             }
             
             // Update socket ID for this user (ONE socket per user)
-            log.info("🔄 Updating user {} socket mapping: {} → {}", userId, existingSocketId, newSocketId);
-            userSocketIds.put(userId, newSocketId);
+            log.info("🔄 Updating user {} socket mapping in Redis: {} → {}", userId, existingSocketId, newSocketId);
+            // userSocketIds.put(userId, newSocketId); // COMMENTED OUT - Using Redis instead
             
             // REDIS IMPLEMENTATION - Update socket mapping in Redis
-            log.info("💾 REDIS: Updating socket mapping in Redis...");
+
             try {
                 redisUserService.updateUserSocket(userId, newSocketId);
                 log.info("✅ REDIS: Socket mapping updated for user {} → {}", userId, newSocketId);
             } catch (Exception redisError) {
                 log.warn("⚠️ REDIS: Failed to update socket mapping in Redis: {}", redisError.getMessage());
-                // Continue with in-memory operation
             }
             
             // Remove disconnection timestamp as user is now connected
@@ -211,32 +216,34 @@ public class SocketConnectionService {
                     newSocketId, userId, clientType);
         } else {
             // No user mapping exists - this is a new user connection
-            log.info("👤 NEW USER CONNECTION - Creating socket mapping...");
-            log.info("📋 Connection details - SocketId: {}, UserId: {}, Type: {}", 
-                    newSocketId, userId, clientType);
+            log.info("👤 NEW USER CONNECTION - Creating socket mapping...Connection details - SocketId: {}, UserId: {}, Type: {}", newSocketId, userId, clientType);
+          
             
-            log.info("🗂️ CREATING SOCKET MAPPING (ONE SOCKET PER USER)...");
-            userSocketIds.put(userId, newSocketId);
+            log.info("🗂️ CREATING SOCKET MAPPING IN REDIS (ONE SOCKET PER USER)...");
+            // userSocketIds.put(userId, newSocketId); // COMMENTED OUT - Using Redis instead
             
-            // REDIS IMPLEMENTATION - Add socket mapping to Redis
-            log.info("💾 REDIS: Adding socket mapping to Redis...");
             try {
                 redisUserService.addUserSocket(userId, newSocketId);
                 log.info("✅ REDIS: Socket mapping added for user {} → {}", userId, newSocketId);
             } catch (Exception redisError) {
                 log.warn("⚠️ REDIS: Failed to add socket mapping to Redis: {}", redisError.getMessage());
-                // Continue with in-memory operation
             }
             
-            log.info("✅ SOCKET MAPPING CREATED:");
-            log.info("   userSocketIds['{}'] = '{}'", userId, newSocketId);
+            log.info("✅ SOCKET MAPPING CREATED IN REDIS:");
+            log.info("   Redis socket mapping: User '{}' → Socket '{}'", userId, newSocketId);
             log.info("   📋 USER RULE: One user can have only ONE active socket");
             log.info("   📋 CLIENT RULE: One user can chat with max {} clients simultaneously", 5);
             
             // Verify mapping was created
-            String verifySocketId = userSocketIds.get(userId);
-            log.info("🔍 MAPPING VERIFICATION:");
-            log.info("   userSocketIds.get('{}') = '{}'", userId, verifySocketId);
+            // String verifySocketId = userSocketIds.get(userId); // COMMENTED OUT - Using Redis instead
+            String verifySocketId = null;
+            try {
+                verifySocketId = redisUserService.getUserSocket(userId);
+            } catch (Exception e) {
+                log.warn("⚠️ Could not verify socket mapping in Redis for user {}: {}", userId, e.getMessage());
+            }
+            
+            log.info(" 🔍 MAPPING VERIFICATION:  Redis getUserSocket('{}') = '{}'", userId, verifySocketId);
             
             if (newSocketId.equals(verifySocketId)) {
                 log.info("✅ MAPPING VERIFICATION PASSED");
@@ -254,20 +261,32 @@ public class SocketConnectionService {
     }
 
     public String getUserIdBySocketId(String socketId) {
-        // Reverse lookup: find userId where userSocketIds[userId] == socketId
+        // COMMENTED OUT - Using Redis instead
+        // // Reverse lookup: find userId where userSocketIds[userId] == socketId
+        // String result = null;
+        // for (Map.Entry<String, String> entry : userSocketIds.entrySet()) {
+        //     if (socketId.equals(entry.getValue())) {
+        //         result = entry.getKey();
+        //         break;
+        //     }
+        // }
+        
+        // REDIS IMPLEMENTATION - Reverse lookup in Redis
         String result = null;
-        for (Map.Entry<String, String> entry : userSocketIds.entrySet()) {
-            if (socketId.equals(entry.getValue())) {
-                result = entry.getKey();
-                break;
+        try {
+            Set<String> allUserIds = redisUserService.getAllUserIds();
+            for (String userId : allUserIds) {
+                String userSocketId = redisUserService.getUserSocket(userId);
+                if (socketId.equals(userSocketId)) {
+                    result = userId;
+                    break;
+                }
             }
+        } catch (Exception e) {
+            log.warn("⚠️ Could not perform reverse socket lookup in Redis: {}", e.getMessage());
         }
         
-        log.info("🔍 getUserIdBySocketId('{}') = '{}' (total user mappings: {})", socketId, result, userSocketIds.size());
-        if (result == null && !userSocketIds.isEmpty()) {
-            log.info("   Available user mappings:");
-            userSocketIds.forEach((userId, currentSocketId) -> log.info("     User '{}' -> Socket '{}'", userId, currentSocketId));
-        }
+        log.info("🔍 getUserIdBySocketId('{}') = '{}' (Redis lookup)", socketId, result);
         return result;
     }
 
@@ -344,7 +363,15 @@ public class SocketConnectionService {
     
     private void cleanupUserConversations(String userId, String reason) {
         // Remove user mapping after configurable timeout
-        userSocketIds.remove(userId);
+        // userSocketIds.remove(userId); // COMMENTED OUT - Using Redis instead
+        
+        // REDIS IMPLEMENTATION - Remove socket mapping from Redis
+        try {
+            redisUserService.deleteUserSocket(userId);
+            log.info("✅ REDIS: Socket mapping deleted for user {}", userId);
+        } catch (Exception e) {
+            log.warn("⚠️ REDIS: Failed to delete socket mapping for user {}: {}", userId, e.getMessage());
+        }
         
         // Remove active conversations
         Set<String> conversations = userActiveConversations.remove(userId);
@@ -367,40 +394,54 @@ public class SocketConnectionService {
     }
 
     public String getUserSocketId(String userId) {
-        // EXISTING IN-MEMORY LOGIC (keeping for safety)
-        String socketId = userSocketIds.get(userId);
+        // COMMENTED OUT - Using Redis instead
+        // // EXISTING IN-MEMORY LOGIC (keeping for safety)
+        // String socketId = userSocketIds.get(userId);
+        // 
+        // if (socketId != null) {
+        //     log.debug("✅ Socket ID found in memory for user {}: {}", userId, socketId);
+        //     return socketId;
+        // }
         
-        if (socketId != null) {
-            log.debug("✅ Socket ID found in memory for user {}: {}", userId, socketId);
-            return socketId;
-        }
-        
-        // REDIS IMPLEMENTATION - Fallback to Redis if not found in memory
-        log.debug("💾 REDIS: Socket not found in memory, checking Redis for user {}", userId);
+        // REDIS IMPLEMENTATION - Get socket directly from Redis
+        log.debug("💾 REDIS: Getting socket from Redis for user {}", userId);
         try {
             String redisSocketId = redisUserService.getUserSocket(userId);
             if (redisSocketId != null) {
-                log.info("✅ REDIS: Socket ID found in Redis for user {}: {}", userId, redisSocketId);
-                // Restore to in-memory map for faster future access
-                userSocketIds.put(userId, redisSocketId);
+                log.debug("✅ REDIS: Socket ID found in Redis for user {}: {}", userId, redisSocketId);
                 return redisSocketId;
             } else {
-                log.debug("📭 REDIS: No socket found in Redis for user {}", userId);
+                log.debug("📭 REDIS: No socket found in Redis in getUserSocketId for user {}", userId);
             }
         } catch (Exception redisError) {
             log.warn("⚠️ REDIS: Failed to get socket from Redis for user {}: {}", userId, redisError.getMessage());
         }
-        
-        log.debug("📭 No socket found for user {} in memory or Redis", userId);
+    
         return null;
     }
 
     public void setUserSocketId(String userId, String socketId) {
-        userSocketIds.put(userId, socketId);
+        // userSocketIds.put(userId, socketId); // COMMENTED OUT - Using Redis instead
+        
+        // REDIS IMPLEMENTATION - Set socket in Redis
+        try {
+            redisUserService.updateUserSocket(userId, socketId);
+            log.debug("✅ REDIS: Socket set for user {} → {}", userId, socketId);
+        } catch (Exception e) {
+            log.warn("⚠️ REDIS: Failed to set socket for user {}: {}", userId, e.getMessage());
+        }
     }
 
     public void removeUserSocketId(String userId) {
-        userSocketIds.remove(userId);
+        // userSocketIds.remove(userId); // COMMENTED OUT - Using Redis instead
+        
+        // REDIS IMPLEMENTATION - Remove socket from Redis
+        try {
+            redisUserService.deleteUserSocket(userId);
+            log.debug("✅ REDIS: Socket removed for user {}", userId);
+        } catch (Exception e) {
+            log.warn("⚠️ REDIS: Failed to remove socket for user {}: {}", userId, e.getMessage());
+        }
     }
     
     // Methods for conversation management
@@ -422,7 +463,14 @@ public class SocketConnectionService {
             if (conversations.isEmpty()) {
                 userActiveConversations.remove(userId);
                 // Only remove user socket mapping if user is not currently connected
-                String currentSocketId = userSocketIds.get(userId);
+                // String currentSocketId = userSocketIds.get(userId); // COMMENTED OUT - Using Redis instead
+                String currentSocketId = null;
+                try {
+                    currentSocketId = redisUserService.getUserSocket(userId);
+                } catch (Exception e) {
+                    log.warn("⚠️ Could not check socket for user {} in Redis: {}", userId, e.getMessage());
+                }
+                
                 if (currentSocketId == null) {
                     log.info("🧹 Removed last conversation {} for user {}. User mapping already cleaned up.", conversationId, userId);
                 } else {
@@ -506,7 +554,15 @@ public class SocketConnectionService {
      * Notify all connected users about chat module disconnection
      */
     private void notifyUsersAboutChatModuleDisconnection() {
-        if (userSocketIds.isEmpty()) {
+        // REDIS IMPLEMENTATION - Get connected users from Redis
+        Set<String> connectedUserIds = new HashSet<>();
+        try {
+            connectedUserIds = getConnectedUserIds();
+        } catch (Exception e) {
+            log.warn("⚠️ Could not get connected users from Redis: {}", e.getMessage());
+        }
+        
+        if (connectedUserIds.isEmpty()) {
             log.info("No connected users to notify about chat module disconnection");
             return;
         }
@@ -519,7 +575,7 @@ public class SocketConnectionService {
             chatModuleDownNotification.put("timestamp", LocalDateTime.now().toString());
             chatModuleDownNotification.put("active_conversations_preserved", true);
             
-            log.info("📤 Notifying {} connected users about chat module disconnection", userSocketIds.size());
+            log.info("📤 Notifying {} connected users about chat module disconnection", connectedUserIds.size());
             
             // Note: Actual notification sending would need the SocketIOServer instance
             // This will be handled by the ChatModule's notification system
@@ -569,7 +625,14 @@ public class SocketConnectionService {
      * Check if user is currently connected (has active socket)
      */
     public boolean isUserConnected(String userId) {
-        String socketId = userSocketIds.get(userId);
+        // String socketId = userSocketIds.get(userId); // COMMENTED OUT - Using Redis instead
+        String socketId = null;
+        try {
+            socketId = redisUserService.getUserSocket(userId);
+        } catch (Exception e) {
+            log.warn("⚠️ Could not check if user {} is connected in Redis: {}", userId, e.getMessage());
+        }
+        
         boolean connected = socketId != null;
         log.debug("🔍 User {} connection status: {} (socket: {})", userId, connected ? "CONNECTED" : "DISCONNECTED", socketId);
         return connected;
@@ -579,39 +642,88 @@ public class SocketConnectionService {
      * Get current socket ID for user (null if not connected)
      */
     public String getCurrentSocketForUser(String userId) {
-        return userSocketIds.get(userId);
+        // return userSocketIds.get(userId); // COMMENTED OUT - Using Redis instead
+        try {
+            return redisUserService.getUserSocket(userId);
+        } catch (Exception e) {
+            log.warn("⚠️ Could not get current socket for user {} from Redis: {}", userId, e.getMessage());
+            return null;
+        }
     }
     
     /**
      * Get total number of connected users
      */
     public int getConnectedUserCount() {
-        return userSocketIds.size();
+        // return userSocketIds.size(); // COMMENTED OUT - Using Redis instead
+        try {
+            // Get all user IDs that have sockets in Redis
+            Set<String> allUserIds = redisUserService.getAllUserIds();
+            int connectedCount = 0;
+            for (String userId : allUserIds) {
+                if (redisUserService.getUserSocket(userId) != null) {
+                    connectedCount++;
+                }
+            }
+            return connectedCount;
+        } catch (Exception e) {
+            log.warn("⚠️ Could not get connected user count from Redis: {}", e.getMessage());
+            return 0;
+        }
     }
     
     /**
      * Get all connected user IDs
      */
     public Set<String> getConnectedUserIds() {
-        return new HashSet<>(userSocketIds.keySet());
+        // return new HashSet<>(userSocketIds.keySet()); // COMMENTED OUT - Using Redis instead
+        try {
+            Set<String> connectedUserIds = new HashSet<>();
+            Set<String> allUserIds = redisUserService.getAllUserIds();
+            for (String userId : allUserIds) {
+                if (redisUserService.getUserSocket(userId) != null) {
+                    connectedUserIds.add(userId);
+                }
+            }
+            return connectedUserIds;
+        } catch (Exception e) {
+            log.warn("⚠️ Could not get connected user IDs from Redis: {}", e.getMessage());
+            return new HashSet<>();
+        }
     }
     
     /**
      * Log current connection status for debugging
      */
     public void logConnectionStatus() {
+        // REDIS IMPLEMENTATION - Get connection status from Redis
+        int connectedUserCount = 0;
+        Set<String> connectedUserIds = new HashSet<>();
+        
+        try {
+            connectedUserIds = getConnectedUserIds();
+            connectedUserCount = connectedUserIds.size();
+        } catch (Exception e) {
+            log.warn("⚠️ Could not get connection status from Redis: {}", e.getMessage());
+        }
+        
         log.info("📊 CONNECTION STATUS SUMMARY:");
-        log.info("   Connected users: {}", userSocketIds.size());
+        log.info("   Connected users: {}", connectedUserCount);
         log.info("   Active conversations: {}", userActiveConversations.size());
         log.info("   Disconnected users (preserved): {}", userDisconnectionTime.size());
         
-        if (!userSocketIds.isEmpty()) {
+        if (!connectedUserIds.isEmpty()) {
             log.info("   Connected user details:");
-            userSocketIds.forEach((userId, socketId) -> {
-                Set<String> conversations = userActiveConversations.get(userId);
-                int conversationCount = conversations != null ? conversations.size() : 0;
-                log.info("     User {} → Socket {} ({} conversations)", userId, socketId, conversationCount);
-            });
+            for (String userId : connectedUserIds) {
+                try {
+                    String socketId = redisUserService.getUserSocket(userId);
+                    Set<String> conversations = userActiveConversations.get(userId);
+                    int conversationCount = conversations != null ? conversations.size() : 0;
+                    log.info("     User {} → Socket {} ({} conversations)", userId, socketId, conversationCount);
+                } catch (Exception e) {
+                    log.warn("     User {} → Could not get socket from Redis: {}", userId, e.getMessage());
+                }
+            }
         }
     }
 

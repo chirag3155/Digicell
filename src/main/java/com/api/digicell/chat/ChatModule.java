@@ -56,7 +56,7 @@ import java.util.UUID;
 @Component
 public class ChatModule {
     private final SocketIOServer server;
-    private static Map<String, ChatUser> userMap;
+    // private static Map<String, ChatUser> userMap;
     private final Map<String, ChatRoom> chatRooms;
     private final UserAccountService userAccountService;
     private final SocketConfig socketConfig;
@@ -184,8 +184,7 @@ public class ChatModule {
         
         log.info("🗂️ INITIALIZING DATA STRUCTURES - Creating concurrent hash maps...");
 
-
-        this.userMap = new ConcurrentHashMap<>();
+        // this.userMap = new ConcurrentHashMap<>(); // COMMENTED OUT - Using Redis instead
         this.chatRooms = new ConcurrentHashMap<>();
         
         log.info("🔗 ASSIGNING DEPENDENCIES - Linking service dependencies...");
@@ -285,7 +284,14 @@ public class ChatModule {
                     log.warn("⚠️ No customer details found in request data");
                 }
                 log.info("🔍 Client info from chat module: {}", history, summary, timestamp, clientName, clientEmail, clientPhone, clientLabel, tenantId);
-                log.info("📈 Current system status - Active Rooms: {}, Total Online Users: {}", chatRooms.size(), userMap.size());
+                // log.info("📈 Current system status - Active Rooms: {}, Total Online Users: {}", chatRooms.size(), userMap.size()); // COMMENTED OUT - Using Redis instead
+                try {
+                    int totalOnlineUsers = redisUserService.getAllUserIds().size();
+                    log.info("📈 Current system status - Active Rooms: {}, Total Online Users: {}", chatRooms.size(), totalOnlineUsers);
+                } catch (Exception e) {
+                    log.warn("⚠️ Could not get total online users from Redis: {}", e.getMessage());
+                    log.info("📈 Current system status - Active Rooms: {}", chatRooms.size());
+                }
                 
                 log.info("🔄 Delegating to handleUserRequest for conversation assignment...");
                 handleUserRequest(socketClient, clientId, conversationId, summary, history, timestamp, clientName, clientEmail, clientPhone, clientLabel,tenantId);
@@ -327,7 +333,13 @@ public class ChatModule {
                 
                 log.info("🔍 Looking up user socket for message forwarding - UserId: {}", chatRoom.getUserId());
                 // Get the user socket ID and send directly to the user
-                String userSocketId = connectionService.getUserSocketId(chatRoom.getUserId());
+                // String userSocketId = connectionService.getUserSocketId(chatRoom.getUserId()); // COMMENTED OUT - Using Redis instead
+                String userSocketId = null;
+                try {
+                    userSocketId = redisUserService.getUserSocket(chatRoom.getUserId());
+                } catch (Exception e) {
+                    log.warn("⚠️ Could not get socket for user {} from Redis: {}", chatRoom.getUserId(), e.getMessage());
+                }
                 log.info("🔗 Socket lookup result - UserId: {}, SocketId: {}", chatRoom.getUserId(), userSocketId);
                 
                 if (userSocketId != null) {
@@ -421,7 +433,14 @@ public class ChatModule {
                 log.info("✅ Chat room found for close request - Room User: {}, Room Client: {}", chatRoom.getUserId(), chatRoom.getClientId());
                 
                 // Get the user
-                ChatUser user = userMap.get(userId);
+                // ChatUser user = userMap.get(userId); // COMMENTED OUT - Using Redis instead
+                ChatUser user = null;
+                try {
+                    user = redisUserService.getUser(userId);
+                } catch (Exception e) {
+                    log.warn("⚠️ Could not get user {} from Redis: {}", userId, e.getMessage());
+                }
+                
                 if (user != null) {
                     log.info("👤 User found - Current client count: {}", user.getCurrentClientCount());
                     
@@ -438,9 +457,18 @@ public class ChatModule {
                     // Remove conversation from tracking
                     connectionService.removeUserConversation(userId, conversationId);
 
+                    // Update user in Redis
+                    try {
+                        redisUserService.updateUser(user);
+                        log.debug("✅ Updated user {} in Redis after client removal", userId);
+                    } catch (Exception e) {
+                        log.warn("⚠️ Could not update user {} in Redis: {}", userId, e.getMessage());
+                    }
+
                     log.info("Chat room removed - User {} now has {} active clients", userId, user.getCurrentClientCount());
                 } else {
-                    log.warn("User {} not found in userMap", userId);
+                    // log.warn("User {} not found in userMap", userId); // COMMENTED OUT - Using Redis instead
+                    log.warn("User {} not found in Redis", userId);
                 }
             } else {
                 log.warn("No chat room found for conversation {}", conversationId);
@@ -485,7 +513,14 @@ public class ChatModule {
                 String userId = chatRoom.getUserId();
                 
                 // Get the user
-                ChatUser user = userMap.get(userId);
+                // ChatUser user = userMap.get(userId); // COMMENTED OUT - Using Redis instead
+                ChatUser user = null;
+                try {
+                    user = redisUserService.getUser(userId);
+                } catch (Exception e) {
+                    log.warn("⚠️ Could not get user {} from Redis: {}", userId, e.getMessage());
+                }
+                
                 if (user != null) {
                     // Remove client from user's room
                     user.removeClient(clientId);
@@ -502,9 +537,24 @@ public class ChatModule {
 
                     log.info("Chat conversation {} removed as client {} closes", conversationId, clientId);
 
+                    // Update user in Redis
+                    try {
+                        redisUserService.updateUser(user);
+                        log.debug("✅ Updated user {} in Redis after client close", userId);
+                    } catch (Exception e) {
+                        log.warn("⚠️ Could not update user {} in Redis: {}", userId, e.getMessage());
+                    }
+
                     log.info("user.getCurrentClientCount() {}: {}", user.getCurrentClientCount());
                     // If this was the last client, clean up the room
-                    String userSocketId = connectionService.getUserSocketId(userId);
+                    // String userSocketId = connectionService.getUserSocketId(userId); // COMMENTED OUT - Using Redis instead
+                    String userSocketId = null;
+                    try {
+                        userSocketId = redisUserService.getUserSocket(userId);
+                    } catch (Exception e) {
+                        log.warn("⚠️ Could not get socket for user {} from Redis: {}", userId, e.getMessage());
+                    }
+                    
                     if (userSocketId != null) {
                         SocketIOClient userSocketClient = server.getClient(UUID.fromString(userSocketId));
                         if (userSocketClient != null) {
@@ -555,49 +605,49 @@ public class ChatModule {
                     log.debug("ℹ️ User {} has no preserved conversations to restore", userId);
                 }
 
-                log.info("🔍 Checking if user exists in userMap...");
-                // Check if user is already in queue
-                ChatUser user = userMap.get(userId);
+                // log.info("🔍 Checking if user exists in userMap..."); // COMMENTED OUT - Using Redis instead
+                log.info("🔍 Checking if user exists in Redis...");
+                // Check if user is already in Redis
+                // ChatUser user = userMap.get(userId); // COMMENTED OUT - Using Redis instead
+                ChatUser user = null;
+                try {
+                    user = redisUserService.getUser(userId);
+                } catch (Exception e) {
+                    log.warn("⚠️ Could not get user {} from Redis: {}", userId, e.getMessage());
+                }
 
                 if (user == null) {
-                    log.info("👤 New user detected, creating user object and adding to system...");
+                    // log.info("👤 New user detected, creating user object and adding to system...");
                     
-                    // REDIS IMPLEMENTATION - Try to get user from Redis first
-                    log.info("💾 REDIS: Checking if user exists in Redis...");
-                    try {
-                        ChatUser redisUser = redisUserService.getUser(userId);
-                        if (redisUser != null) {
-                            log.info("✅ REDIS: User {} found in Redis, restoring to memory", userId);
-                            user = redisUser;
-                            userMap.put(userId, user); // Restore to in-memory map
-                        } else {
-                            log.info("📭 REDIS: User {} not found in Redis, creating new", userId);
-                            // User not in queue, create new user and add to queue
-                            user = new ChatUser(userId);
-                            user.setOfflineRequested(false);  // Set as online
-                            userMap.put(userId, user);
-                            
-                            // Store new user in Redis
-                            redisUserService.addUser(user);
-                            log.info("✅ REDIS: New user {} added to Redis", userId);
-                        }
-                    } catch (Exception redisError) {
-                        log.warn("⚠️ REDIS: Failed to access Redis, using in-memory only: {}", redisError.getMessage());
-                        // Fallback to in-memory only
-                        user = new ChatUser(userId);
-                        user.setOfflineRequested(false);  // Set as online
-                        userMap.put(userId, user);
-                    }
+                    // Create new user since not found in Redis
+                    log.info("📭 REDIS: User {} not found in Redis, creating new", userId);
+                    // user = new ChatUser(userId);
+                    // user.setOfflineRequested(false);  // Set as online
                     
-                    user.updatePingTime();
-                    log.info("✅ get ping for user: {}, last ping time: {}, email: {}, ip: {}", user.getUserId(), user.getLastPingTime(), user.getEmail(), user.getIpAddress());
+                    // Store new user in Redis
+                    // try {
+                    //     redisUserService.addUser(user);
+                    //     log.info("✅ REDIS: New user {} added to Redis", userId);
+                    // } catch (Exception redisError) {
+                       
                     
-                    log.info("🏢 Adding user to relevant tenant pools...");
-                    // Add user to relevant tenant pools for efficient assignment
-                    addUserToTenantPools(userId);
-                    log.info("✅ User added to tenant pools");
+                    // user.updatePingTime();
+                    // log.info("✅ get ping for user: {}, last ping time: {}, email: {}, ip: {}", user.getUserId(), user.getLastPingTime(), user.getEmail(), user.getIpAddress());
                     
-                    log.info("userMap: {}", userMap);
+                    // log.info("🏢 Adding user to relevant tenant pools...");
+                    // // Add user to relevant tenant pools for efficient assignment
+                    // addUserToTenantPools(userId);
+                    // log.info("✅ User added to tenant pools");
+                    
+                    // // Update user in Redis after modifications
+                    // try {
+                    //     redisUserService.updateUser(user);
+                    //     log.debug("✅ Updated user {} in Redis after ping", userId);
+                    // } catch (Exception e) {
+                    //     log.warn("⚠️ Could not update user {} in Redis: {}", userId, e.getMessage());
+                    // }
+                    
+                    // log.info("userMap: {}", userMap); // COMMENTED OUT - Using Redis instead
                     
                     // Update user status in database
                     // try {
@@ -626,11 +676,11 @@ public class ChatModule {
                     }
                 }
 
-                log.info("📤 Sending PONG response to user...");
+            
                 // Send pong response
                 socketClient.sendEvent(SocketConfig.EVENT_PONG, "pong");
                 log.info("✅ PONG sent to user: {}", userId);
-                log.info("✅ EVENT_PING processing completed for user: {}", userId);
+            
             } catch (Exception e) {
                 log.error("❌ Error in EVENT_PING processing: {}", e.getMessage(), e);
             }
@@ -656,12 +706,25 @@ public class ChatModule {
                 String userId = String.valueOf(userIdObj);
                 log.info("👤 Go online request details - UserId: {}, Email: {}, IP: {}", userId, email, ipAddress);
         
-                // EXISTING IN-MEMORY LOGIC (keeping for safety)
-                ChatUser user = userMap.get(userId);
+                // REDIS LOGIC - Get user from Redis
+                // ChatUser user = userMap.get(userId); // COMMENTED OUT - Using Redis instead
+                ChatUser user = null;
+                try {
+                    user = redisUserService.getUser(userId);
+                } catch (Exception e) {
+                    log.warn("⚠️ Could not get user {} from Redis: {}", userId, e.getMessage());
+                }
+                
                 if (user == null) {
                     log.info("👤 New user detected for go_online, creating user object...");
                     user = new ChatUser(userId);
-                    userMap.put(userId, user);
+                    // Store new user in Redis
+                    try {
+                        redisUserService.addUser(user);
+                        log.info("✅ REDIS: New user {} added to Redis during go_online", userId);
+                    } catch (Exception redisError) {
+                        log.warn("⚠️ REDIS: Failed to add new user to Redis during go_online: {}", redisError.getMessage());
+                    }
                 }
         
                 // Store new info
@@ -675,20 +738,10 @@ public class ChatModule {
                 // REDIS IMPLEMENTATION - Store user data in Redis
                 log.info("💾 REDIS: Storing user data in Redis...");
                 try {
-                    // Try to get existing user from Redis first
-                    ChatUser redisUser = redisUserService.getUser(userId);
-                    if (redisUser == null) {
-                        // New user - add to Redis
-                        redisUserService.addUser(user);
-                        log.info("✅ REDIS: New user {} added to Redis", userId);
-                    } else {
-                        // Existing user - update Redis
-                        redisUser.setEmail(email);
-                        redisUser.setIpAddress(ipAddress);
-                        redisUser.setOfflineRequested(false);
-                        redisUser.updatePingTime();
-                        redisUserService.updateUser(redisUser);
-                        log.info("✅ REDIS: Existing user {} updated in Redis", userId);
+                    if (user != null) {
+                        // We already have the user object, just store/update it in Redis
+                        redisUserService.updateUser(user);
+                        log.info("✅ REDIS: User {} data stored/updated in Redis", userId);
                     }
                 } catch (Exception redisError) {
                     log.warn("⚠️ REDIS: Failed to store user data in Redis: {}", redisError.getMessage());
@@ -709,8 +762,6 @@ public class ChatModule {
                 } catch (Exception e) {
                     log.error("❌ Error setting user ONLINE: {}", e.getMessage(), e);
                 }
-        
-                log.info("✅ EVENT_GO_ONLINE processing completed for user: {}", userId);
         
             } catch (Exception e) {
                 log.error("❌ Error in EVENT_GO_ONLINE processing: {}", e.getMessage(), e);
@@ -741,8 +792,7 @@ public class ChatModule {
     }
 
     private void handleUserRequest(SocketIOClient socketClient, String clientId, String conversationId, String summary, String history, String timestamp, String clientName, String clientEmail, String clientPhone, String clientLabel,String tenantId) {
-        log.info("🎯 HANDLE_USER_REQUEST STARTED - Processing conversation assignment...");
-        log.info("📋 Request details - Conversation: {}, Client: {}, Tenant: {}", conversationId, clientId, tenantId);
+        log.info("🎯 HANDLE_USER_REQUEST STARTED ----> Request details - Conversation: {}, Client: {}, Tenant: {}", conversationId, clientId, tenantId);
         log.info("👤 Customer info - Name: {}, Email: {}, Phone: {}", clientName, clientEmail, clientPhone);
         
         log.info("🔍 Checking for duplicate conversation ID...");
@@ -768,10 +818,23 @@ public class ChatModule {
             log.error("❌ Error saving client data for clientId {}: {}", clientId, e.getMessage(), e);
         }
         
-        log.info("🔍 Looking for available user - Current users: {}, Max clients per user: {}", userMap.size(), MAX_CLIENTS_PER_USER);
+        // log.info("🔍 Looking for available user - Current users: {}, Max clients per user: {}", userMap.size(), MAX_CLIENTS_PER_USER); // COMMENTED OUT - Using Redis instead
+        try {
+            int totalOnlineUsers = redisUserService.getAllUserIds().size();
+            log.info("🔍 Looking for available user - Current users: {}, Max clients per user: {}", totalOnlineUsers, MAX_CLIENTS_PER_USER);
+        } catch (Exception e) {
+            log.warn("⚠️ Could not get user count from Redis: {}", e.getMessage());
+            log.info("🔍 Looking for available user - Max clients per user: {}", MAX_CLIENTS_PER_USER);
+        }
         
         // Debug: Log current system state
-        log.info("🔍 SYSTEM DEBUG - Current online users: {}", userMap.keySet());
+        // log.info("🔍 SYSTEM DEBUG - Current online users: {}", userMap.keySet()); // COMMENTED OUT - Using Redis instead
+        try {
+            Set<String> onlineUserIds = redisUserService.getAllUserIds();
+            log.info("🔍 SYSTEM DEBUG - Current online users: {}", onlineUserIds);
+        } catch (Exception e) {
+            log.warn("⚠️ Could not get online users from Redis: {}", e.getMessage());
+        }
         log.info("🏢 TENANT POOLS DEBUG - Available tenant pools: {}", tenantUserPools.keySet());
         tenantUserPools.forEach((tenant, users) -> {
             log.info("   Tenant '{}' has {} users: {}", tenant, users.size(), users);
@@ -830,11 +893,26 @@ public class ChatModule {
             
                                 // Update atomic client count for efficient tracking
                     incrementUserClientCount(user.getUserId());
+                    
+                    // Update user in Redis after assignment
+                    try {
+                        redisUserService.updateUser(user);
+                        log.debug("✅ Updated user {} in Redis after client assignment", user.getUserId());
+                    } catch (Exception e) {
+                        log.warn("⚠️ Could not update user {} in Redis: {}", user.getUserId(), e.getMessage());
+                    }
+                    
                     log.info("✅ User client count updated - User: {}, New count: {}, Maximum: {}", user.getUserId(), user.getCurrentClientCount(), MAX_CLIENTS_PER_USER);
             
             log.info("🔗 Looking up user socket for room joining...");
             // Store socket ID mapping
-            String userSocketId = connectionService.getUserSocketId(user.getUserId());
+            // String userSocketId = connectionService.getUserSocketId(user.getUserId()); // COMMENTED OUT - Using Redis instead
+            String userSocketId = null;
+            try {
+                userSocketId = redisUserService.getUserSocket(user.getUserId());
+            } catch (Exception e) {
+                log.warn("⚠️ Could not get socket for user {} from Redis: {}", user.getUserId(), e.getMessage());
+            }
             log.info("🔍 Socket mapping check - UserId: {}, SocketId: {}", user.getUserId(), userSocketId);
             
             if (userSocketId != null) {
@@ -907,8 +985,14 @@ public class ChatModule {
         } else {
             log.warn("❌ NO USER AVAILABLE for assignment");
             // No user available
-            log.warn("💔 Assignment failed - Queue empty: {}, User limit reached: {}", 
-                    userMap.isEmpty(), user != null ? "Yes (current: " + user.getCurrentClientCount() + ")" : "N/A");
+            // log.warn("💔 Assignment failed - Queue empty: {}, User limit reached: {}", userMap.isEmpty(), user != null ? "Yes (current: " + user.getCurrentClientCount() + ")" : "N/A"); // COMMENTED OUT - Using Redis instead
+            try {
+                boolean redisEmpty = redisUserService.getAllUserIds().isEmpty();
+                log.warn("💔 Assignment failed - Redis empty: {}, User limit reached: {}", 
+                        redisEmpty, user != null ? "Yes (current: " + user.getCurrentClientCount() + ")" : "N/A");
+            } catch (Exception e) {
+                log.warn("💔 Assignment failed - Could not check Redis status: {}", e.getMessage());
+            }
             
             log.info("📝 Preparing unavailable response...");
             ClientInfoResponse userInfo = new ClientInfoResponse();
@@ -955,8 +1039,15 @@ public class ChatModule {
         log.info("📴 HANDLE_OFFLINE_REQUEST STARTED - Processing offline request...");
         log.info("👤 Offline request details - UserId: {}, SocketId: {}", userId, socketClient.getSessionId());
         
-        log.info("🔍 LOOKING UP USER - Checking if user exists in userMap...");
-        ChatUser user = userMap.get(userId);
+        // log.info("🔍 LOOKING UP USER - Checking if user exists in userMap..."); // COMMENTED OUT - Using Redis instead
+        log.info("🔍 LOOKING UP USER - Checking if user exists in Redis...");
+        // ChatUser user = userMap.get(userId); // COMMENTED OUT - Using Redis instead
+        ChatUser user = null;
+        try {
+            user = redisUserService.getUser(userId);
+        } catch (Exception e) {
+            log.warn("⚠️ Could not get user {} from Redis: {}", userId, e.getMessage());
+        }
         
         if (user != null) {
             log.info("✅ USER FOUND - User exists in system, checking active chats...");
@@ -998,7 +1089,8 @@ public class ChatModule {
                 log.info("📤 Sent offline rejection response to user: {}", userId);
             }
         } else {
-            log.warn("User {} not found in userMap. This can happen if the server restarted. Forcing user to OFFLINE.", userId);
+            // log.warn("User {} not found in userMap. This can happen if the server restarted. Forcing user to OFFLINE.", userId); // COMMENTED OUT - Using Redis instead
+            log.warn("User {} not found in Redis. This can happen if the server restarted. Forcing user to OFFLINE.", userId);
             
             // If user is not in memory, we can still process the offline request
             // to ensure the database status is correct.
@@ -1138,7 +1230,14 @@ public class ChatModule {
             log.info("🔔 Executing scheduled disconnection notifications - User: {}", userId);
             
             // Check if user is still disconnected
-            String currentSocketId = connectionService.getUserSocketId(userId);
+            // String currentSocketId = connectionService.getUserSocketId(userId); // COMMENTED OUT - Using Redis instead
+            String currentSocketId = null;
+            try {
+                currentSocketId = redisUserService.getUserSocket(userId);
+            } catch (Exception e) {
+                log.warn("⚠️ Could not get socket for user {} from Redis: {}", userId, e.getMessage());
+            }
+            
             if (currentSocketId == null) {
                 log.info("📤 User {} still disconnected, sending notifications...", userId);
                 
@@ -1201,13 +1300,24 @@ public class ChatModule {
      */
     public void logSystemCapacity() {
         log.info("📊 SYSTEM CAPACITY STATUS WITH LOAD BALANCING:");
-        log.info("   Total users in system: {}", userMap.size());
+        // log.info("   Total users in system: {}", userMap.size()); // COMMENTED OUT - Using Redis instead
+        try {
+            int totalUsers = redisUserService.getAllUserIds().size();
+            log.info("   Total users in system: {}", totalUsers);
+        } catch (Exception e) {
+            log.warn("   Could not get total users from Redis: {}", e.getMessage());
+        }
         log.info("   Active chat rooms: {}", chatRooms.size());
         log.info("   Max clients per user: {}", MAX_CLIENTS_PER_USER);
         
-        if (!userMap.isEmpty()) {
+        // if (!userMap.isEmpty()) { // COMMENTED OUT - Using Redis instead
+        try {
+            Set<String> userIds = redisUserService.getAllUserIds();
+            if (!userIds.isEmpty()) {
             log.info("   📊 LOAD BALANCING ANALYSIS:");
             
+            // COMMENTED OUT - Complex load balancing analysis requires refactoring for Redis
+            /*
             // Calculate load distribution statistics
             Map<Integer, Long> loadDistribution = userMap.values().stream()
                 .collect(Collectors.groupingBy(
@@ -1250,16 +1360,37 @@ public class ChatModule {
                                  clientCount <= 4 ? "MEDIUM" : "HIGH";
                 log.info("     User {} → {}/{} clients ({}, {})", userId, clientCount, MAX_CLIENTS_PER_USER, status, loadLevel);
             });
+            */
+            
+            // Simplified Redis-based logging
+            log.info("   📋 Individual User Details (from Redis):");
+            for (String userId : userIds) {
+                try {
+                    ChatUser user = redisUserService.getUser(userId);
+                    if (user != null) {
+                        int clientCount = user.getCurrentClientCount();
+                        String status = clientCount >= MAX_CLIENTS_PER_USER ? "AT CAPACITY" : "AVAILABLE";
+                        String loadLevel = clientCount == 0 ? "IDLE" : 
+                                         clientCount <= 2 ? "LOW" : 
+                                         clientCount <= 4 ? "MEDIUM" : "HIGH";
+                        log.info("     User {} → {}/{} clients ({}, {})", userId, clientCount, MAX_CLIENTS_PER_USER, status, loadLevel);
+                    }
+                } catch (Exception e) {
+                    log.warn("     Could not get details for user {}: {}", userId, e.getMessage());
+                }
+            }
         }
         
         // Log tenant-specific load balancing details
         log.info("   🏢 TENANT-SPECIFIC LOAD BALANCING:");
         if (!tenantUserPools.isEmpty()) {
-            tenantUserPools.forEach((tenantId, userIds) -> {
-                log.info("     Tenant '{}' has {} users:", tenantId, userIds.size());
+            tenantUserPools.forEach((tenantId, tenantUserIds) -> {
+                log.info("     Tenant '{}' has {} users:", tenantId, tenantUserIds.size());
                 
+                // COMMENTED OUT - Complex tenant load balancing requires refactoring for Redis
+                /*
                 // Calculate load distribution for this tenant
-                Map<Integer, Long> tenantLoadDistribution = userIds.stream()
+                Map<Integer, Long> tenantLoadDistribution = tenantUserIds.stream()
                     .filter(userId -> userMap.containsKey(userId))
                     .map(userId -> userMap.get(userId).getCurrentClientCount())
                     .collect(Collectors.groupingBy(
@@ -1268,7 +1399,7 @@ public class ChatModule {
                     ));
                 
                 // Find next assignment candidate for this tenant
-                Optional<String> nextCandidate = userIds.stream()
+                Optional<String> nextCandidate = tenantUserIds.stream()
                     .filter(userId -> userMap.containsKey(userId))
                     .filter(userId -> userMap.get(userId).getCurrentClientCount() < MAX_CLIENTS_PER_USER)
                     .min(Comparator.comparingInt(userId -> userMap.get(userId).getCurrentClientCount()));
@@ -1281,9 +1412,16 @@ public class ChatModule {
                 } else {
                     log.info("       ❌ All users at capacity for tenant '{}'", tenantId);
                 }
+                */
+                
+                // Simplified tenant logging
+                log.info("       📊 Tenant analysis temporarily disabled (Redis migration)");
             });
-        } else {
-            log.info("     No tenant pools configured");
+            } else {
+                log.info("     No tenant pools configured");
+            }
+        } catch (Exception e) {
+            log.warn("   Could not get users from Redis for system capacity analysis: {}", e.getMessage());
         }
         
         // Also log connection status
@@ -1524,7 +1662,14 @@ public class ChatModule {
             
             // Only consider users with available capacity
             if (currentCount < MAX_CLIENTS_PER_USER) {
-                ChatUser user = userMap.get(userId);
+                // ChatUser user = userMap.get(userId);
+                ChatUser user = null;
+                try {
+                    user = redisUserService.getUser(userId);
+                } catch (Exception e) {
+                    log.warn("⚠️ Could not get user {} from Redis: {}", userId, e.getMessage());
+                }
+                
                 if (user != null) {
                     // Check if user's last ping time is under 7 seconds (recent activity)
                     long currentTime = System.currentTimeMillis();
@@ -1545,7 +1690,7 @@ public class ChatModule {
                                  userId, timeSinceLastPing);
                     }
                 } else {
-                    log.warn("⚠️ User object not found in userMap for userId: {}", userId);
+                    log.warn("⚠️ User object not found in Redis for userId: {}", userId);
                 }
             } else {
                 log.debug("❌ User {} at capacity ({}/{})", userId, currentCount, MAX_CLIENTS_PER_USER);
@@ -1560,7 +1705,14 @@ public class ChatModule {
         });
         
         if (bestUserId != null) {
-            ChatUser selectedUser = userMap.get(bestUserId);
+            ChatUser selectedUser = null;
+            try {
+                selectedUser = redisUserService.getUser(bestUserId);
+            } catch (Exception e) {
+                log.warn("⚠️ Could not get selected user {} from Redis: {}", bestUserId, e.getMessage());
+                return null;
+            }
+            
             log.info("✅ OPTIMAL USER SELECTED - User: {}, Current load: {}/{} (minimum among available)", 
                     bestUserId, minClientCount, MAX_CLIENTS_PER_USER);
             log.info("🎯 Load balancing successful - Selected user with lowest workload");

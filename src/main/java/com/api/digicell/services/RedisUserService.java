@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -202,6 +204,24 @@ public class RedisUserService {
         } catch (Exception e) {
             log.error("❌ Error deleting socket for user {} from Redis: {}", userId, e.getMessage(), e);
             return false;
+        }
+    }
+
+    /**
+     * Get all user IDs currently stored in Redis
+     */
+    public Set<String> getAllUserIds() {
+        try {
+            Set<String> keys = redisTemplate.keys(USER_KEY_PREFIX + "*");
+            if (keys != null) {
+                return keys.stream()
+                        .map(key -> key.substring(USER_KEY_PREFIX.length()))
+                        .collect(Collectors.toSet());
+            }
+            return Set.of();
+        } catch (Exception e) {
+            log.error("❌ Error getting all user IDs from Redis: {}", e.getMessage(), e);
+            return Set.of();
         }
     }
 
