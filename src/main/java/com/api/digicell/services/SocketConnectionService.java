@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.api.digicell.chat.ChatModule;
+import com.api.digicell.services.RedisUserService;
 import jakarta.inject.Provider;
 
 import jakarta.annotation.PostConstruct;
@@ -22,6 +23,7 @@ import java.util.HashMap;
 public class SocketConnectionService {
     private final SocketConfig socketConfig;
     private final Provider<ChatModule> chatModuleProvider;
+    private final RedisUserService redisUserService;
     private String chatModuleSocketId;
     private Map<String, String> userSocketIds = new ConcurrentHashMap<>();  // userId → socketId
     
@@ -43,9 +45,10 @@ public class SocketConnectionService {
     @Value("${socket.conversation.cleanup.interval:1}")
     private int cleanupIntervalMinutes;
 
-    public SocketConnectionService(SocketConfig socketConfig, Provider<ChatModule> chatModuleProvider) {
+    public SocketConnectionService(SocketConfig socketConfig, Provider<ChatModule> chatModuleProvider, RedisUserService redisUserService) {
         this.socketConfig = socketConfig;
         this.chatModuleProvider = chatModuleProvider;
+        this.redisUserService = redisUserService;
         this.chatModuleSocketId = null;
     }
     
@@ -176,6 +179,16 @@ public class SocketConnectionService {
             log.info("🔄 Updating user {} socket mapping: {} → {}", userId, existingSocketId, newSocketId);
             userSocketIds.put(userId, newSocketId);
             
+            // REDIS IMPLEMENTATION - Update socket mapping in Redis
+            log.info("💾 REDIS: Updating socket mapping in Redis...");
+            try {
+                redisUserService.updateUserSocket(userId, newSocketId);
+                log.info("✅ REDIS: Socket mapping updated for user {} → {}", userId, newSocketId);
+            } catch (Exception redisError) {
+                log.warn("⚠️ REDIS: Failed to update socket mapping in Redis: {}", redisError.getMessage());
+                // Continue with in-memory operation
+            }
+            
             // Remove disconnection timestamp as user is now connected
             LocalDateTime disconnectionTime = userDisconnectionTime.remove(userId);
             if (disconnectionTime != null) {
@@ -204,6 +217,16 @@ public class SocketConnectionService {
             
             log.info("🗂️ CREATING SOCKET MAPPING (ONE SOCKET PER USER)...");
             userSocketIds.put(userId, newSocketId);
+            
+            // REDIS IMPLEMENTATION - Add socket mapping to Redis
+            log.info("💾 REDIS: Adding socket mapping to Redis...");
+            try {
+                redisUserService.addUserSocket(userId, newSocketId);
+                log.info("✅ REDIS: Socket mapping added for user {} → {}", userId, newSocketId);
+            } catch (Exception redisError) {
+                log.warn("⚠️ REDIS: Failed to add socket mapping to Redis: {}", redisError.getMessage());
+                // Continue with in-memory operation
+            }
             
             log.info("✅ SOCKET MAPPING CREATED:");
             log.info("   userSocketIds['{}'] = '{}'", userId, newSocketId);
@@ -344,7 +367,32 @@ public class SocketConnectionService {
     }
 
     public String getUserSocketId(String userId) {
-        return userSocketIds.get(userId);
+        // EXISTING IN-MEMORY LOGIC (keeping for safety)
+        String socketId = userSocketIds.get(userId);
+        
+        if (socketId != null) {
+            log.debug("✅ Socket ID found in memory for user {}: {}", userId, socketId);
+            return socketId;
+        }
+        
+        // REDIS IMPLEMENTATION - Fallback to Redis if not found in memory
+        log.debug("💾 REDIS: Socket not found in memory, checking Redis for user {}", userId);
+        try {
+            String redisSocketId = redisUserService.getUserSocket(userId);
+            if (redisSocketId != null) {
+                log.info("✅ REDIS: Socket ID found in Redis for user {}: {}", userId, redisSocketId);
+                // Restore to in-memory map for faster future access
+                userSocketIds.put(userId, redisSocketId);
+                return redisSocketId;
+            } else {
+                log.debug("📭 REDIS: No socket found in Redis for user {}", userId);
+            }
+        } catch (Exception redisError) {
+            log.warn("⚠️ REDIS: Failed to get socket from Redis for user {}: {}", userId, redisError.getMessage());
+        }
+        
+        log.debug("📭 No socket found for user {} in memory or Redis", userId);
+        return null;
     }
 
     public void setUserSocketId(String userId, String socketId) {

@@ -26,6 +26,7 @@ import com.api.digicell.dto.UserCloseNotification;
 import com.api.digicell.config.SocketConfig;
 import com.api.digicell.services.SocketConnectionService;
 import com.api.digicell.services.ZendeskService;
+import com.api.digicell.services.RedisUserService;
 import com.corundumstudio.socketio.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -55,8 +56,6 @@ import java.util.UUID;
 @Component
 public class ChatModule {
     private final SocketIOServer server;
-    private final Map<String, String> clientUserMapping;
-    private static Map<String, Set<String>> userRooms;
     private static Map<String, ChatUser> userMap;
     private final Map<String, ChatRoom> chatRooms;
     private final UserAccountService userAccountService;
@@ -70,6 +69,7 @@ public class ChatModule {
     private final TaskScheduler taskScheduler;
     private static final int MAX_CLIENTS_PER_USER = 5;
     private final ZendeskService zendeskService;
+    private final RedisUserService redisUserService;
     
     /*
      * NEW BUSINESS LOGIC RULES:
@@ -94,7 +94,7 @@ public class ChatModule {
     private final Map<String, AtomicInteger> userClientCounts = new ConcurrentHashMap<>();
 
     public ChatModule(UserAccountService userAccountService, SocketConfig socketConfig, SocketConnectionService connectionService, 
-                     ClientRepository clientRepository, ConversationRepository conversationRepository, UserRepository userRepository, Environment environment, UserOrgPermissionsRepository userOrgPermissionsRepository, TaskScheduler taskScheduler, ZendeskService zendeskService) {
+                     ClientRepository clientRepository, ConversationRepository conversationRepository, UserRepository userRepository, Environment environment, UserOrgPermissionsRepository userOrgPermissionsRepository, TaskScheduler taskScheduler, ZendeskService zendeskService, RedisUserService redisUserService) {
         
         log.info("🚀 CHATMODULE CONSTRUCTOR STARTED - Initializing chat module with dependencies...");
         
@@ -162,9 +162,12 @@ public class ChatModule {
                     FileInputStream keystoreStream = new FileInputStream(keystoreFile);
                     config.setKeyStore(keystoreStream);
                     config.setKeyStorePassword(actualKeyStorePassword);
-                    log.info("SSL keystore and password configured successfully");
                     
-                    log.info("SSL configured successfully for Socket.IO server on port {}", socketConfig.getPort());
+                    // Configure secure SSL/TLS protocols and cipher suites
+                    config.setSSLProtocol("TLSv1.2");
+                    
+                    log.info("SSL keystore and password configured successfully");
+                    log.info("SSL configured successfully for Socket.IO server on port {} with TLS 1.2+", socketConfig.getPort());
                 }
             } catch (Exception e) {
                 log.error("Failed to configure SSL for Socket.IO server: {}", e.getMessage(), e);
@@ -180,8 +183,8 @@ public class ChatModule {
         this.server = new SocketIOServer(config);
         
         log.info("🗂️ INITIALIZING DATA STRUCTURES - Creating concurrent hash maps...");
-        this.clientUserMapping = new ConcurrentHashMap<>();
-        this.userRooms = new ConcurrentHashMap<>();
+
+
         this.userMap = new ConcurrentHashMap<>();
         this.chatRooms = new ConcurrentHashMap<>();
         
@@ -196,6 +199,7 @@ public class ChatModule {
         this.userOrgPermissionsRepository = userOrgPermissionsRepository;
         this.taskScheduler = taskScheduler;
         this.zendeskService = zendeskService;
+        this.redisUserService = redisUserService;
 
         log.info("🎧 INITIALIZING SOCKET LISTENERS - Setting up event handlers...");
         initializeSocketListeners();
@@ -557,10 +561,34 @@ public class ChatModule {
 
                 if (user == null) {
                     log.info("👤 New user detected, creating user object and adding to system...");
-                    // User not in queue, create new user and add to queue
-                    user = new ChatUser(userId);
-                    user.setOfflineRequested(false);  // Set as online
-                    userMap.put(userId, user);
+                    
+                    // REDIS IMPLEMENTATION - Try to get user from Redis first
+                    log.info("💾 REDIS: Checking if user exists in Redis...");
+                    try {
+                        ChatUser redisUser = redisUserService.getUser(userId);
+                        if (redisUser != null) {
+                            log.info("✅ REDIS: User {} found in Redis, restoring to memory", userId);
+                            user = redisUser;
+                            userMap.put(userId, user); // Restore to in-memory map
+                        } else {
+                            log.info("📭 REDIS: User {} not found in Redis, creating new", userId);
+                            // User not in queue, create new user and add to queue
+                            user = new ChatUser(userId);
+                            user.setOfflineRequested(false);  // Set as online
+                            userMap.put(userId, user);
+                            
+                            // Store new user in Redis
+                            redisUserService.addUser(user);
+                            log.info("✅ REDIS: New user {} added to Redis", userId);
+                        }
+                    } catch (Exception redisError) {
+                        log.warn("⚠️ REDIS: Failed to access Redis, using in-memory only: {}", redisError.getMessage());
+                        // Fallback to in-memory only
+                        user = new ChatUser(userId);
+                        user.setOfflineRequested(false);  // Set as online
+                        userMap.put(userId, user);
+                    }
+                    
                     user.updatePingTime();
                     log.info("✅ get ping for user: {}, last ping time: {}, email: {}, ip: {}", user.getUserId(), user.getLastPingTime(), user.getEmail(), user.getIpAddress());
                     
@@ -587,6 +615,15 @@ public class ChatModule {
                     addUserToTenantPools(userId);
                     log.info("✅ get ping for user: {}, last ping time: {}", user.getUserId(), user.getLastPingTime());
                     
+                    // REDIS IMPLEMENTATION - Update user ping time in Redis
+                    log.info("💾 REDIS: Updating user ping time in Redis...");
+                    try {
+                        redisUserService.updateUser(user);
+                        log.info("✅ REDIS: User {} ping time updated in Redis", userId);
+                    } catch (Exception redisError) {
+                        log.warn("⚠️ REDIS: Failed to update user ping time in Redis: {}", redisError.getMessage());
+                        // Continue with in-memory operation
+                    }
                 }
 
                 log.info("📤 Sending PONG response to user...");
@@ -619,6 +656,7 @@ public class ChatModule {
                 String userId = String.valueOf(userIdObj);
                 log.info("👤 Go online request details - UserId: {}, Email: {}, IP: {}", userId, email, ipAddress);
         
+                // EXISTING IN-MEMORY LOGIC (keeping for safety)
                 ChatUser user = userMap.get(userId);
                 if (user == null) {
                     log.info("👤 New user detected for go_online, creating user object...");
@@ -633,6 +671,29 @@ public class ChatModule {
                 user.updatePingTime(); // Also update ping time as this is an activity
         
                 log.info("✅ User {} details updated: email={}, ip={}", userId, user.getEmail(), user.getIpAddress());
+        
+                // REDIS IMPLEMENTATION - Store user data in Redis
+                log.info("💾 REDIS: Storing user data in Redis...");
+                try {
+                    // Try to get existing user from Redis first
+                    ChatUser redisUser = redisUserService.getUser(userId);
+                    if (redisUser == null) {
+                        // New user - add to Redis
+                        redisUserService.addUser(user);
+                        log.info("✅ REDIS: New user {} added to Redis", userId);
+                    } else {
+                        // Existing user - update Redis
+                        redisUser.setEmail(email);
+                        redisUser.setIpAddress(ipAddress);
+                        redisUser.setOfflineRequested(false);
+                        redisUser.updatePingTime();
+                        redisUserService.updateUser(redisUser);
+                        log.info("✅ REDIS: Existing user {} updated in Redis", userId);
+                    }
+                } catch (Exception redisError) {
+                    log.warn("⚠️ REDIS: Failed to store user data in Redis: {}", redisError.getMessage());
+                    // Continue with in-memory operation as fallback
+                }
         
                 // Add user to tenant pools
                 addUserToTenantPools(userId);

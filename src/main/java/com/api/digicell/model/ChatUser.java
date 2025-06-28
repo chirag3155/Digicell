@@ -1,12 +1,15 @@
 package com.api.digicell.model;
 
 import lombok.Data;
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
 @Data
-public class ChatUser {
+public class ChatUser implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
     private String userId;
     private String email;
     private String ipAddress;
@@ -16,6 +19,10 @@ public class ChatUser {
     private boolean offlineRequested;
     private long lastPingTime;
     private Set<String> activeClients = new HashSet<>();
+
+    public ChatUser() {
+        // Default constructor for Redis deserialization
+    }
 
     public ChatUser(String userId) {
         this.userId = userId;
