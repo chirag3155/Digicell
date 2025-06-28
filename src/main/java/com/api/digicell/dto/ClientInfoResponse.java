@@ -14,6 +14,9 @@ public class ClientInfoResponse {
     @JsonProperty("user_id")
     private String userId;
     
+    @JsonProperty("user_name")
+    private String userName;
+
     @JsonProperty("conversation_id")
     private String conversationId;
     

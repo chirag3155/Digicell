@@ -795,6 +795,7 @@ public class ChatModule {
                 ClientInfoResponse userInfo = new ClientInfoResponse();
                 userInfo.setStatus("user_at_capacity");
                 userInfo.setUserId("");
+                userInfo.setUserName("");
                 userInfo.setConversationId(conversationId);
                 userInfo.setClientName("");
                 userInfo.setClientLabel("");
@@ -852,6 +853,7 @@ public class ChatModule {
                     ClientInfoResponse userInfo = new ClientInfoResponse();
                     userInfo.setStatus("online");
                     userInfo.setUserId(user.getUserId());
+                    userInfo.setUserName(user.getEmail());
                     userInfo.setConversationId(conversationId);
                     userInfo.setTenantId(tenantId);
                     userInfo.setHistory(history);
