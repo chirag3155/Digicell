@@ -12,14 +12,18 @@ import com.api.digicell.responses.ApiResponse;
 import com.api.digicell.services.UserAccountService;
 import com.api.digicell.services.ClientService;
 import com.api.digicell.services.ChildUserService;
+import com.api.digicell.services.RedisUserService;
 import com.api.digicell.dto.ChildUserListResponseDTO;
 import com.api.digicell.dto.ChildUserRequestDTO;
+import com.api.digicell.model.ChatUser;
+import com.api.digicell.model.ChatRoom;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.validation.annotation.Validated;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -34,6 +38,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -47,6 +53,7 @@ public class UserAccountController {
     private final ClientService clientService;
     private final UserAccountMapper userAccountMapper;
     private final ChildUserService childUserService;
+    private final RedisUserService redisUserService;
     private static final Logger logger = LoggerFactory.getLogger(UserAccountController.class);
 
     /**
@@ -314,6 +321,188 @@ public class UserAccountController {
     }
 
     /**
+     * Add test data to Redis for testing child users API.
+     */
+    @Operation(
+        summary = "Add test data to Redis",
+        description = "Adds sample ChatUser and ChatRoom data to Redis for testing the child users API with active status",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
+    @PostMapping("/test/redis-data")
+    public ResponseEntity<ApiResponse<String>> addTestRedisData(
+            @RequestHeader(name = "Authorization", required = false) String authToken) {
+        logger.info("Adding test data to Redis for child users API testing");
+        
+        try {
+            // Create test users and rooms
+            ChatUser chatUser1 = new ChatUser();
+            ChatUser chatUser2 = new ChatUser();
+            ChatRoom chatRoom1 = new ChatRoom();
+            ChatRoom chatRoom2 = new ChatRoom();
+            ChatRoom chatRoom3 = new ChatRoom();
+            
+            // Configure first test user (Active)
+            chatUser1.setUserId("19");
+            chatUser1.setUserName("Pankaj");
+            chatUser1.setEmail("pankaj@blackngreen.com");
+            chatUser1.setIpAddress("127.0.0.1");
+            chatUser1.setLastPingTime(System.currentTimeMillis()); // Recent ping = Active
+            chatUser1.setCurrentClientCount(2);
+            chatUser1.setOfflineRequested(false);
+            
+            // Add active conversations
+            Set<String> activeConversations1 = new HashSet<>();
+            activeConversations1.add("conv_001");
+            activeConversations1.add("conv_002");
+            chatUser1.setActiveConversations(activeConversations1);
+            
+            // Configure second test user (Active)
+            chatUser2.setUserId("59");
+            chatUser2.setUserName("TestUser59");
+            chatUser2.setEmail("testuser59@example.com");
+            chatUser2.setIpAddress("127.0.0.1");
+            chatUser2.setLastPingTime(System.currentTimeMillis() - 5000); // 5 seconds ago = Active
+            chatUser2.setCurrentClientCount(1);
+            chatUser2.setOfflineRequested(false);
+            
+            // Add active conversations
+            Set<String> activeConversations2 = new HashSet<>();
+            activeConversations2.add("conv_003");
+            chatUser2.setActiveConversations(activeConversations2);
+            
+            // Configure ChatRooms
+            chatRoom1.setConversationId("conv_001");
+            chatRoom1.setClientId("CLIENT_001");
+            chatRoom1.setUserId("19");
+            
+            chatRoom2.setConversationId("conv_002");
+            chatRoom2.setClientId("CLIENT_002");
+            chatRoom2.setUserId("19");
+            
+            chatRoom3.setConversationId("conv_003");
+            chatRoom3.setClientId("CLIENT_003");
+            chatRoom3.setUserId("59");
+            
+            // Add data to Redis using the injected service
+            this.redisUserService.addUser(chatUser1);
+            this.redisUserService.addUser(chatUser2);
+            this.redisUserService.addChatRoom(chatRoom1);
+            this.redisUserService.addChatRoom(chatRoom2);
+            this.redisUserService.addChatRoom(chatRoom3);
+            
+            String message = "Test data added successfully: User 19 (Active, 2 clients), User 59 (Active, 1 client)";
+            logger.info(message);
+            
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), message, "Data added to Redis"));
+            
+        } catch (Exception e) {
+            logger.error("Error adding test data to Redis: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), 
+                                          "Error adding test data to Redis: " + e.getMessage(), null));
+        }
+    }
+
+    /**
+     * Verify Redis connectivity and check stored data.
+     */
+    @Operation(
+        summary = "Verify Redis data",
+        description = "Checks if the test data exists in Redis and verifies connectivity",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
+    @GetMapping("/test/redis-verify")
+    public ResponseEntity<ApiResponse<String>> verifyRedisData(
+            @RequestHeader(name = "Authorization", required = false) String authToken) {
+        logger.info("Verifying Redis data and connectivity");
+        
+        try {
+            StringBuilder result = new StringBuilder();
+            
+            // Check if users exist in Redis
+            ChatUser user19 = this.redisUserService.getUser("19");
+            ChatUser user59 = this.redisUserService.getUser("59");
+            
+            result.append("User 19: ").append(user19 != null ? "EXISTS" : "NOT FOUND").append("\n");
+            if (user19 != null) {
+                result.append("  - Last Ping: ").append(user19.getLastPingTime()).append("\n");
+                result.append("  - Current Time: ").append(System.currentTimeMillis()).append("\n");
+                result.append("  - Time Diff: ").append(System.currentTimeMillis() - user19.getLastPingTime()).append(" ms\n");
+                result.append("  - Active Conversations: ").append(user19.getActiveConversations()).append("\n");
+            }
+            
+            result.append("User 59: ").append(user59 != null ? "EXISTS" : "NOT FOUND").append("\n");
+            if (user59 != null) {
+                result.append("  - Last Ping: ").append(user59.getLastPingTime()).append("\n");
+                result.append("  - Current Time: ").append(System.currentTimeMillis()).append("\n");
+                result.append("  - Time Diff: ").append(System.currentTimeMillis() - user59.getLastPingTime()).append(" ms\n");
+                result.append("  - Active Conversations: ").append(user59.getActiveConversations()).append("\n");
+            }
+            
+            // Check ChatRooms
+            ChatRoom room1 = this.redisUserService.getChatRoom("conv_001");
+            ChatRoom room2 = this.redisUserService.getChatRoom("conv_002");
+            ChatRoom room3 = this.redisUserService.getChatRoom("conv_003");
+            
+            result.append("ChatRoom conv_001: ").append(room1 != null ? "EXISTS (Client: " + room1.getClientId() + ")" : "NOT FOUND").append("\n");
+            result.append("ChatRoom conv_002: ").append(room2 != null ? "EXISTS (Client: " + room2.getClientId() + ")" : "NOT FOUND").append("\n");
+            result.append("ChatRoom conv_003: ").append(room3 != null ? "EXISTS (Client: " + room3.getClientId() + ")" : "NOT FOUND").append("\n");
+            
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), "Redis verification completed", result.toString()));
+            
+        } catch (Exception e) {
+            logger.error("Error verifying Redis data: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), 
+                                          "Error verifying Redis data: " + e.getMessage(), null));
+        }
+    }
+
+    /**
+     * Simple Redis connection test.
+     */
+    @Operation(
+        summary = "Test Redis connection",
+        description = "Simple test to verify Redis connectivity from Java application",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
+    @GetMapping("/test/redis-ping")
+    public ResponseEntity<ApiResponse<String>> testRedisConnection(
+            @RequestHeader(name = "Authorization", required = false) String authToken) {
+        logger.info("Testing Redis connection");
+        
+        try {
+            // Test if we can check for existing keys
+            boolean user19Exists = this.redisUserService.userKeyExists("19");
+            boolean user59Exists = this.redisUserService.userKeyExists("59");
+            
+            // Get raw data to see what's stored
+            Object rawUser19 = this.redisUserService.getRawUserData("19");
+            Object rawUser59 = this.redisUserService.getRawUserData("59");
+            
+            StringBuilder result = new StringBuilder();
+            result.append("Redis Connection Test Results:\n");
+            result.append("User 19 key exists: ").append(user19Exists).append("\n");
+            result.append("User 59 key exists: ").append(user59Exists).append("\n");
+            result.append("Raw User 19 data type: ").append(rawUser19 != null ? rawUser19.getClass().getSimpleName() : "null").append("\n");
+            result.append("Raw User 59 data type: ").append(rawUser59 != null ? rawUser59.getClass().getSimpleName() : "null").append("\n");
+            
+            if (rawUser19 != null) {
+                result.append("Raw User 19 data: ").append(rawUser19.toString().substring(0, Math.min(100, rawUser19.toString().length()))).append("...\n");
+            }
+            
+            return ResponseEntity.ok(new ApiResponse<>(HttpStatus.OK.value(), 
+                "Redis connection test completed", result.toString()));
+            
+        } catch (Exception e) {
+            logger.error("Redis connection test failed: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), 
+                                          "Redis connection failed: " + e.getMessage(), null));
+        }
+    }
+
+    /**
      * Get child users with Redis status information.
      */
     @Operation(
@@ -324,7 +513,7 @@ public class UserAccountController {
     @PostMapping("/{parent_user_id}/children")
     public ResponseEntity<ApiResponse<ChildUserListResponseDTO>> getChildUsersWithRedisStatus(
             HttpServletRequest request,
-            @RequestHeader(name = "Authorization", required = true) String authToken,
+            @RequestHeader(name = "Authorization", required = false) String authToken,
             @PathVariable("parent_user_id") @Positive(message = "parent_user_id must be positive") Long parentUserId,
             @Valid @RequestBody ChildUserRequestDTO requestDTO) {
         
@@ -346,6 +535,15 @@ public class UserAccountController {
                 "Child users retrieved successfully with Redis status", 
                 childUsers
             ));
+            
+        } catch (HttpClientErrorException e) {
+            logger.warn("External API returned HTTP error for parent user ID {}: {} - {}", 
+                       parentUserId, e.getStatusCode(), e.getResponseBodyAsString());
+            
+            // Return the exact status code and response body from external API
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(new ApiResponse<>(e.getStatusCode().value(), 
+                                          e.getResponseBodyAsString(), null));
             
         } catch (IllegalArgumentException e) {
             logger.warn("Invalid request for parent user ID {}: {}", parentUserId, e.getMessage());
