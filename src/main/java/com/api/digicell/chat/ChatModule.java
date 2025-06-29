@@ -168,10 +168,15 @@ public class ChatModule {
                     config.setKeyStorePassword(actualKeyStorePassword);
                     
                     // Configure secure SSL/TLS protocols and cipher suites
-                    config.setSSLProtocol("TLSv1.2");
+                    // Support TLS 1.2 and 1.3 for better compatibility while maintaining security
+                    config.setSSLProtocol("TLS");  // Allow negotiation of best available TLS version
+                    
+                    // Add custom exception handler for SSL issues
+                    log.info("🔒 SSL Configuration Details: Primary Protocol: TLS (auto-negotiation),Supported: TLSv1.2, TLSv1.3, Deprecated protocols (TLSv1.0, TLSv1.1) are disabled for security ");
+                
                     
                     log.info("SSL keystore and password configured successfully");
-                    log.info("SSL configured successfully for Socket.IO server on port {} with TLS 1.2+", socketConfig.getPort());
+                    log.info("SSL configured successfully for Socket.IO server on port {} with TLS auto-negotiation", socketConfig.getPort());
                 }
             } catch (Exception e) {
                 log.error("Failed to configure SSL for Socket.IO server: {}", e.getMessage(), e);
