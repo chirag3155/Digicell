@@ -79,6 +79,16 @@ public class RedisUserService {
             
             if (userObj instanceof ChatUser) {
                 ChatUser user = (ChatUser) userObj;
+                
+                // ✅ FIX: Automatically validate and fix count issues on retrieval
+                user.validateAndFixCount();
+                
+                // If user data was corrected, update it in Redis
+                if (user.getCurrentClientCount() != ((ChatUser) userObj).getCurrentClientCount()) {
+                    log.info("🔄 AUTO-CORRECTED: User {} data was corrected during retrieval, updating Redis", userId);
+                    updateUser(user);
+                }
+                
                 log.debug("✅ User {} retrieved from Redis", userId);
                 return user;
             } else {
@@ -543,7 +553,14 @@ public class RedisUserService {
         try {
             ChatUser user = getUser(userId);
             if (user != null) {
-                return user.getCurrentClientCount();
+                int count = user.getCurrentClientCount();
+                if (count < 0) {
+                    log.warn("⚠️ NEGATIVE COUNT DETECTED: User {} has negative client count: {}, correcting to 0", userId, count);
+                    user.setCurrentClientCount(0);
+                    updateUser(user);
+                    return 0;
+                }
+                return count;
             } else {
                 log.debug("📭 User {} not found in Redis for client count", userId);
                 return 0;
@@ -555,7 +572,7 @@ public class RedisUserService {
     }
 
     /**
-     * Increment client count for a user
+     * Increment client count for a user with validation
      */
     public void incrementUserClientCount(String userId) {
         if (userId == null || userId.trim().isEmpty()) {
@@ -566,9 +583,17 @@ public class RedisUserService {
         try {
             ChatUser user = getUser(userId);
             if (user != null) {
-                user.incrementClientCount();
+                int currentCount = user.getCurrentClientCount();
+                
+                if (currentCount < 0) {
+                    log.warn("⚠️ NEGATIVE COUNT CORRECTION: User {} had negative count {}, resetting to 0 before increment", userId, currentCount);
+                    currentCount = 0;
+                }
+                
+                user.setCurrentClientCount(currentCount + 1);
                 updateUser(user);
-                log.debug("✅ Client count incremented for user {} to {}", userId, user.getCurrentClientCount());
+                
+                log.debug("✅ Client count incremented for user {} from {} to {}", userId, currentCount, currentCount + 1);
             } else {
                 log.warn("⚠️ User {} not found in Redis for client count increment", userId);
             }
@@ -578,7 +603,7 @@ public class RedisUserService {
     }
 
     /**
-     * Decrement client count for a user
+     * Decrement client count for a user with validation
      */
     public void decrementUserClientCount(String userId) {
         if (userId == null || userId.trim().isEmpty()) {
@@ -589,14 +614,54 @@ public class RedisUserService {
         try {
             ChatUser user = getUser(userId);
             if (user != null) {
-                user.decrementClientCount();
+                int currentCount = user.getCurrentClientCount();
+                
+                if (currentCount <= 0) {
+                    log.warn("⚠️ INVALID DECREMENT: User {} already has count {} (≤0), cannot decrement further", userId, currentCount);
+                    if (currentCount < 0) {
+                        user.setCurrentClientCount(0);
+                        updateUser(user);
+                        log.warn("⚠️ CORRECTED: User {} count was negative ({}), reset to 0", userId, currentCount);
+                    }
+                    return;
+                }
+                
+                int newCount = currentCount - 1;
+                user.setCurrentClientCount(newCount);
                 updateUser(user);
-                log.debug("✅ Client count decremented for user {} to {}", userId, user.getCurrentClientCount());
+                
+                log.debug("✅ Client count decremented for user {} from {} to {}", userId, currentCount, newCount);
             } else {
                 log.warn("⚠️ User {} not found in Redis for client count decrement", userId);
             }
         } catch (Exception e) {
             log.error("❌ Error decrementing client count for user {} in Redis: {}", userId, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Reset client count for a user (useful for cleanup/recovery)
+     */
+    public void resetUserClientCount(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            log.warn("❌ Cannot reset client count with null or empty user ID");
+            return;
+        }
+
+        try {
+            ChatUser user = getUser(userId);
+            if (user != null) {
+                int oldCount = user.getCurrentClientCount();
+                user.setCurrentClientCount(0);
+                user.getActiveClients().clear();
+                updateUser(user);
+                
+                log.info("🔄 RESET: User {} client count reset from {} to 0", userId, oldCount);
+            } else {
+                log.debug("📭 User {} not found in Redis for client count reset", userId);
+            }
+        } catch (Exception e) {
+            log.error("❌ Error resetting client count for user {} in Redis: {}", userId, e.getMessage(), e);
         }
     }
 

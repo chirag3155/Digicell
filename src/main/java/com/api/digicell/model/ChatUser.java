@@ -5,6 +5,8 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Data
 public class ChatUser implements Serializable {
@@ -19,6 +21,7 @@ public class ChatUser implements Serializable {
     private boolean offlineRequested;
     private long lastPingTime;
     private Set<String> activeClients = new HashSet<>();
+    private static final Logger log = LoggerFactory.getLogger(ChatUser.class);
 
     public ChatUser() {
         // Default constructor for Redis deserialization
@@ -42,21 +45,70 @@ public class ChatUser implements Serializable {
     public void addClient(String clientId) {
         activeClients.add(clientId);
         this.currentClientCount = activeClients.size(); // Keep count in sync
+        
+        // ✅ FIX: Ensure count is never negative
+        if (this.currentClientCount < 0) {
+            log.warn("⚠️ NEGATIVE COUNT DETECTED in addClient for user {}, resetting to activeClients size: {}", userId, activeClients.size());
+            this.currentClientCount = activeClients.size();
+        }
     }
 
     public void removeClient(String clientId) {
         activeClients.remove(clientId);
         this.currentClientCount = activeClients.size(); // Keep count in sync
+        
+        // ✅ FIX: Ensure count is never negative
+        if (this.currentClientCount < 0) {
+            log.warn("⚠️ NEGATIVE COUNT DETECTED in removeClient for user {}, resetting to 0", userId);
+            this.currentClientCount = 0;
+            activeClients.clear(); // Clear set if count is inconsistent
+        }
     }
 
     public void incrementClientCount() {
         this.currentClientCount++;
+        
+        // ✅ FIX: Validate increment result
+        if (this.currentClientCount < 0) {
+            log.warn("⚠️ NEGATIVE COUNT AFTER INCREMENT for user {}, resetting to 1", userId);
+            this.currentClientCount = 1;
+        }
     }
 
     public void decrementClientCount() {
         if (this.currentClientCount > 0) {
             this.currentClientCount--;
+        } else {
+            // ✅ FIX: Log warning for invalid decrement attempts
+            log.warn("⚠️ INVALID DECREMENT ATTEMPT for user {} - count is already {}", userId, this.currentClientCount);
+            this.currentClientCount = 0; // Ensure it stays at 0
         }
+    }
+    
+    /**
+     * ✅ NEW: Synchronize count with active clients set
+     */
+    public void synchronizeClientCount() {
+        int actualCount = activeClients.size();
+        if (this.currentClientCount != actualCount) {
+            log.warn("⚠️ COUNT MISMATCH for user {}: stored={}, actual={}, correcting to actual", 
+                    userId, this.currentClientCount, actualCount);
+            this.currentClientCount = actualCount;
+        }
+    }
+    
+    /**
+     * ✅ NEW: Validate and fix any count inconsistencies
+     */
+    public void validateAndFixCount() {
+        if (this.currentClientCount < 0) {
+            log.warn("⚠️ NEGATIVE COUNT DETECTED for user {}: {}, resetting to 0", userId, this.currentClientCount);
+            this.currentClientCount = 0;
+            activeClients.clear();
+        }
+        
+        // Ensure count matches active clients
+        synchronizeClientCount();
     }
 
     public Set<String> getActiveClients() {
