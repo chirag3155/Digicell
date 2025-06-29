@@ -154,18 +154,13 @@ public class RedisUserService {
                 user.setLastPingTime(System.currentTimeMillis());
             }
             
-            // Handle activeConversations set (new field name) or activeClients (legacy field name)
+            // Handle activeConversations set
             Object activeConversationsObj = map.get("activeConversations");
-            Object activeClientsObj = map.get("activeClients"); // Legacy field name
             
             java.util.Set<String> activeConversations = new java.util.HashSet<>();
             
             if (activeConversationsObj instanceof java.util.List) {
                 activeConversations = new java.util.HashSet<>((java.util.List<String>) activeConversationsObj);
-            } else if (activeClientsObj instanceof java.util.List) {
-                // Handle legacy field name for backward compatibility
-                activeConversations = new java.util.HashSet<>((java.util.List<String>) activeClientsObj);
-                log.debug("📋 Migrating legacy activeClients field to activeConversations for user {}", user.getUserId());
             }
             
             user.setActiveConversations(activeConversations);

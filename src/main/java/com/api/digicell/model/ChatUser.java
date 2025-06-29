@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Data
 public class ChatUser implements Serializable {
@@ -20,6 +21,7 @@ public class ChatUser implements Serializable {
     private int currentClientCount;
     private boolean offlineRequested;
     private long lastPingTime;
+    @JsonProperty("activeConversations")
     private Set<String> activeConversations = new HashSet<>();
     private static final Logger log = LoggerFactory.getLogger(ChatUser.class);
 
@@ -63,19 +65,6 @@ public class ChatUser implements Serializable {
             this.currentClientCount = 0;
             activeConversations.clear(); // Clear set if count is inconsistent
         }
-    }
-
-    // Keep legacy methods for backward compatibility during transition
-    @Deprecated
-    public void addClient(String clientId) {
-        log.warn("⚠️ DEPRECATED: addClient() called with clientId {}. Use addConversation() with conversationId instead.", clientId);
-        addConversation(clientId);
-    }
-
-    @Deprecated
-    public void removeClient(String clientId) {
-        log.warn("⚠️ DEPRECATED: removeClient() called with clientId {}. Use removeConversation() with conversationId instead.", clientId);
-        removeConversation(clientId);
     }
 
     public void incrementClientCount() {
@@ -128,11 +117,25 @@ public class ChatUser implements Serializable {
         return activeConversations;
     }
 
-    // Keep legacy getter for backward compatibility during transition
-    @Deprecated
-    public Set<String> getActiveClients() {
-        log.warn("⚠️ DEPRECATED: getActiveClients() called. Use getActiveConversations() instead.");
-        return activeConversations;
+    public void setActiveConversations(Set<String> activeConversations) {
+        this.activeConversations = activeConversations != null ? activeConversations : new HashSet<>();
+    }
+
+    /**
+     * Post-deserialization cleanup to ensure data consistency
+     * This method should be called after loading from Redis to ensure proper migration
+     */
+    public void postDeserializationCleanup() {
+        // Ensure activeConversations is never null
+        if (this.activeConversations == null) {
+            this.activeConversations = new HashSet<>();
+        }
+        
+        // Synchronize the client count with actual conversations
+        synchronizeClientCount();
+        
+        log.debug("✅ Post-deserialization cleanup completed for user {}: {} active conversations", 
+                userId, activeConversations.size());
     }
 
     public static class UserComparator implements Comparator<ChatUser> {

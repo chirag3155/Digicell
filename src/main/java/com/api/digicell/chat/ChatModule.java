@@ -644,8 +644,7 @@ public class ChatModule {
                         pingRequest.getClass().getSimpleName(), pingRequest.getUserId());
                 
                 // Debug socket client details
-                log.info("🔌 Socket client details:");
-                log.info("   Remote address: {}, Session ID: {}, connected: {}, handshake params: {}", socketClient.getRemoteAddress(), socketClient.getSessionId(), socketClient.isChannelOpen(), socketClient.getHandshakeData().getUrlParams());
+                log.info(" 🔌 Socket client details:  Remote address: {}, Session ID: {}, connected: {}, handshake params: {}", socketClient.getRemoteAddress(), socketClient.getSessionId(), socketClient.isChannelOpen(), socketClient.getHandshakeData().getUrlParams());
               
                 
                 
@@ -691,71 +690,111 @@ public class ChatModule {
                 }
 
                 if (user == null) {
-                    // Create new user since not found in Redis
-                    log.info("📭 REDIS: User {} not found in Redis, creating new", userId);
-                    
-                    // ✅ FIX: Recreate user when not found (was completely commented out)
+                    // ⚠️ RECOVERY MODE: User not found in Redis - this should be rare
+                    // Normal flow: go_online creates user, ping maintains user
+                    // This case handles: server restart, Redis flush, network issues
+                    log.warn("🚨 RECOVERY MODE: User {} not found in Redis during ping - this indicates potential issue", userId);
+
+                    // Create new user as recovery fallback
                     user = new ChatUser(userId);
                     user.setOfflineRequested(false);  // Set as online
                     user.updatePingTime();
                     
-                    log.info("✅ Created new user object for ping: {}, last ping time: {}", user.getUserId(), user.getLastPingTime());
+                    // ✅ RECOVERY: Fetch user info from database since go_online data is missing
+                    try {
+                        Long userIdLong = Long.parseLong(userId);
+                        UserAccount userAccount = userRepository.findById(userIdLong).orElse(null);
+                        if (userAccount != null) {
+                            // Populate fields from database as recovery
+                            user.setEmail(userAccount.getEmail());
+                            user.setUserName(userAccount.getUserName());
+                            user.setUserLabel(userAccount.getPhoneNumber()); // Use phone as label for now
+                            log.info("✅ RECOVERY: Enhanced user {} with database info - Email: {}, UserName: {}, Phone: {}", 
+                                    userId, userAccount.getEmail(), userAccount.getUserName(), userAccount.getPhoneNumber());
+                        } else {
+                            log.error("❌ RECOVERY FAILED: User {} not found in database - orphaned user session", userId);
+                        }
+                    } catch (NumberFormatException e) {
+                        log.error("❌ RECOVERY FAILED: Invalid user ID format for database lookup: {}", userId);
+                    } catch (Exception e) {
+                        log.error("❌ RECOVERY FAILED: Could not fetch user info from database: {}", e.getMessage());
+                    }
                     
                     // Store new user in Redis
                     try {
                         redisUserService.addUser(user);
-                        log.info("✅ REDIS: New user {} added to Redis during ping", userId);
+                        log.info("✅ RECOVERY: User {} added to Redis during ping recovery", userId);
                     } catch (Exception redisError) {
-                        log.warn("⚠️ REDIS: Failed to add new user to Redis during ping: {}", redisError.getMessage());
-                    }
-                    
-                    log.info("🏢 Adding user to relevant tenant pools...");
-                    // Add user to relevant tenant pools for efficient assignment
-                    addUserToTenantPools(userId);
-                    log.info("✅ User added to tenant pools");
-                    
-                    // Update user in Redis after modifications
-                    try {
-                        redisUserService.updateUser(user);
-                        log.debug("✅ Updated user {} in Redis after ping setup", userId);
-                    } catch (Exception e) {
-                        log.warn("⚠️ Could not update user {} in Redis after ping setup: {}", userId, e.getMessage());
+                        log.warn("⚠️ RECOVERY: Failed to add user to Redis during ping recovery: {}", redisError.getMessage());
                     }
                     
                     // Update user status in database
                     try {
-                        log.info("💾 Updating user status to ONLINE in database...");
+                    
                         Long userIdLong = Long.parseLong(userId);
                         userAccountService.setUserONLINE(userIdLong);
-                        log.info("✅ User {} status set to ONLINE in database", userId);
+                        log.info("✅ RECOVERY: User {} status set to ONLINE in database", userId);
                     } catch (NumberFormatException e) {
-                        log.error("❌ Invalid user ID format for database update: {}", userId);
+                        log.error("❌ RECOVERY: Invalid user ID format for database update: {}", userId);
                     } catch (Exception e) {
-                        log.warn("⚠️ Could not update user status in database: {}", e.getMessage());
+                        log.warn("⚠️ RECOVERY: Could not update user status in database: {}", e.getMessage());
                     }
+                    
+                    log.info("🔄 RECOVERY: Created fallback user object - UserId: {}, Email: {}, UserName: {}", 
+                            user.getUserId(), user.getEmail(), user.getUserName());
                 } else {
-                    log.info("🔄 Existing user found, updating ping time...");
+                    log.debug("🔄 Existing user found, updating ping time...");
                     // User already exists, just update ping time
                     user.updatePingTime();
-                    addUserToTenantPools(userId);
-                    log.info("✅ get ping for user: {}, last ping time: {}", user.getUserId(), user.getLastPingTime());
-                    
-                    // REDIS IMPLEMENTATION - Update user ping time in Redis
-                    log.info("💾 REDIS: Updating user ping time in Redis...");
-                    try {
-                        redisUserService.updateUser(user);
-                        log.info("✅ REDIS: User {} ping time updated in Redis", userId);
-                    } catch (Exception redisError) {
-                        log.warn("⚠️ REDIS: Failed to update user ping time in Redis: {}", redisError.getMessage());
-                        // Continue with in-memory operation
-                    }
                 }
 
-            
-                // Send pong response
-                socketClient.sendEvent(SocketConfig.EVENT_PONG, "pong");
-                log.info("✅ PONG sent to user: {}", userId);
-            
+                // ✅ Common operations for both new and existing users
+                // Check and populate missing user info from database if needed
+                if (user.getEmail() == null || user.getUserName() == null || user.getUserLabel() == null) {
+                    try {
+                        Long userIdLong = Long.parseLong(userId);
+                        UserAccount userAccount = userRepository.findById(userIdLong).orElse(null);
+                        if (userAccount != null) {
+                            // Update missing fields from database
+                            if (user.getEmail() == null) {
+                                user.setEmail(userAccount.getEmail());
+                            }
+                            if (user.getUserName() == null) {
+                                user.setUserName(userAccount.getUserName());
+                            }
+                            if (user.getUserLabel() == null) {
+                                user.setUserLabel(userAccount.getPhoneNumber()); // Use phone as label
+                            }
+                            log.info("✅ Updated missing user {} info from database - Email: {}, UserName: {}, Phone: {}", 
+                                    userId, user.getEmail(), user.getUserName(), user.getUserLabel());
+                        } else {
+                            log.warn("⚠️ User {} not found in database for info update", userId);
+                        }
+                    } catch (NumberFormatException e) {
+                        log.warn("⚠️ Invalid user ID format for database info update: {}", userId);
+                    } catch (Exception e) {
+                        log.warn("⚠️ Could not fetch missing user info from database: {}", e.getMessage());
+                    }
+                }
+                
+                addUserToTenantPools(userId);
+                log.debug("✅ Ping processed for user: {}, email: {}, userName: {}, last ping time: {}", 
+                        user.getUserId(), user.getEmail(), user.getUserName(), user.getLastPingTime());
+                
+                // REDIS IMPLEMENTATION - Update user ping time in Redis
+                try {
+                    redisUserService.updateUser(user);
+                    log.debug("✅ REDIS: User {} ping time updated in Redis", userId);
+                } catch (Exception redisError) {
+                    log.warn("⚠️ REDIS: Failed to update user ping time in Redis: {}", redisError.getMessage());
+                    // Continue with in-memory operation
+                }
+
+        
+            // Send pong response
+            socketClient.sendEvent(SocketConfig.EVENT_PONG, "pong");
+            log.info("✅ PONG sent to user: {}", userId);
+        
             } catch (Exception e) {
                 log.error("❌ Error in EVENT_PING processing: {}", e.getMessage(), e);
             }
@@ -838,6 +877,26 @@ public class ChatModule {
                     log.error("❌ Error setting user ONLINE: {}", e.getMessage(), e);
                 }
         
+                // ✅ NEW: Fetch additional user info from database to enrich ChatUser
+                try {
+                    Long userIdLong = Long.parseLong(userId);
+                    UserAccount userAccount = userRepository.findById(userIdLong).orElse(null);
+                    if (userAccount != null) {
+                        // Populate additional fields from database
+                        user.setUserName(userAccount.getUserName());
+                        user.setUserLabel(userAccount.getPhoneNumber()); // Use phone as label for now
+                        
+                    } else {
+                        log.warn("⚠️ User {} not found in database, using basic info only", userId);
+                    }
+                } catch (NumberFormatException e) {
+                    log.warn("⚠️ Invalid user ID format for database lookup: {}", userId);
+                } catch (Exception e) {
+                    log.warn("⚠️ Could not fetch user info from database: {}", e.getMessage());
+                }
+
+                log.info("✅ User {} details updated in GO_ONLINE: email={}, ip={}, userName={}, userLabel={}", 
+                        userId, user.getEmail(), user.getIpAddress(), user.getUserName(), user.getUserLabel());
             } catch (Exception e) {
                 log.error("❌ Error in EVENT_GO_ONLINE processing: {}", e.getMessage(), e);
             }
