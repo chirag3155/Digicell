@@ -726,4 +726,46 @@ public class RedisUserService {
             return false;
         }
     }
+
+    /**
+     * ✅ DEBUG: Get raw Redis data for troubleshooting
+     */
+    public Object getRawUserData(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            log.warn("❌ Cannot get raw data with null or empty userId");
+            return null;
+        }
+
+        try {
+            String key = getUserKey(userId);
+            Object rawData = redisTemplate.opsForValue().get(key);
+            
+            log.info("🔍 DEBUG: Raw Redis data for user {} (key: {}): {}", userId, key, 
+                    rawData != null ? rawData.getClass().getSimpleName() + " - " + rawData.toString() : "null");
+            
+            return rawData;
+        } catch (Exception e) {
+            log.error("❌ Error getting raw data for user {} from Redis: {}", userId, e.getMessage(), e);
+            return null;
+        }
+    }
+    
+    /**
+     * ✅ DEBUG: Check if Redis key exists
+     */
+    public boolean userKeyExists(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            return false;
+        }
+
+        try {
+            String key = getUserKey(userId);
+            Boolean exists = redisTemplate.hasKey(key);
+            log.info("🔍 DEBUG: Redis key existence check - Key: {}, Exists: {}", key, exists);
+            return Boolean.TRUE.equals(exists);
+        } catch (Exception e) {
+            log.error("❌ Error checking key existence for user {} in Redis: {}", userId, e.getMessage(), e);
+            return false;
+        }
+    }
 } 

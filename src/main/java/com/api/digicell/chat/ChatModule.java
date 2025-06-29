@@ -665,56 +665,73 @@ public class ChatModule {
                 // ChatUser user = userMap.get(userId); // COMMENTED OUT - Using Redis instead
                 ChatUser user = null;
                 try {
+                    // ✅ DEBUG: Enhanced Redis debugging
+                    log.info("🔍 DEBUG: Checking Redis for user {} with detailed analysis...", userId);
+                    
+                    // Check if key exists first
+                    boolean keyExists = redisUserService.userKeyExists(userId);
+                    log.info("🔍 DEBUG: Redis key exists: {}", keyExists);
+                    
+                    if (keyExists) {
+                        // Get raw data to see what's actually stored
+                        Object rawData = redisUserService.getRawUserData(userId);
+                        log.info("🔍 DEBUG: Raw data type: {}", rawData != null ? rawData.getClass().getSimpleName() : "null");
+                    }
+                    
+                    // Try to get user normally
                     user = redisUserService.getUser(userId);
+                    log.info("🔍 DEBUG: getUser() result: {}", user != null ? "ChatUser object found" : "null");
+                    
                 } catch (Exception e) {
                     log.warn("⚠️ Could not get user {} from Redis: {}", userId, e.getMessage());
                 }
 
                 if (user == null) {
-                    // log.info("👤 New user detected, creating user object and adding to system...");
-                    
                     // Create new user since not found in Redis
                     log.info("📭 REDIS: User {} not found in Redis, creating new", userId);
-                    // user = new ChatUser(userId);
-                    // user.setOfflineRequested(false);  // Set as online
+                    
+                    // ✅ FIX: Recreate user when not found (was completely commented out)
+                    user = new ChatUser(userId);
+                    user.setOfflineRequested(false);  // Set as online
+                    user.updatePingTime();
+                    
+                    log.info("✅ Created new user object for ping: {}, last ping time: {}", user.getUserId(), user.getLastPingTime());
                     
                     // Store new user in Redis
-                    // try {
-                    //     redisUserService.addUser(user);
-                    //     log.info("✅ REDIS: New user {} added to Redis", userId);
-                    // } catch (Exception redisError) {
-                       
+                    try {
+                        redisUserService.addUser(user);
+                        log.info("✅ REDIS: New user {} added to Redis during ping", userId);
+                    } catch (Exception redisError) {
+                        log.warn("⚠️ REDIS: Failed to add new user to Redis during ping: {}", redisError.getMessage());
+                    }
                     
-                    // user.updatePingTime();
-                    // log.info("✅ get ping for user: {}, last ping time: {}, email: {}, ip: {}", user.getUserId(), user.getLastPingTime(), user.getEmail(), user.getIpAddress());
+                    log.info("🏢 Adding user to relevant tenant pools...");
+                    // Add user to relevant tenant pools for efficient assignment
+                    addUserToTenantPools(userId);
+                    log.info("✅ User added to tenant pools");
                     
-                    // log.info("🏢 Adding user to relevant tenant pools...");
-                    // // Add user to relevant tenant pools for efficient assignment
-                    // addUserToTenantPools(userId);
-                    // log.info("✅ User added to tenant pools");
-                    
-                    // // Update user in Redis after modifications
-                    // try {
-                    //     redisUserService.updateUser(user);
-                    //     log.debug("✅ Updated user {} in Redis after ping", userId);
-                    // } catch (Exception e) {
-                    //     log.warn("⚠️ Could not update user {} in Redis: {}", userId, e.getMessage());
-                    // }
-                    
-                    // log.info("userMap: {}", userMap); // COMMENTED OUT - Using Redis instead
+                    // Update user in Redis after modifications
+                    try {
+                        redisUserService.updateUser(user);
+                        log.debug("✅ Updated user {} in Redis after ping setup", userId);
+                    } catch (Exception e) {
+                        log.warn("⚠️ Could not update user {} in Redis after ping setup: {}", userId, e.getMessage());
+                    }
                     
                     // Update user status in database
-                    // try {
-                    //     log.info("💾 Updating user status to ONLINE in database...");
-                    //     Long userIdLong = Long.parseLong(userId);
-                    //     // userAccountService.setUserONLINE(userIdLong);
-                    //     log.info("✅ User {} status set to ONLINE in database", userId);
-                    // } catch (NumberFormatException e) {
-                    //     log.error("❌ Invalid user ID format for database update: {}", userId);
-                    // }
+                    try {
+                        log.info("💾 Updating user status to ONLINE in database...");
+                        Long userIdLong = Long.parseLong(userId);
+                        userAccountService.setUserONLINE(userIdLong);
+                        log.info("✅ User {} status set to ONLINE in database", userId);
+                    } catch (NumberFormatException e) {
+                        log.error("❌ Invalid user ID format for database update: {}", userId);
+                    } catch (Exception e) {
+                        log.warn("⚠️ Could not update user status in database: {}", e.getMessage());
+                    }
                 } else {
                     log.info("🔄 Existing user found, updating ping time...");
-                    // User already in queue, just update ping time
+                    // User already exists, just update ping time
                     user.updatePingTime();
                     addUserToTenantPools(userId);
                     log.info("✅ get ping for user: {}, last ping time: {}", user.getUserId(), user.getLastPingTime());
