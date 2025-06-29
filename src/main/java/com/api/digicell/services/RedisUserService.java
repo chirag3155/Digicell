@@ -1,14 +1,18 @@
 package com.api.digicell.services;
 
 import com.api.digicell.model.ChatUser;
+import com.api.digicell.model.ChatRoom;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
+import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.HashMap;
 
 @Service
 @Slf4j
@@ -16,6 +20,8 @@ public class RedisUserService {
 
     private static final String USER_KEY_PREFIX = "chat:user:";
     private static final String USER_SOCKET_PREFIX = "chat:users:socket";
+    private static final String ROOM_KEY_PREFIX = "chat:room:";
+    private static final String TENANT_POOL_PREFIX = "chat:tenant:pool:";
     private static final long DEFAULT_TTL_HOURS = 24; // 24 hours TTL for user data
 
     @Autowired
@@ -230,5 +236,429 @@ public class RedisUserService {
      */
     private String getUserSocketKey(String userId) {
         return USER_SOCKET_PREFIX + ":" + userId;
+    }
+
+    // ===== CHAT ROOM OPERATIONS =====
+
+    /**
+     * Add a ChatRoom to Redis
+     */
+    public void addChatRoom(ChatRoom chatRoom) {
+        if (chatRoom == null || chatRoom.getConversationId() == null) {
+            log.warn("❌ Cannot add null chat room or room with null conversation ID");
+            return;
+        }
+
+        try {
+            String key = getRoomKey(chatRoom.getConversationId());
+            redisTemplate.opsForValue().set(key, chatRoom, DEFAULT_TTL_HOURS, TimeUnit.HOURS);
+            log.debug("✅ Chat room {} added to Redis with TTL {} hours", chatRoom.getConversationId(), DEFAULT_TTL_HOURS);
+        } catch (Exception e) {
+            log.error("❌ Error adding chat room {} to Redis: {}", chatRoom.getConversationId(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Update a ChatRoom in Redis
+     */
+    public void updateChatRoom(ChatRoom chatRoom) {
+        if (chatRoom == null || chatRoom.getConversationId() == null) {
+            log.warn("❌ Cannot update null chat room or room with null conversation ID");
+            return;
+        }
+
+        try {
+            String key = getRoomKey(chatRoom.getConversationId());
+            redisTemplate.opsForValue().set(key, chatRoom, DEFAULT_TTL_HOURS, TimeUnit.HOURS);
+            log.debug("✅ Chat room {} updated in Redis", chatRoom.getConversationId());
+        } catch (Exception e) {
+            log.error("❌ Error updating chat room {} in Redis: {}", chatRoom.getConversationId(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Get a ChatRoom from Redis by conversation ID
+     */
+    public ChatRoom getChatRoom(String conversationId) {
+        if (conversationId == null || conversationId.trim().isEmpty()) {
+            log.warn("❌ Cannot get chat room with null or empty conversation ID");
+            return null;
+        }
+
+        try {
+            String key = getRoomKey(conversationId);
+            Object roomObj = redisTemplate.opsForValue().get(key);
+            
+            if (roomObj instanceof ChatRoom) {
+                ChatRoom chatRoom = (ChatRoom) roomObj;
+                log.debug("✅ Chat room {} retrieved from Redis", conversationId);
+                return chatRoom;
+            } else {
+                log.debug("📭 Chat room {} not found in Redis", conversationId);
+                return null;
+            }
+        } catch (Exception e) {
+            log.error("❌ Error retrieving chat room {} from Redis: {}", conversationId, e.getMessage(), e);
+            return null;
+        }
+    }
+
+    /**
+     * Delete a ChatRoom from Redis
+     */
+    public boolean deleteChatRoom(String conversationId) {
+        if (conversationId == null || conversationId.trim().isEmpty()) {
+            log.warn("❌ Cannot delete chat room with null or empty conversation ID");
+            return false;
+        }
+
+        try {
+            String key = getRoomKey(conversationId);
+            Boolean deleted = redisTemplate.delete(key);
+            
+            if (Boolean.TRUE.equals(deleted)) {
+                log.debug("✅ Chat room {} deleted from Redis", conversationId);
+                return true;
+            } else {
+                log.debug("📭 Chat room {} was not found in Redis for deletion", conversationId);
+                return false;
+            }
+        } catch (Exception e) {
+            log.error("❌ Error deleting chat room {} from Redis: {}", conversationId, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    /**
+     * Get all chat room IDs currently stored in Redis
+     */
+    public Set<String> getAllChatRoomIds() {
+        try {
+            Set<String> keys = redisTemplate.keys(ROOM_KEY_PREFIX + "*");
+            if (keys != null) {
+                return keys.stream()
+                        .map(key -> key.substring(ROOM_KEY_PREFIX.length()))
+                        .collect(Collectors.toSet());
+            }
+            return Set.of();
+        } catch (Exception e) {
+            log.error("❌ Error getting all chat room IDs from Redis: {}", e.getMessage(), e);
+            return Set.of();
+        }
+    }
+
+    /**
+     * Get all ChatRooms currently stored in Redis
+     */
+    public Set<ChatRoom> getAllChatRooms() {
+        try {
+            Set<String> roomIds = getAllChatRoomIds();
+            Set<ChatRoom> chatRooms = new HashSet<>();
+            
+            for (String roomId : roomIds) {
+                ChatRoom room = getChatRoom(roomId);
+                if (room != null) {
+                    chatRooms.add(room);
+                }
+            }
+            
+            return chatRooms;
+        } catch (Exception e) {
+            log.error("❌ Error getting all chat rooms from Redis: {}", e.getMessage(), e);
+            return Set.of();
+        }
+    }
+
+    /**
+     * Generate Redis key for chat room
+     */
+    private String getRoomKey(String conversationId) {
+        return ROOM_KEY_PREFIX + conversationId;
+    }
+
+    // ===== TENANT USER POOL OPERATIONS =====
+
+    /**
+     * Add a user to a tenant pool
+     */
+    public void addUserToTenantPool(String tenantId, String userId) {
+        if (tenantId == null || tenantId.trim().isEmpty() || userId == null || userId.trim().isEmpty()) {
+            log.warn("❌ Cannot add user to tenant pool with null or empty tenant ID or user ID");
+            return;
+        }
+
+        try {
+            String key = getTenantPoolKey(tenantId);
+            redisTemplate.opsForSet().add(key, userId);
+            redisTemplate.expire(key, DEFAULT_TTL_HOURS, TimeUnit.HOURS);
+            log.debug("✅ User {} added to tenant pool {}", userId, tenantId);
+        } catch (Exception e) {
+            log.error("❌ Error adding user {} to tenant pool {} in Redis: {}", userId, tenantId, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Remove a user from a tenant pool
+     */
+    public boolean removeUserFromTenantPool(String tenantId, String userId) {
+        if (tenantId == null || tenantId.trim().isEmpty() || userId == null || userId.trim().isEmpty()) {
+            log.warn("❌ Cannot remove user from tenant pool with null or empty tenant ID or user ID");
+            return false;
+        }
+
+        try {
+            String key = getTenantPoolKey(tenantId);
+            Long removed = redisTemplate.opsForSet().remove(key, userId);
+            
+            if (removed != null && removed > 0) {
+                log.debug("✅ User {} removed from tenant pool {}", userId, tenantId);
+                return true;
+            } else {
+                log.debug("📭 User {} was not found in tenant pool {} for removal", userId, tenantId);
+                return false;
+            }
+        } catch (Exception e) {
+            log.error("❌ Error removing user {} from tenant pool {} in Redis: {}", userId, tenantId, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    /**
+     * Remove a user from all tenant pools
+     */
+    public void removeUserFromAllTenantPools(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            log.warn("❌ Cannot remove user from all tenant pools with null or empty user ID");
+            return;
+        }
+
+        try {
+            Set<String> tenantIds = getAllTenantIds();
+            for (String tenantId : tenantIds) {
+                removeUserFromTenantPool(tenantId, userId);
+            }
+            log.debug("✅ User {} removed from all tenant pools", userId);
+        } catch (Exception e) {
+            log.error("❌ Error removing user {} from all tenant pools in Redis: {}", userId, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Get all users in a tenant pool
+     */
+    public Set<String> getTenantPoolUsers(String tenantId) {
+        if (tenantId == null || tenantId.trim().isEmpty()) {
+            log.warn("❌ Cannot get tenant pool users with null or empty tenant ID");
+            return Set.of();
+        }
+
+        try {
+            String key = getTenantPoolKey(tenantId);
+            Set<Object> members = redisTemplate.opsForSet().members(key);
+            
+            if (members != null) {
+                return members.stream()
+                        .map(Object::toString)
+                        .collect(Collectors.toSet());
+            }
+            return Set.of();
+        } catch (Exception e) {
+            log.error("❌ Error getting users for tenant pool {} from Redis: {}", tenantId, e.getMessage(), e);
+            return Set.of();
+        }
+    }
+
+    /**
+     * Get all tenant IDs that have user pools
+     */
+    public Set<String> getAllTenantIds() {
+        try {
+            Set<String> keys = redisTemplate.keys(TENANT_POOL_PREFIX + "*");
+            if (keys != null) {
+                return keys.stream()
+                        .map(key -> key.substring(TENANT_POOL_PREFIX.length()))
+                        .collect(Collectors.toSet());
+            }
+            return Set.of();
+        } catch (Exception e) {
+            log.error("❌ Error getting all tenant IDs from Redis: {}", e.getMessage(), e);
+            return Set.of();
+        }
+    }
+
+    /**
+     * Check if tenant pool is empty
+     */
+    public boolean isTenantPoolEmpty(String tenantId) {
+        if (tenantId == null || tenantId.trim().isEmpty()) {
+            return true;
+        }
+
+        try {
+            String key = getTenantPoolKey(tenantId);
+            Long size = redisTemplate.opsForSet().size(key);
+            return size == null || size == 0;
+        } catch (Exception e) {
+            log.error("❌ Error checking if tenant pool {} is empty in Redis: {}", tenantId, e.getMessage(), e);
+            return true;
+        }
+    }
+
+    /**
+     * Get size of tenant pool
+     */
+    public long getTenantPoolSize(String tenantId) {
+        if (tenantId == null || tenantId.trim().isEmpty()) {
+            return 0;
+        }
+
+        try {
+            String key = getTenantPoolKey(tenantId);
+            Long size = redisTemplate.opsForSet().size(key);
+            return size != null ? size : 0;
+        } catch (Exception e) {
+            log.error("❌ Error getting tenant pool {} size from Redis: {}", tenantId, e.getMessage(), e);
+            return 0;
+        }
+    }
+
+    /**
+     * Generate Redis key for tenant pool
+     */
+    private String getTenantPoolKey(String tenantId) {
+        return TENANT_POOL_PREFIX + tenantId;
+    }
+
+    // ===== USER CLIENT COUNT OPERATIONS (using user data) =====
+
+    /**
+     * Get current client count for a user from user data
+     */
+    public int getUserClientCount(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            log.warn("❌ Cannot get client count with null or empty user ID");
+            return 0;
+        }
+
+        try {
+            ChatUser user = getUser(userId);
+            if (user != null) {
+                return user.getCurrentClientCount();
+            } else {
+                log.debug("📭 User {} not found in Redis for client count", userId);
+                return 0;
+            }
+        } catch (Exception e) {
+            log.error("❌ Error getting client count for user {} from Redis: {}", userId, e.getMessage(), e);
+            return 0;
+        }
+    }
+
+    /**
+     * Increment client count for a user
+     */
+    public void incrementUserClientCount(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            log.warn("❌ Cannot increment client count with null or empty user ID");
+            return;
+        }
+
+        try {
+            ChatUser user = getUser(userId);
+            if (user != null) {
+                user.incrementClientCount();
+                updateUser(user);
+                log.debug("✅ Client count incremented for user {} to {}", userId, user.getCurrentClientCount());
+            } else {
+                log.warn("⚠️ User {} not found in Redis for client count increment", userId);
+            }
+        } catch (Exception e) {
+            log.error("❌ Error incrementing client count for user {} in Redis: {}", userId, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Decrement client count for a user
+     */
+    public void decrementUserClientCount(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            log.warn("❌ Cannot decrement client count with null or empty user ID");
+            return;
+        }
+
+        try {
+            ChatUser user = getUser(userId);
+            if (user != null) {
+                user.decrementClientCount();
+                updateUser(user);
+                log.debug("✅ Client count decremented for user {} to {}", userId, user.getCurrentClientCount());
+            } else {
+                log.warn("⚠️ User {} not found in Redis for client count decrement", userId);
+            }
+        } catch (Exception e) {
+            log.error("❌ Error decrementing client count for user {} in Redis: {}", userId, e.getMessage(), e);
+        }
+    }
+
+    // ===== CONVERSATION RECOVERY OPERATIONS =====
+
+    /**
+     * Get all active chat rooms with their user mappings (for recovery after restart)
+     */
+    public Map<String, String> getAllActiveConversationUserMappings() {
+        try {
+            Map<String, String> conversationUserMap = new HashMap<>();
+            Set<String> roomIds = getAllChatRoomIds();
+            
+            for (String conversationId : roomIds) {
+                ChatRoom room = getChatRoom(conversationId);
+                if (room != null && room.isActive()) {
+                    conversationUserMap.put(conversationId, room.getUserId());
+                }
+            }
+            
+            log.info("✅ Retrieved {} active conversation-user mappings from Redis", conversationUserMap.size());
+            return conversationUserMap;
+        } catch (Exception e) {
+            log.error("❌ Error getting active conversation-user mappings from Redis: {}", e.getMessage(), e);
+            return new HashMap<>();
+        }
+    }
+
+    /**
+     * Get all active conversations grouped by user (for recovery after restart)
+     */
+    public Map<String, Set<String>> getAllUserActiveConversations() {
+        try {
+            Map<String, Set<String>> userConversationsMap = new HashMap<>();
+            Set<String> roomIds = getAllChatRoomIds();
+            
+            for (String conversationId : roomIds) {
+                ChatRoom room = getChatRoom(conversationId);
+                if (room != null && room.isActive()) {
+                    String userId = room.getUserId();
+                    userConversationsMap.computeIfAbsent(userId, k -> new HashSet<>()).add(conversationId);
+                }
+            }
+            
+            log.info("✅ Retrieved active conversations for {} users from Redis", userConversationsMap.size());
+            return userConversationsMap;
+        } catch (Exception e) {
+            log.error("❌ Error getting user active conversations from Redis: {}", e.getMessage(), e);
+            return new HashMap<>();
+        }
+    }
+
+    /**
+     * Check if a conversation is still active in Redis
+     */
+    public boolean isConversationActive(String conversationId) {
+        try {
+            ChatRoom room = getChatRoom(conversationId);
+            return room != null && room.isActive();
+        } catch (Exception e) {
+            log.error("❌ Error checking if conversation {} is active: {}", conversationId, e.getMessage(), e);
+            return false;
+        }
     }
 } 

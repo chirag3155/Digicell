@@ -41,10 +41,22 @@ public class ChatUser implements Serializable {
 
     public void addClient(String clientId) {
         activeClients.add(clientId);
+        this.currentClientCount = activeClients.size(); // Keep count in sync
     }
 
     public void removeClient(String clientId) {
         activeClients.remove(clientId);
+        this.currentClientCount = activeClients.size(); // Keep count in sync
+    }
+
+    public void incrementClientCount() {
+        this.currentClientCount++;
+    }
+
+    public void decrementClientCount() {
+        if (this.currentClientCount > 0) {
+            this.currentClientCount--;
+        }
     }
 
     public Set<String> getActiveClients() {

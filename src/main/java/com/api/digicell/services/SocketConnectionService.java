@@ -58,6 +58,9 @@ public class SocketConnectionService {
                 conversationPreservationTimeoutMinutes);
         log.info("🔧 Cleanup interval: {} minutes", cleanupIntervalMinutes);
         
+        // 🔄 RECOVERY: Rebuild conversation tracking from Redis after restart
+        recoverConversationTrackingFromRedis();
+        
         // Start the periodic cleanup task
         cleanupScheduler.scheduleAtFixedRate(
             this::cleanupExpiredConversations,
@@ -65,7 +68,17 @@ public class SocketConnectionService {
             cleanupIntervalMinutes,
             TimeUnit.MINUTES
         );
+        
+        // Start periodic validation task (every 5 minutes)
+        cleanupScheduler.scheduleAtFixedRate(
+            this::validateAndCleanupStaleConversations,
+            5, // Initial delay
+            5, // Period
+            TimeUnit.MINUTES
+        );
+        
         log.info("✅ Conversation cleanup scheduler started");
+        log.info("✅ Conversation validation scheduler started (every 5 minutes)");
     }
     
     @PreDestroy
@@ -744,5 +757,106 @@ public class SocketConnectionService {
             log.info("🔄 User {} had preserved conversations - restoration needed", userId);
         }
         return hadPreservedConversations;
+    }
+
+    /**
+     * 🔄 RECOVERY METHOD: Rebuild in-memory conversation tracking from Redis data
+     * This handles the case where the application restarts and loses in-memory maps
+     */
+    private void recoverConversationTrackingFromRedis() {
+        log.info("🔄 RECOVERY: Starting conversation tracking recovery from Redis...");
+        
+        try {
+            // Get all active conversations from Redis
+            Map<String, Set<String>> redisUserConversations = redisUserService.getAllUserActiveConversations();
+            Map<String, String> redisConversationUserMap = redisUserService.getAllActiveConversationUserMappings();
+            
+            if (redisUserConversations.isEmpty() && redisConversationUserMap.isEmpty()) {
+                log.info("📭 RECOVERY: No active conversations found in Redis - clean startup");
+                return;
+            }
+            
+            log.info("🔄 RECOVERY: Found {} users with active conversations in Redis", redisUserConversations.size());
+            log.info("🔄 RECOVERY: Found {} total active conversations in Redis", redisConversationUserMap.size());
+            
+            // Rebuild userActiveConversations map
+            userActiveConversations.clear();
+            userActiveConversations.putAll(redisUserConversations);
+            
+            // Rebuild conversationToUserMap
+            conversationToUserMap.clear();
+            conversationToUserMap.putAll(redisConversationUserMap);
+            
+            // Log recovery results
+            int totalRecoveredConversations = conversationToUserMap.size();
+            int usersWithConversations = userActiveConversations.size();
+            
+            log.info("✅ RECOVERY COMPLETED:");
+            log.info("   📊 Recovered {} active conversations", totalRecoveredConversations);
+            log.info("   👥 Recovered conversation tracking for {} users", usersWithConversations);
+            
+            // Log detailed recovery info
+            userActiveConversations.forEach((userId, conversations) -> {
+                log.info("   🔄 User {} → {} conversations: {}", userId, conversations.size(), conversations);
+            });
+            
+            log.info("🎯 RECOVERY: Conversation tracking fully restored from Redis");
+            
+        } catch (Exception e) {
+            log.error("❌ RECOVERY FAILED: Error recovering conversation tracking from Redis: {}", e.getMessage(), e);
+            log.warn("⚠️ RECOVERY: Application will continue with empty conversation tracking");
+            log.warn("⚠️ RECOVERY: Users may need to reconnect to restore conversation tracking");
+        }
+    }
+
+    /**
+     * 🧹 VALIDATION: Clean up stale conversations that exist in memory but not in Redis
+     * This can happen if Redis data was cleaned up while application was running
+     */
+    public void validateAndCleanupStaleConversations() {
+        log.info("🧹 VALIDATION: Starting stale conversation cleanup...");
+        
+        try {
+            Set<String> staleConversations = new HashSet<>();
+            
+            // Check each conversation in memory against Redis
+            for (String conversationId : conversationToUserMap.keySet()) {
+                if (!redisUserService.isConversationActive(conversationId)) {
+                    staleConversations.add(conversationId);
+                    log.warn("🗑️ STALE: Conversation {} exists in memory but not active in Redis", conversationId);
+                }
+            }
+            
+            if (staleConversations.isEmpty()) {
+                log.info("✅ VALIDATION: No stale conversations found - all in-memory data is valid");
+                return;
+            }
+            
+            log.info("🧹 VALIDATION: Found {} stale conversations to clean up", staleConversations.size());
+            
+            // Clean up stale conversations
+            for (String staleConversationId : staleConversations) {
+                String userId = conversationToUserMap.get(staleConversationId);
+                if (userId != null) {
+                    log.info("🗑️ CLEANUP: Removing stale conversation {} for user {}", staleConversationId, userId);
+                    removeUserConversation(userId, staleConversationId);
+                }
+            }
+            
+            log.info("✅ VALIDATION: Stale conversation cleanup completed");
+            
+        } catch (Exception e) {
+            log.error("❌ VALIDATION FAILED: Error during stale conversation cleanup: {}", e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 🔄 PUBLIC METHOD: Force conversation tracking recovery (can be called manually)
+     */
+    public void forceConversationTrackingRecovery() {
+        log.info("🔄 MANUAL RECOVERY: Force conversation tracking recovery requested");
+        recoverConversationTrackingFromRedis();
+        validateAndCleanupStaleConversations();
+        log.info("✅ MANUAL RECOVERY: Force recovery completed");
     }
 } 

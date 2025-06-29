@@ -1,13 +1,15 @@
 package com.api.digicell.model;
 
 import lombok.Data;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @Data
-public class ChatRoom {
+public class ChatRoom implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String conversationId;
     private String userId;
     private String clientId;
@@ -17,6 +19,10 @@ public class ChatRoom {
     private LocalDateTime endTime;
     private List<ChatMessage> messages;
     private boolean isActive;
+
+    public ChatRoom() {
+        // Default constructor for serialization
+    }
 
     public ChatRoom(String conversationId, String userId, String clientId, String summary, String history) {
         this.conversationId = conversationId;

@@ -56,8 +56,8 @@ import java.util.UUID;
 @Component
 public class ChatModule {
     private final SocketIOServer server;
-    // private static Map<String, ChatUser> userMap;
-    private final Map<String, ChatRoom> chatRooms;
+    // private static Map<String, ChatUser> userMap; // COMMENTED OUT - Using Redis instead
+    // private final Map<String, ChatRoom> chatRooms; // COMMENTED OUT - Using Redis instead
     private final UserAccountService userAccountService;
     private final SocketConfig socketConfig;
     private final SocketConnectionService connectionService;
@@ -89,9 +89,9 @@ public class ChatModule {
     @Value("${socket.ssl.key-store-password:}")
     private String keyStorePassword;
 
-    // Tenant-aware user pools for efficient assignment
-    private final Map<String, Set<String>> tenantUserPools = new ConcurrentHashMap<>();
-    private final Map<String, AtomicInteger> userClientCounts = new ConcurrentHashMap<>();
+    // COMMENTED OUT - Using Redis instead
+    // private final Map<String, Set<String>> tenantUserPools = new ConcurrentHashMap<>();
+    // private final Map<String, AtomicInteger> userClientCounts = new ConcurrentHashMap<>();
 
     public ChatModule(UserAccountService userAccountService, SocketConfig socketConfig, SocketConnectionService connectionService, 
                      ClientRepository clientRepository, ConversationRepository conversationRepository, UserRepository userRepository, Environment environment, UserOrgPermissionsRepository userOrgPermissionsRepository, TaskScheduler taskScheduler, ZendeskService zendeskService, RedisUserService redisUserService) {
@@ -182,10 +182,10 @@ public class ChatModule {
         log.info("🖥️ CREATING SOCKET.IO SERVER - Initializing server with configuration...");
         this.server = new SocketIOServer(config);
         
-        log.info("🗂️ INITIALIZING DATA STRUCTURES - Creating concurrent hash maps...");
+        log.info("🗂️ INITIALIZING DATA STRUCTURES - Using Redis instead of in-memory maps...");
 
         // this.userMap = new ConcurrentHashMap<>(); // COMMENTED OUT - Using Redis instead
-        this.chatRooms = new ConcurrentHashMap<>();
+        // this.chatRooms = new ConcurrentHashMap<>(); // COMMENTED OUT - Using Redis instead
         
         log.info("🔗 ASSIGNING DEPENDENCIES - Linking service dependencies...");
         this.userAccountService = userAccountService;
@@ -287,10 +287,11 @@ public class ChatModule {
                 // log.info("📈 Current system status - Active Rooms: {}, Total Online Users: {}", chatRooms.size(), userMap.size()); // COMMENTED OUT - Using Redis instead
                 try {
                     int totalOnlineUsers = redisUserService.getAllUserIds().size();
-                    log.info("📈 Current system status - Active Rooms: {}, Total Online Users: {}", chatRooms.size(), totalOnlineUsers);
+                    int totalActiveRooms = redisUserService.getAllChatRoomIds().size();
+                    log.info("📈 Current system status - Active Rooms: {}, Total Online Users: {}", totalActiveRooms, totalOnlineUsers);
                 } catch (Exception e) {
-                    log.warn("⚠️ Could not get total online users from Redis: {}", e.getMessage());
-                    log.info("📈 Current system status - Active Rooms: {}", chatRooms.size());
+                    log.warn("⚠️ Could not get total online users or rooms from Redis: {}", e.getMessage());
+                    log.info("📈 Current system status - Redis unavailable");
                 }
                 
                 log.info("🔄 Delegating to handleUserRequest for conversation assignment...");
@@ -313,7 +314,13 @@ public class ChatModule {
             
             log.info("🔍 Looking up chat room for conversation: {}", conversationId);
             // Store the message
-            ChatRoom chatRoom = chatRooms.get(conversationId);
+            // ChatRoom chatRoom = chatRooms.get(conversationId); // COMMENTED OUT - Using Redis instead
+            ChatRoom chatRoom = null;
+            try {
+                chatRoom = redisUserService.getChatRoom(conversationId);
+            } catch (Exception e) {
+                log.warn("⚠️ Could not get chat room {} from Redis: {}", conversationId, e.getMessage());
+            }
             if (chatRoom != null) {
                 log.info("✅ Chat room found - Room User: {}, Room Client: {}", chatRoom.getUserId(), chatRoom.getClientId());
                 
@@ -330,6 +337,14 @@ public class ChatModule {
                 message.setRole("client");
                 chatRoom.addMessage(message);
                 log.info("✅ Message stored in chat room, Total messages: {}", chatRoom.getMessages().size());
+                
+                // Update chat room in Redis
+                try {
+                    redisUserService.updateChatRoom(chatRoom);
+                    log.debug("✅ Updated chat room {} in Redis", conversationId);
+                } catch (Exception e) {
+                    log.warn("⚠️ Could not update chat room {} in Redis: {}", conversationId, e.getMessage());
+                }
                 
                 log.info("🔍 Looking up user socket for message forwarding - UserId: {}", chatRoom.getUserId());
                 // Get the user socket ID and send directly to the user
@@ -374,13 +389,32 @@ public class ChatModule {
                     userResponse.getMessage() != null ? userResponse.getMessage().substring(0, Math.min(100, userResponse.getMessage().length())) + "..." : "null",
                     userResponse.getTimestamp());
             
-            log.info("Active Chat Rooms ({} total):", chatRooms.size());
-            chatRooms.forEach((roomId, chatRoom) -> {
-                log.info("   Room: {} -> User: {}, Client: {}, Active: {}", roomId, chatRoom.getUserId(), chatRoom.getClientId(), chatRoom.isActive());
-            });
+            // Log active chat rooms from Redis
+            try {
+                Set<String> roomIds = redisUserService.getAllChatRoomIds();
+                log.info("Active Chat Rooms ({} total):", roomIds.size());
+                for (String roomId : roomIds) {
+                    try {
+                        ChatRoom room = redisUserService.getChatRoom(roomId);
+                        if (room != null) {
+                            log.info("   Room: {} -> User: {}, Client: {}, Active: {}", roomId, room.getUserId(), room.getClientId(), room.isActive());
+                        }
+                    } catch (Exception e) {
+                        log.warn("   Could not get details for room {}: {}", roomId, e.getMessage());
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("⚠️ Could not get chat room list from Redis: {}", e.getMessage());
+            }
 
             // Store the message
-            ChatRoom chatRoom = chatRooms.get(conversationId);
+            // ChatRoom chatRoom = chatRooms.get(conversationId); // COMMENTED OUT - Using Redis instead
+            ChatRoom chatRoom = null;
+            try {
+                chatRoom = redisUserService.getChatRoom(conversationId);
+            } catch (Exception e) {
+                log.warn("⚠️ Could not get chat room {} from Redis: {}", conversationId, e.getMessage());
+            }
             if (chatRoom != null) {
                 log.info("✅ Chat room found for user response - Conversation: {}, Room User: {}", conversationId, chatRoom.getUserId());
                 
@@ -396,6 +430,14 @@ public class ChatModule {
                 chatRoom.addMessage(message);
                 
                 log.info("💾 Message stored in chat room, Total messages: {}", chatRoom.getMessages().size());
+                
+                // Update chat room in Redis
+                try {
+                    redisUserService.updateChatRoom(chatRoom);
+                    log.debug("✅ Updated chat room {} in Redis after user response", conversationId);
+                } catch (Exception e) {
+                    log.warn("⚠️ Could not update chat room {} in Redis: {}", conversationId, e.getMessage());
+                }
                 
                 // Forward to chat module with DivineMessage format
                 String chatModuleSocketId = connectionService.getChatModuleSocketId();
@@ -452,7 +494,13 @@ public class ChatModule {
                     decrementUserClientCount(userId);
                     
                     // Remove the chat room
-                    chatRooms.remove(conversationId);
+                    // chatRooms.remove(conversationId); // COMMENTED OUT - Using Redis instead
+                    try {
+                        redisUserService.deleteChatRoom(conversationId);
+                        log.debug("✅ Deleted chat room {} from Redis", conversationId);
+                    } catch (Exception e) {
+                        log.warn("⚠️ Could not delete chat room {} from Redis: {}", conversationId, e.getMessage());
+                    }
                     
                     // Remove conversation from tracking
                     connectionService.removeUserConversation(userId, conversationId);
@@ -530,7 +578,13 @@ public class ChatModule {
                     decrementUserClientCount(userId);
                     
                     // Remove the chat room
-                    chatRooms.remove(conversationId);
+                    // chatRooms.remove(conversationId); // COMMENTED OUT - Using Redis instead
+                    try {
+                        redisUserService.deleteChatRoom(conversationId);
+                        log.debug("✅ Deleted chat room {} from Redis", conversationId);
+                    } catch (Exception e) {
+                        log.warn("⚠️ Could not delete chat room {} from Redis: {}", conversationId, e.getMessage());
+                    }
                     
                     // Remove conversation from tracking
                     connectionService.removeUserConversation(userId, conversationId);
@@ -797,9 +851,17 @@ public class ChatModule {
         
         log.info("🔍 Checking for duplicate conversation ID...");
         // Check if this conversation ID already exists
-        if (chatRooms.containsKey(conversationId)) {
+        // if (chatRooms.containsKey(conversationId)) { // COMMENTED OUT - Using Redis instead
+        ChatRoom existingRoom = null;
+        try {
+            existingRoom = redisUserService.getChatRoom(conversationId);
+        } catch (Exception e) {
+            log.warn("⚠️ Could not check for existing room {} in Redis: {}", conversationId, e.getMessage());
+        }
+        
+        if (existingRoom != null) {
             log.warn("⚠️ DUPLICATE CONVERSATION DETECTED - Conversation {} already exists, rejecting request", conversationId);
-            ChatRoom existingRoom = chatRooms.get(conversationId);
+            // ChatRoom existingRoom = chatRooms.get(conversationId);
             log.info("📋 Existing room details - User: {}, Client: {}, Active: {}", 
                     existingRoom.getUserId(), existingRoom.getClientId(), existingRoom.isActive());
             return;
@@ -835,10 +897,24 @@ public class ChatModule {
         } catch (Exception e) {
             log.warn("⚠️ Could not get online users from Redis: {}", e.getMessage());
         }
-        log.info("🏢 TENANT POOLS DEBUG - Available tenant pools: {}", tenantUserPools.keySet());
-        tenantUserPools.forEach((tenant, users) -> {
-            log.info("   Tenant '{}' has {} users: {}", tenant, users.size(), users);
-        });
+        // log.info("🏢 TENANT POOLS DEBUG - Available tenant pools: {}", tenantUserPools.keySet()); // COMMENTED OUT - Using Redis instead
+        // tenantUserPools.forEach((tenant, users) -> {
+        //     log.info("   Tenant '{}' has {} users: {}", tenant, users.size(), users);
+        // });
+        try {
+            Set<String> tenantIds = redisUserService.getAllTenantIds();
+            log.info("🏢 TENANT POOLS DEBUG - Available tenant pools: {}", tenantIds);
+            for (String currentTenantId : tenantIds) {
+                try {
+                    Set<String> users = redisUserService.getTenantPoolUsers(currentTenantId);
+                    log.info("   Tenant '{}' has {} users: {}", currentTenantId, users.size(), users);
+                } catch (Exception e) {
+                    log.warn("   Could not get users for tenant {}: {}", currentTenantId, e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("⚠️ Could not get tenant pools from Redis: {}", e.getMessage());
+        }
         
         log.info("🎯 Starting efficient tenant-aware user lookup...");
         // Use efficient tenant-aware assignment instead of blocking queue processing
@@ -878,8 +954,13 @@ public class ChatModule {
             log.info("🏠 Creating chat room for conversation...");
             // Create and store the chat room using conversationId as the key
             ChatRoom chatRoom = new ChatRoom(conversationId, user.getUserId(), clientId, summary, history);
-            chatRooms.put(conversationId, chatRoom);
-            log.info("✅ Chat room created and stored - Room ID: {}", conversationId);
+            // chatRooms.put(conversationId, chatRoom); // COMMENTED OUT - Using Redis instead
+            try {
+                redisUserService.addChatRoom(chatRoom);
+                log.info("✅ Chat room created and stored in Redis - Room ID: {}", conversationId);
+            } catch (Exception e) {
+                log.warn("⚠️ Could not store chat room {} in Redis: {}", conversationId, e.getMessage());
+            }
             
             log.info("📊 Tracking conversation for user preservation...");
             // Track this conversation for the user to preserve it during reconnections
@@ -1126,18 +1207,25 @@ public class ChatModule {
     }
 
     private String findUserIdByConversationId(String conversationId) {
-        ChatRoom chatRoom = chatRooms.get(conversationId);
-        return chatRoom != null ? chatRoom.getUserId() : null;
+        // ChatRoom chatRoom = chatRooms.get(conversationId); // COMMENTED OUT - Using Redis instead
+        try {
+            ChatRoom chatRoom = redisUserService.getChatRoom(conversationId);
+            return chatRoom != null ? chatRoom.getUserId() : null;
+        } catch (Exception e) {
+            log.warn("⚠️ Could not get chat room {} from Redis: {}", conversationId, e.getMessage());
+            return null;
+        }
     }
 
     // Helper method to find chat room by conversation ID
     private ChatRoom findChatRoomByConversationId(String conversationId) {
-        for (ChatRoom room : chatRooms.values()) {
-            if (room.getConversationId().equals(conversationId)) {
-                return room;
-            }
+        // for (ChatRoom room : chatRooms.values()) { // COMMENTED OUT - Using Redis instead
+        try {
+            return redisUserService.getChatRoom(conversationId);
+        } catch (Exception e) {
+            log.warn("⚠️ Could not get chat room {} from Redis: {}", conversationId, e.getMessage());
+            return null;
         }
-        return null;
     }
     
     /**
@@ -1307,7 +1395,13 @@ public class ChatModule {
         } catch (Exception e) {
             log.warn("   Could not get total users from Redis: {}", e.getMessage());
         }
-        log.info("   Active chat rooms: {}", chatRooms.size());
+        // log.info("   Active chat rooms: {}", chatRooms.size()); // COMMENTED OUT - Using Redis instead
+        try {
+            int totalActiveRooms = redisUserService.getAllChatRoomIds().size();
+            log.info("   Active chat rooms: {}", totalActiveRooms);
+        } catch (Exception e) {
+            log.warn("   Could not get active chat rooms from Redis: {}", e.getMessage());
+        }
         log.info("   Max clients per user: {}", MAX_CLIENTS_PER_USER);
         
         // if (!userMap.isEmpty()) { // COMMENTED OUT - Using Redis instead
@@ -1315,7 +1409,7 @@ public class ChatModule {
             Set<String> userIds = redisUserService.getAllUserIds();
             if (!userIds.isEmpty()) {
             log.info("   📊 LOAD BALANCING ANALYSIS:");
-            
+
             // COMMENTED OUT - Complex load balancing analysis requires refactoring for Redis
             /*
             // Calculate load distribution statistics
@@ -1350,7 +1444,64 @@ public class ChatModule {
             } else {
                 log.info("   ❌ All users at capacity - no assignment candidates available");
             }
+            */
             
+            // REDIS-BASED LOAD BALANCING ANALYSIS - Reimplemented for Redis
+            try {
+                log.info("   📈 CALCULATING LOAD DISTRIBUTION FROM REDIS...");
+                
+                // Collect all user data efficiently
+                Map<String, ChatUser> allUsers = new HashMap<>();
+                for (String userId : userIds) {
+                    try {
+                        ChatUser user = redisUserService.getUser(userId);
+                        if (user != null) {
+                            allUsers.put(userId, user);
+                        }
+                    } catch (Exception e) {
+                        log.warn("     Could not get user {} from Redis: {}", userId, e.getMessage());
+                    }
+                }
+                
+                if (!allUsers.isEmpty()) {
+                    // Calculate load distribution statistics
+                    Map<Integer, Long> loadDistribution = allUsers.values().stream()
+                        .collect(Collectors.groupingBy(
+                            user -> user.getCurrentClientCount(),
+                            Collectors.counting()
+                        ));
+                    
+                    log.info("   📈 Load Distribution:");
+                    for (int i = 0; i <= MAX_CLIENTS_PER_USER; i++) {
+                        long count = loadDistribution.getOrDefault(i, 0L);
+                        if (count > 0) {
+                            log.info("     {} clients: {} users", i, count);
+                        }
+                    }
+                    
+                    // Find users with minimum load for next assignment
+                    int minLoad = allUsers.values().stream()
+                        .filter(user -> user.getCurrentClientCount() < MAX_CLIENTS_PER_USER)
+                        .mapToInt(ChatUser::getCurrentClientCount)
+                        .min()
+                        .orElse(-1);
+                    
+                    if (minLoad >= 0) {
+                        List<String> nextAssignmentCandidates = allUsers.entrySet().stream()
+                            .filter(entry -> entry.getValue().getCurrentClientCount() == minLoad)
+                            .map(Map.Entry::getKey)
+                            .collect(Collectors.toList());
+                        
+                        log.info("   🎯 Next Assignment Candidates (load: {}): {}", minLoad, nextAssignmentCandidates);
+                    } else {
+                        log.info("   ❌ All users at capacity - no assignment candidates available");
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("   ⚠️ Error calculating load distribution from Redis: {}", e.getMessage());
+            }
+            
+            /*
             log.info("   📋 Individual User Details:");
             userMap.forEach((userId, user) -> {
                 int clientCount = user.getCurrentClientCount();
@@ -1383,10 +1534,14 @@ public class ChatModule {
         
         // Log tenant-specific load balancing details
         log.info("   🏢 TENANT-SPECIFIC LOAD BALANCING:");
-        if (!tenantUserPools.isEmpty()) {
-            tenantUserPools.forEach((tenantId, tenantUserIds) -> {
+        // if (!tenantUserPools.isEmpty()) { // COMMENTED OUT - Using Redis instead
+        try {
+            Set<String> allTenantIds = redisUserService.getAllTenantIds();
+            if (!allTenantIds.isEmpty()) {
+                for (String tenantId : allTenantIds) {
+                    Set<String> tenantUserIds = redisUserService.getTenantPoolUsers(tenantId);
                 log.info("     Tenant '{}' has {} users:", tenantId, tenantUserIds.size());
-                
+
                 // COMMENTED OUT - Complex tenant load balancing requires refactoring for Redis
                 /*
                 // Calculate load distribution for this tenant
@@ -1408,18 +1563,67 @@ public class ChatModule {
                     String candidateId = nextCandidate.get();
                     int candidateLoad = userMap.get(candidateId).getCurrentClientCount();
                     log.info("       📊 Load distribution: {}", tenantLoadDistribution);
-                    log.info("       🎯 Next assignment: User {} (load: {}/{})", candidateId, candidateLoad, MAX_CLIENTS_PER_USER);
+                    log.info("       🎯 Next assignment: User {} (load: {}/{})", candidateId, candidateLoad, 
+                    MAX_CLIENTS_PER_USER);
                 } else {
                     log.info("       ❌ All users at capacity for tenant '{}'", tenantId);
                 }
                 */
                 
-                // Simplified tenant logging
-                log.info("       📊 Tenant analysis temporarily disabled (Redis migration)");
-            });
+                
+                // REDIS-BASED TENANT LOAD BALANCING ANALYSIS - Reimplemented for Redis
+                try {
+                    log.info("       📈 CALCULATING TENANT LOAD DISTRIBUTION FROM REDIS...");
+                    
+                    // Collect tenant user data efficiently
+                    Map<String, ChatUser> tenantUsers = new HashMap<>();
+                    for (String userId : tenantUserIds) {
+                        try {
+                            ChatUser user = redisUserService.getUser(userId);
+                            if (user != null) {
+                                tenantUsers.put(userId, user);
+                            }
+                        } catch (Exception e) {
+                            log.warn("       Could not get tenant user {} from Redis: {}", userId, e.getMessage());
+                        }
+                    }
+                    
+                    if (!tenantUsers.isEmpty()) {
+                        // Calculate load distribution for this tenant
+                        Map<Integer, Long> tenantLoadDistribution = tenantUsers.values().stream()
+                            .collect(Collectors.groupingBy(
+                                user -> user.getCurrentClientCount(),
+                                Collectors.counting()
+                            ));
+                        
+                        // Find next assignment candidate for this tenant
+                        Optional<String> nextCandidate = tenantUsers.entrySet().stream()
+                            .filter(entry -> entry.getValue().getCurrentClientCount() < MAX_CLIENTS_PER_USER)
+                            .min(Comparator.comparingInt(entry -> entry.getValue().getCurrentClientCount()))
+                            .map(Map.Entry::getKey);
+                        
+                        log.info("       📊 Load distribution: {}", tenantLoadDistribution);
+                        
+                        if (nextCandidate.isPresent()) {
+                            String candidateId = nextCandidate.get();
+                            int candidateLoad = tenantUsers.get(candidateId).getCurrentClientCount();
+                            log.info("       🎯 Next assignment: User {} (load: {}/{})", candidateId, candidateLoad, MAX_CLIENTS_PER_USER);
+                        } else {
+                            log.info("       ❌ All users at capacity for tenant '{}'", tenantId);
+                        }
+                    } else {
+                        log.info("       📭 No valid users found in Redis for tenant '{}'", tenantId);
+                    }
+                } catch (Exception e) {
+                    log.warn("       ⚠️ Error calculating tenant load distribution from Redis: {}", e.getMessage());
+                }
+                }
             } else {
                 log.info("     No tenant pools configured");
             }
+        } catch (Exception e) {
+            log.warn("   Could not get tenant pools from Redis: {}", e.getMessage());
+        }
         } catch (Exception e) {
             log.warn("   Could not get users from Redis for system capacity analysis: {}", e.getMessage());
         }
@@ -1444,20 +1648,74 @@ public class ChatModule {
                     userSocketClient.joinRoom(conversationId);
                     log.info("🏠 User {} rejoined preserved room: {}", userId, conversationId);
                     
-                    // Send notification that conversation is restored
+                    // Send notification that conversation is restored with COMPLETE details
                     ClientInfoResponse restoreInfo = new ClientInfoResponse();
                     restoreInfo.setStatus("restored");
                     restoreInfo.setUserId(userId);
                     restoreInfo.setConversationId(conversationId);
                     
                     // Find the chat room to get client details
-                    ChatRoom chatRoom = chatRooms.get(conversationId);
-                    if (chatRoom != null) {
+                    // ChatRoom chatRoom = chatRooms.get(conversationId); // COMMENTED OUT - Using Redis instead
+                    // if (chatRoom != null) {
+                    //     restoreInfo.setClientName("Conversation Restored");
+                    //     restoreInfo.setClientLabel("active");
+                    //     userSocketClient.sendEvent(socketConfig.EVENT_NEW_CLIENT_REQ, restoreInfo);
+                    //     log.info("📤 Sent conversation restore notification to user {} for conversation {}", 
+                    //             userId, conversationId);
+                    // }
+                    // Get complete conversation details from Redis
+                    try {
+                        ChatRoom chatRoom = redisUserService.getChatRoom(conversationId);
+                        if (chatRoom != null) {
+                            // Set complete conversation details for proper restoration
+                            // restoreInfo.setClientId(chatRoom.getClientId());
+                            // restoreInfo.setSummary(chatRoom.getSummary());
+                            // restoreInfo.setHistory(chatRoom.getHistory());
+                            
+                            // Get user details for complete restoration
+                            // ChatUser user = redisUserService.getUser(userId);
+                            // if (user != null) {
+                            //     restoreInfo.setUserName(user.getEmail());
+                            //     restoreInfo.setTenantId(user.getTenantId());
+                            // }
+                            
+                            // Get client details from database for complete restoration
+                            try {
+                                Client client = clientRepository.findById(chatRoom.getClientId()).orElse(null);
+                                if (client != null) {
+                                    restoreInfo.setClientName(client.getName());
+                                    restoreInfo.setClientEmail(client.getEmail());
+                                    restoreInfo.setClientPhone(client.getPhone());
+                                    restoreInfo.setClientLabel("active");
+                                } else {
+                                    // Fallback if client not found in database
+                                    restoreInfo.setClientName("Conversation Restored");
+                                    restoreInfo.setClientLabel("active");
+                                }
+                            } catch (Exception e) {
+                                log.warn("⚠️ Could not get client details for restoration of conversation {}: {}", 
+                                        conversationId, e.getMessage());
+                                // Use fallback values
+                                restoreInfo.setClientName("Conversation Restored");
+                                restoreInfo.setClientLabel("active");
+                            }
+                            
+                            userSocketClient.sendEvent(socketConfig.EVENT_NEW_CLIENT_REQ, restoreInfo);
+                            log.info("📤 Sent COMPLETE conversation restore notification to user {} for conversation {} with client {}", 
+                                    userId, conversationId, chatRoom.getClientId());
+                        } else {
+                            log.warn("⚠️ Chat room not found in Redis for conversation {}, cannot restore complete details", conversationId);
+                            // Send minimal restoration info as fallback
+                            restoreInfo.setClientName("Conversation Restored");
+                            restoreInfo.setClientLabel("active");
+                            userSocketClient.sendEvent(socketConfig.EVENT_NEW_CLIENT_REQ, restoreInfo);
+                        }
+                    } catch (Exception e) {
+                        log.warn("⚠️ Could not get chat room {} from Redis for restore: {}", conversationId, e.getMessage());
+                        // Send minimal restoration info as fallback
                         restoreInfo.setClientName("Conversation Restored");
                         restoreInfo.setClientLabel("active");
                         userSocketClient.sendEvent(socketConfig.EVENT_NEW_CLIENT_REQ, restoreInfo);
-                        log.info("📤 Sent conversation restore notification to user {} for conversation {}", 
-                                userId, conversationId);
                     }
                 } catch (Exception e) {
                     log.error("❌ Error restoring conversation {} for user {}: {}", 
@@ -1636,7 +1894,13 @@ public class ChatModule {
         }
         
         log.info("🏢 Looking up tenant user pool...");
-        Set<String> tenantUsers = tenantUserPools.get(tenantId);
+        // Set<String> tenantUsers = tenantUserPools.get(tenantId); // COMMENTED OUT - Using Redis instead
+        Set<String> tenantUsers = null;
+        try {
+            tenantUsers = redisUserService.getTenantPoolUsers(tenantId);
+        } catch (Exception e) {
+            log.warn("⚠️ Could not get tenant pool users for {} from Redis: {}", tenantId, e.getMessage());
+        }
         log.info("📊 Tenant pool status - Tenant: {}, Pool size: {}", tenantId, tenantUsers != null ? tenantUsers.size() : 0);
         
         if (tenantUsers == null || tenantUsers.isEmpty()) {
@@ -1654,8 +1918,14 @@ public class ChatModule {
         
         for (String userId : tenantUsers) {
             log.debug("⚡ Analyzing user load - User: {}", userId);
-            AtomicInteger userCount = userClientCounts.get(userId);
-            int currentCount = userCount != null ? userCount.get() : 0;
+            // AtomicInteger userCount = userClientCounts.get(userId); // COMMENTED OUT - Using Redis instead
+            // int currentCount = userCount != null ? userCount.get() : 0;
+            int currentCount = 0;
+            try {
+                currentCount = redisUserService.getUserClientCount(userId);
+            } catch (Exception e) {
+                log.warn("⚠️ Could not get client count for user {} from Redis: {}", userId, e.getMessage());
+            }
             
             userLoadMap.put(userId, currentCount);
             log.debug("📊 User {} current clients: {}/{}", userId, currentCount, MAX_CLIENTS_PER_USER);
@@ -1752,15 +2022,21 @@ public class ChatModule {
                 for (String tenantId : tenantIds) {
                     log.info("🔗 Adding user {} to tenant pool: {}", userId, tenantId);
                     
-                    tenantUserPools.computeIfAbsent(tenantId, k -> ConcurrentHashMap.newKeySet()).add(userId);
-                    log.info("✅ User added to tenant pool - Tenant: {}, Pool size now: {}", 
-                            tenantId, tenantUserPools.get(tenantId).size());
+                    // tenantUserPools.computeIfAbsent(tenantId, k -> ConcurrentHashMap.newKeySet()).add(userId); // COMMENTED OUT - Using Redis instead
+                    try {
+                        redisUserService.addUserToTenantPool(tenantId, userId);
+                        long poolSize = redisUserService.getTenantPoolSize(tenantId);
+                        log.info("✅ User added to tenant pool - Tenant: {}, Pool size now: {}", tenantId, poolSize);
+                    } catch (Exception e) {
+                        log.warn("⚠️ Could not add user {} to tenant pool {} in Redis: {}", userId, tenantId, e.getMessage());
+                    }
                 }
                 
                 log.info("📊 Initializing client count tracking for user: {}", userId);
                 // Initialize client count tracking
-                userClientCounts.put(userId, new AtomicInteger(0));
-                log.info("✅ Client count tracking initialized for user: {}", userId);
+                // userClientCounts.put(userId, new AtomicInteger(0)); // COMMENTED OUT - Using Redis instead
+                // Client count is now managed in the ChatUser object in Redis
+                log.info("✅ Client count tracking initialized for user: {} (managed in Redis)", userId);
                 
             } else {
                 log.warn("❌ User account not found for userId: {}", userId);
@@ -1777,9 +2053,14 @@ public class ChatModule {
      * Remove user from all tenant pools when they go offline
      */
     private void removeUserFromTenantPools(String userId) {
-        tenantUserPools.values().forEach(pool -> pool.remove(userId));
-        userClientCounts.remove(userId);
-        log.debug("Removed user {} from all tenant pools", userId);
+        // tenantUserPools.values().forEach(pool -> pool.remove(userId)); // COMMENTED OUT - Using Redis instead
+        // userClientCounts.remove(userId); // COMMENTED OUT - Using Redis instead
+        try {
+            redisUserService.removeUserFromAllTenantPools(userId);
+            log.debug("Removed user {} from all tenant pools", userId);
+        } catch (Exception e) {
+            log.warn("⚠️ Could not remove user {} from tenant pools in Redis: {}", userId, e.getMessage());
+        }
     }
     
     /**
@@ -1787,9 +2068,15 @@ public class ChatModule {
      */
     private void incrementUserClientCount(String userId) {
         log.debug("📈 Incrementing client count for user: {}", userId);
-        AtomicInteger count = userClientCounts.computeIfAbsent(userId, k -> new AtomicInteger(0));
-        int newCount = count.incrementAndGet();
-        log.debug("✅ User {} client count incremented to: {}", userId, newCount);
+        // AtomicInteger count = userClientCounts.computeIfAbsent(userId, k -> new AtomicInteger(0)); // COMMENTED OUT - Using Redis instead
+        // int newCount = count.incrementAndGet();
+        try {
+            redisUserService.incrementUserClientCount(userId);
+            int newCount = redisUserService.getUserClientCount(userId);
+            log.debug("✅ User {} client count incremented to: {}", userId, newCount);
+        } catch (Exception e) {
+            log.warn("⚠️ Could not increment client count for user {} in Redis: {}", userId, e.getMessage());
+        }
     }
     
     /**
@@ -1797,16 +2084,16 @@ public class ChatModule {
      */
     private void decrementUserClientCount(String userId) {
         log.debug("📉 Decrementing client count for user: {}", userId);
-        AtomicInteger count = userClientCounts.get(userId);
-        if (count != null) {
-            int newCount = count.decrementAndGet();
+        // AtomicInteger count = userClientCounts.get(userId); // COMMENTED OUT - Using Redis instead
+        try {
+            redisUserService.decrementUserClientCount(userId);
+            int newCount = redisUserService.getUserClientCount(userId);
             log.debug("✅ User {} client count decremented to: {}", userId, newCount);
             if (newCount < 0) {
-                log.warn("⚠️ Negative client count detected for user {}, resetting to 0", userId);
-                count.set(0);
+                log.warn("⚠️ Negative client count detected for user {}, this should not happen with Redis implementation", userId);
             }
-        } else {
-            log.warn("⚠️ No client count tracking found for user: {}", userId);
+        } catch (Exception e) {
+            log.warn("⚠️ Could not decrement client count for user {} in Redis: {}", userId, e.getMessage());
         }
     }
 
