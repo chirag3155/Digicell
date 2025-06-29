@@ -91,12 +91,83 @@ public class RedisUserService {
                 
                 log.debug("✅ User {} retrieved from Redis", userId);
                 return user;
+            } else if (userObj instanceof java.util.LinkedHashMap) {
+                // ✅ FIX: Handle existing LinkedHashMap data (deserialization issue)
+                log.warn("🔄 LEGACY DATA DETECTED: User {} stored as LinkedHashMap, converting to ChatUser", userId);
+                ChatUser user = convertLinkedHashMapToChatUser((java.util.LinkedHashMap<String, Object>) userObj);
+                
+                if (user != null) {
+                    // Validate and fix the converted user
+                    user.validateAndFixCount();
+                    
+                    // Store the corrected ChatUser object back to Redis
+                    updateUser(user);
+                    log.info("✅ LEGACY DATA CONVERTED: User {} converted from LinkedHashMap to ChatUser and updated in Redis", userId);
+                    return user;
+                } else {
+                    log.error("❌ CONVERSION FAILED: Could not convert LinkedHashMap to ChatUser for user {}", userId);
+                    return null;
+                }
             } else {
                 log.debug("📭 User {} not found in Redis", userId);
                 return null;
             }
         } catch (Exception e) {
             log.error("❌ Error retrieving user {} from Redis: {}", userId, e.getMessage(), e);
+            return null;
+        }
+    }
+
+    /**
+     * ✅ HELPER: Convert LinkedHashMap to ChatUser (for legacy data)
+     */
+    private ChatUser convertLinkedHashMapToChatUser(java.util.LinkedHashMap<String, Object> map) {
+        try {
+            ChatUser user = new ChatUser();
+            
+            // Map basic fields
+            user.setUserId((String) map.get("userId"));
+            user.setEmail((String) map.get("email"));
+            user.setIpAddress((String) map.get("ipAddress"));
+            user.setUserName((String) map.get("userName"));
+            user.setUserLabel((String) map.get("userLabel"));
+            
+            // Handle numeric fields safely
+            Object clientCountObj = map.get("currentClientCount");
+            if (clientCountObj instanceof Number) {
+                user.setCurrentClientCount(((Number) clientCountObj).intValue());
+            } else {
+                user.setCurrentClientCount(0);
+            }
+            
+            Object offlineRequestedObj = map.get("offlineRequested");
+            if (offlineRequestedObj instanceof Boolean) {
+                user.setOfflineRequested((Boolean) offlineRequestedObj);
+            } else {
+                user.setOfflineRequested(false);
+            }
+            
+            Object lastPingTimeObj = map.get("lastPingTime");
+            if (lastPingTimeObj instanceof Number) {
+                user.setLastPingTime(((Number) lastPingTimeObj).longValue());
+            } else {
+                user.setLastPingTime(System.currentTimeMillis());
+            }
+            
+            // Handle activeClients set
+            Object activeClientsObj = map.get("activeClients");
+            if (activeClientsObj instanceof java.util.List) {
+                java.util.Set<String> activeClients = new java.util.HashSet<>((java.util.List<String>) activeClientsObj);
+                user.setActiveClients(activeClients);
+            } else {
+                user.setActiveClients(new java.util.HashSet<>());
+            }
+            
+            log.info("✅ Successfully converted LinkedHashMap to ChatUser for user {}", user.getUserId());
+            return user;
+            
+        } catch (Exception e) {
+            log.error("❌ Error converting LinkedHashMap to ChatUser: {}", e.getMessage(), e);
             return null;
         }
     }
