@@ -13,6 +13,8 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.api.digicell.utils.Constants;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -77,19 +79,19 @@ public class JwtUtil {
 	}
 
 	// -- generate auth token for user
-	// public String generateToken(String userName, String tokenType, String tenantId,long id,String ipAddress) {
-	// 	long expirationTimeInSec = jwtExpirationTimeInSec;
-	// 	if (tokenType.equals(Constants.TYPE_REFRESH_TOKEN)) {
-	// 		// -- refresh token time will be double
-	// 		expirationTimeInSec = 2 * expirationTimeInSec;
-	// 	}
-	// 	Map<String, Object> claims = new HashMap<>();
-	// 	claims.put(Constants.TOKEN_TYPE, tokenType);
-	// 	claims.put(Constants.USER_ID, id);
-	// 	claims.put(Constants.TENANT_ID, tenantId); // Add tenantId to the claims
-	// 	claims.put(Constants.IP_ADDRESS, ipAddress); // Add IP address to the claims
-	// 	return doGenerateToken(claims, userName, expirationTimeInSec);
-	// }
+	public String generateToken(String userName, String tokenType, String tenantId,long id,String ipAddress) {
+		long expirationTimeInSec = jwtExpirationTimeInSec;
+		if (tokenType.equals(Constants.TYPE_REFRESH_TOKEN)) {
+			// -- refresh token time will be double
+			expirationTimeInSec = 2 * expirationTimeInSec;
+		}
+		Map<String, Object> claims = new HashMap<>();
+		claims.put(Constants.TOKEN_TYPE, tokenType);
+		claims.put(Constants.USER_ID, id);
+		claims.put(Constants.TENANT_ID, tenantId); // Add tenantId to the claims
+		claims.put(Constants.IP_ADDRESS, ipAddress); // Add IP address to the claims
+		return doGenerateToken(claims, userName, expirationTimeInSec);
+	}
 
 	// // -- generate auth token for email
 	// public String generateEmailToken(String userName, String tokenType, String emailType,String ipAddress) {
@@ -100,12 +102,12 @@ public class JwtUtil {
 	// 	return doGenerateToken(claims, userName, emailJWTExpirationTimeInSec);
 	// }
 
-	// private String doGenerateToken(Map<String, Object> claims, String subject, long customJwtExpirationTime) {
-	// 	return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
-	// 			.setExpiration(new Date(System.currentTimeMillis() + customJwtExpirationTime * 1000))
-	// 			.signWith(key, SignatureAlgorithm.HS512) // Updated to use the non-deprecated method
-	// 			.compact();
-	// }
+	private String doGenerateToken(Map<String, Object> claims, String subject, long customJwtExpirationTime) {
+		return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
+				.setExpiration(new Date(System.currentTimeMillis() + customJwtExpirationTime * 1000))
+				.signWith(key, SignatureAlgorithm.HS512) // Updated to use the non-deprecated method
+				.compact();
+	}
 
 	// -- validate token
 	public Boolean validateToken(String token, String userName) {

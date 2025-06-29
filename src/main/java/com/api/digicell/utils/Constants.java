@@ -10,6 +10,7 @@ public class Constants {
 	public static final String TYPE_EMAIL_TOKEN = "email";
 	public static final String TYPE_HE_TOKEN = "he";
     public static final String TYPE_OTP_TOKEN = "otp";
+    public static final String TENANT_ID = "tenantId";
     // Authorization
     public static final String BEARER = "Bearer ";
 

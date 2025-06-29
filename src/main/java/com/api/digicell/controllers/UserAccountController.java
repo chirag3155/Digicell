@@ -11,6 +11,9 @@ import com.api.digicell.exceptions.ResourceNotFoundException;
 import com.api.digicell.responses.ApiResponse;
 import com.api.digicell.services.UserAccountService;
 import com.api.digicell.services.ClientService;
+import com.api.digicell.services.ChildUserService;
+import com.api.digicell.dto.ChildUserListResponseDTO;
+import com.api.digicell.dto.ChildUserRequestDTO;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,12 +23,15 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.annotation.Validated;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 import com.api.digicell.responses.ResponseUtil;
 import org.springframework.transaction.annotation.Transactional;
 import com.api.digicell.mapper.UserAccountMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
 
@@ -40,6 +46,7 @@ public class UserAccountController {
     private final UserAccountService userAccountService;
     private final ClientService clientService;
     private final UserAccountMapper userAccountMapper;
+    private final ChildUserService childUserService;
     private static final Logger logger = LoggerFactory.getLogger(UserAccountController.class);
 
     /**
@@ -305,4 +312,52 @@ public class UserAccountController {
                     .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error setting user status", null));
         }
     }
+
+    /**
+     * Get child users with Redis status information.
+     */
+    @Operation(
+        summary = "Get child users with Redis status",
+        description = "Retrieves child users for a parent user ID with Redis status information including active/inactive status and active client IDs",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
+    @PostMapping("/{parent_user_id}/children")
+    public ResponseEntity<ApiResponse<ChildUserListResponseDTO>> getChildUsersWithRedisStatus(
+            HttpServletRequest request,
+            @RequestHeader(name = "Authorization", required = true) String authToken,
+            @PathVariable("parent_user_id") @Positive(message = "parent_user_id must be positive") Long parentUserId,
+            @Valid @RequestBody ChildUserRequestDTO requestDTO) {
+        
+        logger.info("Received request to get child users for parent ID: {}, page: {}, limit: {}", 
+                   parentUserId, requestDTO.getPage(), requestDTO.getLimit());
+        
+        try {
+            ChildUserListResponseDTO childUsers = childUserService.getChildUsersWithRedisStatus(
+                parentUserId, 
+                requestDTO.getPage(), 
+                requestDTO.getLimit(), 
+                authToken
+            );
+            logger.info("Successfully retrieved {} child users for parent ID: {}", 
+                       childUsers.getContent() != null ? childUsers.getContent().size() : 0, parentUserId);
+            
+            return ResponseEntity.ok(new ApiResponse<>(
+                HttpStatus.OK.value(), 
+                "Child users retrieved successfully with Redis status", 
+                childUsers
+            ));
+            
+        } catch (IllegalArgumentException e) {
+            logger.warn("Invalid request for parent user ID {}: {}", parentUserId, e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
+                    
+        } catch (Exception e) {
+            logger.error("Error retrieving child users for parent ID {}: {}", parentUserId, e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), 
+                                          "Error retrieving child users with Redis status", null));
+        }
+    }
+
 } 
