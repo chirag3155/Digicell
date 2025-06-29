@@ -1961,7 +1961,7 @@ public class ChatModule {
                     // Check if user's last ping time is under 7 seconds (recent activity)
                     long currentTime = System.currentTimeMillis();
                     long timeSinceLastPing = currentTime - user.getLastPingTime();
-                    boolean isRecentlyActive = timeSinceLastPing < 7000; // 7 seconds in milliseconds
+                    boolean isRecentlyActive = timeSinceLastPing < 15000; // 15 seconds in milliseconds
                     
                     log.debug("⏰ User {} ping status - Time since last ping: {}ms, Recently active: {}", 
                              userId, timeSinceLastPing, isRecentlyActive);
