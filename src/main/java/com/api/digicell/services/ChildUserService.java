@@ -114,7 +114,7 @@ public class ChildUserService {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Accept", "*/*");
         headers.set("langCode", "en");
-        headers.set("Authorization", "Bearer " + "eyJhbGciOiJIUzUxMiJ9.eyJ0ZW5hbnRJZCI6IlJvYWRtYXAgTmV3IiwiaXBBZGRyZXNzIjoiMTI3LjAuMC4xIiwidG9rZW5UeXBlIjoiYXV0aCIsInVzZXJJZCI6MSwic3ViIjoiZXZhcm9hZG1hcEBibGFja25ncmVlbi5jb20iLCJpYXQiOjE3NTEyMDU3NTIsImV4cCI6MTc1ODQwNTc1Mn0.iRuJtIjXJxN9oOjrA6J9H5WZGWWIFEev1gAC8PC57C8GWA_cYZ4c7F2vCdJef9HUDcepXPfnrFapyCwyXkdTxw");
+        headers.set("Authorization", "Bearer " + token);
         
         HttpEntity<String> entity = new HttpEntity<>(headers);
         
