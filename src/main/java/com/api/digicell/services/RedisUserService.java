@@ -154,14 +154,21 @@ public class RedisUserService {
                 user.setLastPingTime(System.currentTimeMillis());
             }
             
-            // Handle activeClients set
-            Object activeClientsObj = map.get("activeClients");
-            if (activeClientsObj instanceof java.util.List) {
-                java.util.Set<String> activeClients = new java.util.HashSet<>((java.util.List<String>) activeClientsObj);
-                user.setActiveClients(activeClients);
-            } else {
-                user.setActiveClients(new java.util.HashSet<>());
+            // Handle activeConversations set (new field name) or activeClients (legacy field name)
+            Object activeConversationsObj = map.get("activeConversations");
+            Object activeClientsObj = map.get("activeClients"); // Legacy field name
+            
+            java.util.Set<String> activeConversations = new java.util.HashSet<>();
+            
+            if (activeConversationsObj instanceof java.util.List) {
+                activeConversations = new java.util.HashSet<>((java.util.List<String>) activeConversationsObj);
+            } else if (activeClientsObj instanceof java.util.List) {
+                // Handle legacy field name for backward compatibility
+                activeConversations = new java.util.HashSet<>((java.util.List<String>) activeClientsObj);
+                log.debug("📋 Migrating legacy activeClients field to activeConversations for user {}", user.getUserId());
             }
+            
+            user.setActiveConversations(activeConversations);
             
             log.info("✅ Successfully converted LinkedHashMap to ChatUser for user {}", user.getUserId());
             return user;
@@ -203,6 +210,40 @@ public class RedisUserService {
      */
     private String getUserKey(String userId) {
         return USER_KEY_PREFIX + userId;
+    }
+
+    /**
+     * Check if user key exists in Redis (for debugging)
+     */
+    public boolean userKeyExists(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            return false;
+        }
+        
+        try {
+            String key = getUserKey(userId);
+            return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+        } catch (Exception e) {
+            log.error("❌ Error checking if user key exists for {} in Redis: {}", userId, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    /**
+     * Get raw user data from Redis (for debugging)
+     */
+    public Object getRawUserData(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            return null;
+        }
+        
+        try {
+            String key = getUserKey(userId);
+            return redisTemplate.opsForValue().get(key);
+        } catch (Exception e) {
+            log.error("❌ Error getting raw user data for {} from Redis: {}", userId, e.getMessage(), e);
+            return null;
+        }
     }
 
     /**
@@ -724,7 +765,7 @@ public class RedisUserService {
             if (user != null) {
                 int oldCount = user.getCurrentClientCount();
                 user.setCurrentClientCount(0);
-                user.getActiveClients().clear();
+                user.getActiveConversations().clear();
                 updateUser(user);
                 
                 log.info("🔄 RESET: User {} client count reset from {} to 0", userId, oldCount);
@@ -794,48 +835,6 @@ public class RedisUserService {
             return room != null && room.isActive();
         } catch (Exception e) {
             log.error("❌ Error checking if conversation {} is active: {}", conversationId, e.getMessage(), e);
-            return false;
-        }
-    }
-
-    /**
-     * ✅ DEBUG: Get raw Redis data for troubleshooting
-     */
-    public Object getRawUserData(String userId) {
-        if (userId == null || userId.trim().isEmpty()) {
-            log.warn("❌ Cannot get raw data with null or empty userId");
-            return null;
-        }
-
-        try {
-            String key = getUserKey(userId);
-            Object rawData = redisTemplate.opsForValue().get(key);
-            
-            log.info("🔍 DEBUG: Raw Redis data for user {} (key: {}): {}", userId, key, 
-                    rawData != null ? rawData.getClass().getSimpleName() + " - " + rawData.toString() : "null");
-            
-            return rawData;
-        } catch (Exception e) {
-            log.error("❌ Error getting raw data for user {} from Redis: {}", userId, e.getMessage(), e);
-            return null;
-        }
-    }
-    
-    /**
-     * ✅ DEBUG: Check if Redis key exists
-     */
-    public boolean userKeyExists(String userId) {
-        if (userId == null || userId.trim().isEmpty()) {
-            return false;
-        }
-
-        try {
-            String key = getUserKey(userId);
-            Boolean exists = redisTemplate.hasKey(key);
-            log.info("🔍 DEBUG: Redis key existence check - Key: {}, Exists: {}", key, exists);
-            return Boolean.TRUE.equals(exists);
-        } catch (Exception e) {
-            log.error("❌ Error checking key existence for user {} in Redis: {}", userId, e.getMessage(), e);
             return false;
         }
     }

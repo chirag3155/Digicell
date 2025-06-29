@@ -89,6 +89,10 @@ public class ChatModule {
     @Value("${socket.ssl.key-store-password:}")
     private String keyStorePassword;
 
+    // User ping timeout configuration
+    @Value("${socket.user.ping.timeout:10000}")
+    private long userPingTimeoutMs;
+
     // COMMENTED OUT - Using Redis instead
     // private final Map<String, Set<String>> tenantUserPools = new ConcurrentHashMap<>();
     // private final Map<String, AtomicInteger> userClientCounts = new ConcurrentHashMap<>();
@@ -486,8 +490,8 @@ public class ChatModule {
                 if (user != null) {
                     log.info("👤 User found - Current client count: {}", user.getCurrentClientCount());
                     
-                    // Remove client from user's room
-                    user.removeClient(clientId);
+                    // Remove conversation from user's active conversations
+                    user.removeConversation(conversationId);
                     user.setCurrentClientCount(user.getCurrentClientCount() - 1);
                     
                     // Update atomic client count
@@ -570,8 +574,8 @@ public class ChatModule {
                 }
                 
                 if (user != null) {
-                    // Remove client from user's room
-                    user.removeClient(clientId);
+                    // Remove conversation from user's active conversations
+                    user.removeConversation(conversationId);
                     user.setCurrentClientCount(user.getCurrentClientCount() - 1);
                     
                     // Update atomic client count
@@ -985,8 +989,8 @@ public class ChatModule {
             log.info("✅ Conversation tracking added for user: {}", user.getUserId());
 
             log.info("📈 Updating user client counts...");
-            // Add client to user's room
-            user.addClient(clientId);
+            // Add conversation to user's active conversations
+            user.addConversation(conversationId);
             user.setCurrentClientCount(user.getCurrentClientCount() + 1);
             
                                 // Update atomic client count for efficient tracking
@@ -1961,7 +1965,7 @@ public class ChatModule {
                     // Check if user's last ping time is under 7 seconds (recent activity)
                     long currentTime = System.currentTimeMillis();
                     long timeSinceLastPing = currentTime - user.getLastPingTime();
-                    boolean isRecentlyActive = timeSinceLastPing < 15000; // 15 seconds in milliseconds
+                    boolean isRecentlyActive = timeSinceLastPing < userPingTimeoutMs; // Configurable timeout
                     
                     log.debug("⏰ User {} ping status - Time since last ping: {}ms, Recently active: {}", 
                              userId, timeSinceLastPing, isRecentlyActive);

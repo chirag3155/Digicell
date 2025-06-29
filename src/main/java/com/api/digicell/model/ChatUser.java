@@ -20,7 +20,7 @@ public class ChatUser implements Serializable {
     private int currentClientCount;
     private boolean offlineRequested;
     private long lastPingTime;
-    private Set<String> activeClients = new HashSet<>();
+    private Set<String> activeConversations = new HashSet<>();
     private static final Logger log = LoggerFactory.getLogger(ChatUser.class);
 
     public ChatUser() {
@@ -42,27 +42,40 @@ public class ChatUser implements Serializable {
         return (System.currentTimeMillis() - lastPingTime) > timeoutMillis;
     }
 
-    public void addClient(String clientId) {
-        activeClients.add(clientId);
-        this.currentClientCount = activeClients.size(); // Keep count in sync
+    public void addConversation(String conversationId) {
+        activeConversations.add(conversationId);
+        this.currentClientCount = activeConversations.size(); // Keep count in sync
         
         // ✅ FIX: Ensure count is never negative
         if (this.currentClientCount < 0) {
-            log.warn("⚠️ NEGATIVE COUNT DETECTED in addClient for user {}, resetting to activeClients size: {}", userId, activeClients.size());
-            this.currentClientCount = activeClients.size();
+            log.warn("⚠️ NEGATIVE COUNT DETECTED in addConversation for user {}, resetting to activeConversations size: {}", userId, activeConversations.size());
+            this.currentClientCount = activeConversations.size();
         }
     }
 
-    public void removeClient(String clientId) {
-        activeClients.remove(clientId);
-        this.currentClientCount = activeClients.size(); // Keep count in sync
+    public void removeConversation(String conversationId) {
+        activeConversations.remove(conversationId);
+        this.currentClientCount = activeConversations.size(); // Keep count in sync
         
         // ✅ FIX: Ensure count is never negative
         if (this.currentClientCount < 0) {
-            log.warn("⚠️ NEGATIVE COUNT DETECTED in removeClient for user {}, resetting to 0", userId);
+            log.warn("⚠️ NEGATIVE COUNT DETECTED in removeConversation for user {}, resetting to 0", userId);
             this.currentClientCount = 0;
-            activeClients.clear(); // Clear set if count is inconsistent
+            activeConversations.clear(); // Clear set if count is inconsistent
         }
+    }
+
+    // Keep legacy methods for backward compatibility during transition
+    @Deprecated
+    public void addClient(String clientId) {
+        log.warn("⚠️ DEPRECATED: addClient() called with clientId {}. Use addConversation() with conversationId instead.", clientId);
+        addConversation(clientId);
+    }
+
+    @Deprecated
+    public void removeClient(String clientId) {
+        log.warn("⚠️ DEPRECATED: removeClient() called with clientId {}. Use removeConversation() with conversationId instead.", clientId);
+        removeConversation(clientId);
     }
 
     public void incrementClientCount() {
@@ -86,10 +99,10 @@ public class ChatUser implements Serializable {
     }
     
     /**
-     * ✅ NEW: Synchronize count with active clients set
+     * ✅ NEW: Synchronize count with active conversations set
      */
     public void synchronizeClientCount() {
-        int actualCount = activeClients.size();
+        int actualCount = activeConversations.size();
         if (this.currentClientCount != actualCount) {
             log.warn("⚠️ COUNT MISMATCH for user {}: stored={}, actual={}, correcting to actual", 
                     userId, this.currentClientCount, actualCount);
@@ -104,15 +117,22 @@ public class ChatUser implements Serializable {
         if (this.currentClientCount < 0) {
             log.warn("⚠️ NEGATIVE COUNT DETECTED for user {}: {}, resetting to 0", userId, this.currentClientCount);
             this.currentClientCount = 0;
-            activeClients.clear();
+            activeConversations.clear();
         }
         
-        // Ensure count matches active clients
+        // Ensure count matches active conversations
         synchronizeClientCount();
     }
 
+    public Set<String> getActiveConversations() {
+        return activeConversations;
+    }
+
+    // Keep legacy getter for backward compatibility during transition
+    @Deprecated
     public Set<String> getActiveClients() {
-        return activeClients;
+        log.warn("⚠️ DEPRECATED: getActiveClients() called. Use getActiveConversations() instead.");
+        return activeConversations;
     }
 
     public static class UserComparator implements Comparator<ChatUser> {
