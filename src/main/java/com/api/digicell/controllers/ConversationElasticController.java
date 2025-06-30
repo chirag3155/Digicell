@@ -10,18 +10,30 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/elastic/conversation/")
 @RequiredArgsConstructor
+@Tag(name = "Conversation Elastic", description = "APIs for managing conversations in Elasticsearch")
+@SecurityRequirement(name = "bearerAuth")
 public class ConversationElasticController {
    private static final Logger logger = LoggerFactory.getLogger(ConversationElasticController.class);
    private final ConversationElasticService conversationElasticService;
 
+  @Operation(
+        summary = "Create a new conversation",
+        description = "Creates a new conversation document in Elasticsearch",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
   @PostMapping
-  public ResponseEntity<ApiResponse<ConversationDocument>> createConversation(@RequestBody ConversationDocument conversation) {
+  public ResponseEntity<ApiResponse<ConversationDocument>> createConversation(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @RequestBody ConversationDocument conversation) {
       try {
           logger.info("Creating new conversation for client: {} and session: {}",
               conversation.getUserInfo() != null ? conversation.getUserInfo().getId() : "unknown", 
@@ -38,8 +50,15 @@ public class ConversationElasticController {
       }
   }
 
+   @Operation(
+        summary = "Get conversations by user",
+        description = "Retrieves all conversations for a specific user/agent",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
    @GetMapping("/user/{userId}")
-   public ResponseEntity<ApiResponse<List<ConversationDocument>>> getConversationsByUser(@PathVariable Long userId) {
+   public ResponseEntity<ApiResponse<List<ConversationDocument>>> getConversationsByUser(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @PathVariable Long userId) {
     
        try {
            logger.info("Retrieving conversations for agent: {}", userId);
@@ -53,8 +72,15 @@ public class ConversationElasticController {
        }
    }
 
+   @Operation(
+        summary = "Get conversations by client",
+        description = "Retrieves all conversations for a specific client",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
    @GetMapping("/client/{clientId}")
-       public ResponseEntity<ApiResponse<List<ConversationDocument>>> getConversationsByClient(@PathVariable String clientId) {
+   public ResponseEntity<ApiResponse<List<ConversationDocument>>> getConversationsByClient(
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @PathVariable String clientId) {
        try {
            logger.info("Retrieving conversations for human client: {}", clientId);
            List<ConversationDocument> conversations = conversationElasticService.getConversationsByClient(clientId);
@@ -67,10 +93,16 @@ public class ConversationElasticController {
        }
    }
 
+   @Operation(
+        summary = "Get conversations by user and client",
+        description = "Retrieves all conversations between a specific user/agent and client",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
    @GetMapping("/user/{userId}/client/{clientId}")
    public ResponseEntity<ApiResponse<List<ConversationDocument>>> getConversationsByUserAndClient(
-           @PathVariable Long userId,
-           @PathVariable String clientId) {
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @PathVariable Long userId,
+            @PathVariable String clientId) {
        try {
            logger.info("Retrieving conversations for AI system: {} and human client: {}", userId, clientId);
            List<ConversationDocument> conversations = conversationElasticService.getConversationsByUserAndClient(userId, clientId);
@@ -83,10 +115,16 @@ public class ConversationElasticController {
        }
    }
 
+   @Operation(
+        summary = "Get conversation by ID and client",
+        description = "Retrieves a specific conversation by ID for a specific client",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
    @GetMapping("/{conversationId}/client/{clientId}")
    public ResponseEntity<ApiResponse<ConversationDocument>> getConversationByIdAndClient(
-           @PathVariable String conversationId,
-           @PathVariable String clientId) {
+            @RequestHeader(name = "Authorization", required = false) String authToken,
+            @PathVariable String conversationId,
+            @PathVariable String clientId) {
        try {
            logger.info("Retrieving conversation: {} for client: {}", conversationId, clientId);
            ConversationDocument conversation = conversationElasticService.getConversationByIdAndClient(conversationId, clientId);
@@ -99,10 +137,14 @@ public class ConversationElasticController {
        }
    }
 
-
-
+   @Operation(
+        summary = "Get conversations with real agents",
+        description = "Retrieves all conversations that were handled by real agents (not AI)",
+        security = { @SecurityRequirement(name = "bearerAuth") }
+    )
    @GetMapping("/real-agents")
-   public ResponseEntity<ApiResponse<List<ConversationDocument>>> getConversationsWithRealAgents() {
+   public ResponseEntity<ApiResponse<List<ConversationDocument>>> getConversationsWithRealAgents(
+            @RequestHeader(name = "Authorization", required = false) String authToken) {
        try {
            logger.info("Retrieving conversations handled by real agents");
            List<ConversationDocument> conversations = conversationElasticService.getConversationsWithRealAgents();
@@ -114,6 +156,5 @@ public class ConversationElasticController {
            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
        }
    }
-
 
 }
