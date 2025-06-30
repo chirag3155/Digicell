@@ -28,7 +28,7 @@ public class ChildUserService {
     private final RestTemplate restTemplate;
     private final RedisUserService redisUserService;
     
-    private static final String EXTERNAL_API_BASE_URL = "https://digicel-sandbox.bngrenew.com/evaportalbackend";
+    private static final String EXTERNAL_API_BASE_URL = "https://eva-prod.bngrenew.com/evaportalbackend";
     
     private static final long PING_TIMEOUT_SECONDS = 15;
     private static final long PING_TIMEOUT_MILLIS = PING_TIMEOUT_SECONDS * 1000;
