@@ -39,6 +39,7 @@ public class SecurityConfig {
         "/v3/api-docs/**",
         "/swagger-resources/**",
         "/webjars/**",
+        "/api/tenant/**",
         // API endpoints
         // "/api/v1/**",  // Allow all /api/v1/ paths
         // "/api/v1/auth/login",
