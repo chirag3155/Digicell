@@ -185,25 +185,6 @@ public class ChildUserService {
         responseUser.setUpdatedAt(externalUser.getUpdatedAt());
         responseUser.setActive(externalUser.getActive());
         
-        // TEMPORARY MOCK DATA - Force specific values for testing
-        if (externalUser.getUserId() != null && externalUser.getUserId().equals(19L)) {
-            log.info("FORCING MOCK DATA for User 19");
-            responseUser.setRedisStatus("Active");
-            List<String> mockClients = new ArrayList<>();
-            mockClients.add("CLIENT_001");
-            mockClients.add("CLIENT_002");
-            responseUser.setActiveClients(mockClients);
-            return responseUser;
-        }
-        
-        if (externalUser.getUserId() != null && externalUser.getUserId().equals(59L)) {
-            log.info("FORCING MOCK DATA for User 59");
-            responseUser.setRedisStatus("Active");
-            List<String> mockClients = new ArrayList<>();
-            mockClients.add("CLIENT_003");
-            responseUser.setActiveClients(mockClients);
-            return responseUser;
-        }
         
         // Add Redis status for other users
         String redisStatus = determineRedisStatus(externalUser.getUserId());
@@ -224,11 +205,6 @@ public class ChildUserService {
             return "Inactive";
         }
         
-        // TEMPORARY: Mock data for testing - users 19 and 59 show as Active
-        if (userId.equals(19L) || userId.equals(59L)) {
-            log.info("MOCK: User {} returning Active status for testing", userId);
-            return "Active";
-        }
         
         try {
             ChatUser chatUser = redisUserService.getUser(userId.toString());
@@ -264,22 +240,6 @@ public class ChildUserService {
     private List<String> getActiveClients(Long userId) {
         if (userId == null) {
             return new ArrayList<>();
-        }
-        
-        // TEMPORARY: Mock data for testing
-        if (userId.equals(19L)) {
-            log.info("MOCK: User 19 returning active clients: CLIENT_001, CLIENT_002");
-            List<String> mockClients = new ArrayList<>();
-            mockClients.add("CLIENT_001");
-            mockClients.add("CLIENT_002");
-            return mockClients;
-        }
-        
-        if (userId.equals(59L)) {
-            log.info("MOCK: User 59 returning active clients: CLIENT_003");
-            List<String> mockClients = new ArrayList<>();
-            mockClients.add("CLIENT_003");
-            return mockClients;
         }
         
         try {
