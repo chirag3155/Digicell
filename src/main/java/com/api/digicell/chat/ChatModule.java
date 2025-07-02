@@ -7,7 +7,6 @@ import com.api.digicell.entities.UserAccount;
 import com.api.digicell.entities.UserAccountStatus;
 import com.api.digicell.entities.Client;
 import com.api.digicell.entities.Conversation;
-import com.api.digicell.entities.UserOrgPermissions;
 import com.api.digicell.entities.Organization;
 import com.api.digicell.services.UserAccountService;
 import com.api.digicell.repository.ClientRepository;
@@ -38,16 +37,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.FileInputStream;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.concurrent.atomic.AtomicInteger;
+
 import java.util.stream.Collectors;
-import java.util.function.Function;
+
 
 import java.util.Optional;
 import java.util.UUID;
@@ -64,7 +60,6 @@ public class ChatModule {
     private final ClientRepository clientRepository;
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
-    private final Environment environment;
     private final UserOrgPermissionsRepository userOrgPermissionsRepository;
     private final TaskScheduler taskScheduler;
     private static final int MAX_CLIENTS_PER_USER = 5;
@@ -153,8 +148,6 @@ public class ChatModule {
             log.info("🔒 SSL CONFIGURATION ENABLED - Starting SSL setup process...");
             try {
                 log.info("📂 LOADING SSL KEYSTORE - KeyStore path: {}", actualKeyStorePath);
-                
-                log.info("🛠️ PROCESSING KEYSTORE PATH - Removing file: prefix if present...");
                 // Remove "file:" prefix if present and create File object
                 String cleanPath = actualKeyStorePath.replace("file:", "");
                 
@@ -187,7 +180,6 @@ public class ChatModule {
                 }
             } catch (Exception e) {
                 log.error("Failed to configure SSL for Socket.IO server: {}", e.getMessage(), e);
-                log.error("SSL will be DISABLED - Server will run with HTTP only");
                 // Continue without SSL rather than failing
             }
         } else {
@@ -210,7 +202,6 @@ public class ChatModule {
         this.clientRepository = clientRepository;
         this.conversationRepository = conversationRepository;
         this.userRepository = userRepository;
-        this.environment = environment;
         this.userOrgPermissionsRepository = userOrgPermissionsRepository;
         this.taskScheduler = taskScheduler;
         this.zendeskService = zendeskService;
@@ -252,10 +243,9 @@ public class ChatModule {
             connectionService.removeConnection(socketId);
         });
 
-        server.addEventListener(socketConfig.EVENT_AGENT_REQUEST, Map.class, (socketClient, data, ackSender) -> {
+        server.addEventListener(SocketConfig.EVENT_AGENT_REQUEST, Map.class, (socketClient, data, ackSender) -> {
             log.info("🎯 --------->  EVENT_AGENT_REQUEST RECEIVED - Starting request processing...");
             try {
-                log.info("🔍 Extracting request data from incoming event...");
                 String clientId = (String) data.get("client_id");
                 String conversationId = (String) data.get("conversation_id");
                 String summary = (String) data.get("summary");
@@ -267,22 +257,21 @@ public class ChatModule {
                 log.info("📊 Basic request data extracted - Client: {}, Conversation: {}, Assistant: {}, Tenant: {}", 
                         clientId, conversationId, assistantId, tenantId);
                 
-                log.info("🔍 Extracting customer details from nested object...");
                 // Extract customer details from nested object
-                Map<String, Object> customerDetails = (Map<String, Object>) data.get("customer_details");
+                Map<String, Object> customerDetails = null;
+                if (data.get("customer_details") instanceof Map) {
+                    customerDetails = (Map<String, Object>) data.get("customer_details");
+                }
                 String clientName = null;
                 String clientEmail = null;
                 String clientPhone = null;
                 String clientLabel = null;
                 
                 if (customerDetails != null) {
-                    log.info("📝 Customer details object found, extracting fields...");
                     clientName = (String) customerDetails.get("name");
                     clientEmail = (String) customerDetails.get("email");
                     clientPhone = (String) customerDetails.get("phoneNumber");
                     clientLabel = (String) customerDetails.get("label");
-                    log.info("👤 Customer details extracted - Name: {}, Email: {}, Phone: {}, Label: {}", 
-                            clientName, clientEmail, clientPhone, clientLabel);
                 } else {
                     log.warn("⚠️ No customer details found in request data");
                 }
@@ -293,11 +282,9 @@ public class ChatModule {
                     int totalActiveRooms = redisUserService.getAllChatRoomIds().size();
                     log.info("📈 Current system status - Active Rooms: {}, Total Online Users: {}", totalActiveRooms, totalOnlineUsers);
                 } catch (Exception e) {
-                    log.warn("⚠️ Could not get total online users or rooms from Redis: {}", e.getMessage());
-                    log.info("📈 Current system status - Redis unavailable");
+                    log.warn("⚠️ Could not get total online users or rooms from Redis: {},  Current system status - Redis unavailable", e.getMessage());
                 }
                 
-                log.info("🔄 Delegating to handleUserRequest for conversation assignment...");
                 handleUserRequest(socketClient, clientId, conversationId, summary, history, timestamp, clientName, clientEmail, clientPhone, clientLabel,tenantId);
                 log.info("✅ EVENT_AGENT_REQUEST processing completed");
             } catch (Exception e) {
@@ -305,7 +292,7 @@ public class ChatModule {
             }
         });
 
-        server.addEventListener(socketConfig.EVENT_MESSAGE_REQ, ChatMessageRequest.class, (socketClient, messageRequest, ackSender) -> {
+        server.addEventListener(SocketConfig.EVENT_MESSAGE_REQ, ChatMessageRequest.class, (socketClient, messageRequest, ackSender) -> {
             log.info("💬 --------->  EVENT_MESSAGE_REQ RECEIVED - Starting message processing...");
             String conversationId = messageRequest.getConversationId();
         
@@ -365,17 +352,17 @@ public class ChatModule {
                     SocketIOClient userSocketClient = server.getClient(UUID.fromString(userSocketId));
                     if (userSocketClient != null) {
                         log.info("📤 Sending message directly to user socket: {}", userSocketId);
-                        userSocketClient.sendEvent(socketConfig.EVENT_MESSAGE_REQ_AGENT, messageRequest);
+                        userSocketClient.sendEvent(SocketConfig.EVENT_MESSAGE_REQ_AGENT, messageRequest);
                         log.info("✅ Message delivered directly to user socket");
                     } else {
                         log.warn("⚠️ Socket client not found, falling back to room operation");
-                        server.getRoomOperations(conversationId).sendEvent(socketConfig.EVENT_MESSAGE_REQ_AGENT, messageRequest);
+                        server.getRoomOperations(conversationId).sendEvent(SocketConfig.EVENT_MESSAGE_REQ_AGENT, messageRequest);
                         log.info("📡 Message sent via room operation fallback");
                     }
                 } else {
                     log.warn("⚠️ User socket not found, using room operation (room clients: {})", 
                             server.getRoomOperations(conversationId).getClients().size());
-                    server.getRoomOperations(conversationId).sendEvent(socketConfig.EVENT_MESSAGE_REQ_AGENT, messageRequest);
+                    server.getRoomOperations(conversationId).sendEvent(SocketConfig.EVENT_MESSAGE_REQ_AGENT, messageRequest);
                     log.info("📡 Message sent via room operation");
                 }
             } else {
@@ -384,7 +371,7 @@ public class ChatModule {
             log.info("✅ EVENT_MESSAGE_REQ processing completed");
         });
 
-        server.addEventListener(socketConfig.EVENT_MESSAGE_RESP_AGENT, UserMessageResponse.class, (socketClient, userResponse, ackSender) -> {
+        server.addEventListener(SocketConfig.EVENT_MESSAGE_RESP_AGENT, UserMessageResponse.class, (socketClient, userResponse, ackSender) -> {
             String conversationId = userResponse.getConversationId();
             
             log.info(" --------->  EVENT_MESSAGE_RESP_AGENT - User Response Details - Client: {}, Message: {}, Timestamp: {}", 
@@ -454,7 +441,7 @@ public class ChatModule {
                     log.info("📤 Sending response to chat module - Socket: {}, Message: {}", 
                             chatModuleSocketId, chatModuleResponse.getMessage() != null ? chatModuleResponse.getMessage().substring(0, Math.min(50, chatModuleResponse.getMessage().length())) + "..." : "null");
                     server.getClient(UUID.fromString(chatModuleSocketId))
-                          .sendEvent(socketConfig.EVENT_MESSAGE_RESP, chatModuleResponse);
+                          .sendEvent(SocketConfig.EVENT_MESSAGE_RESP, chatModuleResponse);
                 } else {
                     log.warn("Chat module socket not found");
                 }
@@ -464,7 +451,7 @@ public class ChatModule {
         });
 
         // Listen for user close requests
-        server.addEventListener(socketConfig.EVENT_CLOSE_AGENT, UserCloseRequest.class, (socketClient, closeRequest, ackSender) -> {
+        server.addEventListener(SocketConfig.EVENT_CLOSE_AGENT, UserCloseRequest.class, (socketClient, closeRequest, ackSender) -> {
             String userId = closeRequest.getUserId();
             String conversationId = closeRequest.getConversationId();
             String clientId = closeRequest.getClientId();
@@ -538,7 +525,7 @@ public class ChatModule {
                     
                     log.info("📤 Sending close event to chat module - Socket: {}, Conversation: {}", chatModuleSocketId, conversationId);
                     // Send close event to chat module
-                    chatModuleSocketClient.sendEvent(socketConfig.EVENT_CLOSE, chatCloseRequest);
+                    chatModuleSocketClient.sendEvent(SocketConfig.EVENT_CLOSE, chatCloseRequest);
                 } else {
                     log.warn("Chat module socket client not found");
                 }
@@ -548,7 +535,7 @@ public class ChatModule {
         });
 
         // Listen for client close/disconnect events
-        server.addEventListener(socketConfig.EVENT_CLIENT_CLOSE, Map.class, (socketClient, data, ackSender) -> {
+        server.addEventListener(SocketConfig.EVENT_CLIENT_CLOSE, Map.class, (socketClient, data, ackSender) -> {
             log.info(" --------->  EVENT_CLIENT_CLOSE - Client close event received");
             String conversationId = null;
             String clientId = null;
@@ -619,7 +606,7 @@ public class ChatModule {
                             closeInfo.setConversationId(conversationId);
                             closeInfo.setClientId(clientId);
                             
-                            userSocketClient.sendEvent(socketConfig.EVENT_CLOSE, closeInfo);
+                            userSocketClient.sendEvent(SocketConfig.EVENT_CLOSE, closeInfo);
                             log.info("Notified user {} about chat closure for conversation {}", userId, conversationId);
                         }
                     }
@@ -632,25 +619,14 @@ public class ChatModule {
         });
 
         // Handle ping from user
-        log.info("📋 Setting up EVENT_PING listener...");
         server.addEventListener(SocketConfig.EVENT_PING, UserPingRequest.class, (socketClient, pingRequest, ackSender) -> {
             log.info("🏓 --------->  EVENT_PING RECEIVED - Starting ping processing...");
             try {
                 String userId = pingRequest.getUserId();
                 String socketId = socketClient.getSessionId().toString();
-                log.info("📍 Ping details - UserId: '{}', SocketId: '{}'", userId, socketId);
-                log.info("📍 Ping request object - Class: {}, UserId from object: '{}'", 
-                        pingRequest.getClass().getSimpleName(), pingRequest.getUserId());
+                log.info("📍 Ping details - UserId: '{}', SocketId: '{}', request object - Class: {}, UserId from object: '{}', client details:  Remote address: {}, Session ID: {}, connected: {}, handshake params: {}", userId, socketId, pingRequest.getClass().getSimpleName(), pingRequest.getUserId(), socketClient.getRemoteAddress(), socketClient.getSessionId(), socketClient.isChannelOpen(), socketClient.getHandshakeData().getUrlParams());
+
                 
-                // Debug socket client details
-                log.info(" 🔌 Socket client details:  Remote address: {}, Session ID: {}, connected: {}, handshake params: {}", socketClient.getRemoteAddress(), socketClient.getSessionId(), socketClient.isChannelOpen(), socketClient.getHandshakeData().getUrlParams());
-              
-                
-                
-                
-                log.info("📋 NEW LOGIC: User {} verified with ONE socket ID (max {} clients allowed)", userId, MAX_CLIENTS_PER_USER);
-                
-                log.info("🔄 Checking if user reconnected with preserved conversations...");
                 // Check if this user reconnected with preserved conversations
                 boolean hadPreservedConversations = connectionService.checkAndClearUserReconnectedFlag(userId);
                 if (hadPreservedConversations) {
@@ -662,14 +638,11 @@ public class ChatModule {
                 }
 
                 // log.info("🔍 Checking if user exists in userMap..."); // COMMENTED OUT - Using Redis instead
-                log.info("🔍 Checking if user exists in Redis...");
+                // log.info("🔍 Checking if user exists in Redis...");
                 // Check if user is already in Redis
                 // ChatUser user = userMap.get(userId); // COMMENTED OUT - Using Redis instead
                 ChatUser user = null;
                 try {
-                    // ✅ DEBUG: Enhanced Redis debugging
-                    log.info("🔍 DEBUG: Checking Redis for user {} with detailed analysis...", userId);
-                    
                     // Check if key exists first
                     boolean keyExists = redisUserService.userKeyExists(userId);
                     log.info("🔍 DEBUG: Redis key exists: {}", keyExists);
@@ -682,7 +655,6 @@ public class ChatModule {
                     
                     // Try to get user normally
                     user = redisUserService.getUser(userId);
-                    log.info("🔍 DEBUG: getUser() result: {}", user != null ? "ChatUser object found" : "null");
                     
                 } catch (Exception e) {
                     log.warn("⚠️ Could not get user {} from Redis: {}", userId, e.getMessage());
@@ -732,7 +704,6 @@ public class ChatModule {
                     
                         Long userIdLong = Long.parseLong(userId);
                         userAccountService.setUserONLINE(userIdLong);
-                        log.info("✅ RECOVERY: User {} status set to ONLINE in database", userId);
                     } catch (NumberFormatException e) {
                         log.error("❌ RECOVERY: Invalid user ID format for database update: {}", userId);
                     } catch (Exception e) {
@@ -764,8 +735,6 @@ public class ChatModule {
                             if (user.getUserLabel() == null) {
                                 user.setUserLabel(userAccount.getPhoneNumber()); // Use phone as label
                             }
-                            log.info("✅ Updated missing user {} info from database - Email: {}, UserName: {}, Phone: {}", 
-                                    userId, user.getEmail(), user.getUserName(), user.getUserLabel());
                         } else {
                             log.warn("⚠️ User {} not found in database for info update", userId);
                         }
@@ -776,9 +745,9 @@ public class ChatModule {
                     }
                 }
                 
-                addUserToTenantPools(userId);
-                log.debug("✅ Ping processed for user: {}, email: {}, userName: {}, last ping time: {}", 
-                        user.getUserId(), user.getEmail(), user.getUserName(), user.getLastPingTime());
+                    addUserToTenantPools(userId);
+                log.debug("✅ Ping processed for user: {}, email: {}, userName: {} and added to tenant pools", 
+                        user.getUserId(), user.getEmail(), user.getUserName());
                 
                 // REDIS IMPLEMENTATION - Update user ping time in Redis
                 try {
@@ -790,9 +759,9 @@ public class ChatModule {
                 }
 
         
-            // Send pong response
-            socketClient.sendEvent(SocketConfig.EVENT_PONG, "pong");
-            log.info("✅ PONG sent to user: {}", userId);
+                // Send pong response
+                socketClient.sendEvent(SocketConfig.EVENT_PONG, "pong");
+                log.info("✅ PONG sent to user: {}", userId);
         
             } catch (Exception e) {
                 log.error("❌ Error in EVENT_PING processing: {}", e.getMessage(), e);
@@ -901,7 +870,7 @@ public class ChatModule {
             }
         });
 
-        server.addEventListener(socketConfig.EVENT_OFFLINE_REQ, UserPingRequest.class, (socketClient, offlineRequest, ackSender) -> {
+        server.addEventListener(SocketConfig.EVENT_OFFLINE_REQ, UserPingRequest.class, (socketClient, offlineRequest, ackSender) -> {
             log.info("📴 --------->  EVENT_OFFLINE_REQ RECEIVED - Starting offline request processing...");
             try {
                 if (offlineRequest == null) {
@@ -969,9 +938,6 @@ public class ChatModule {
 
     private void handleUserRequest(SocketIOClient socketClient, String clientId, String conversationId, String summary, String history, String timestamp, String clientName, String clientEmail, String clientPhone, String clientLabel,String tenantId) {
         log.info("🎯 HANDLE_USER_REQUEST STARTED ----> Request details - Conversation: {}, Client: {}, Tenant: {}", conversationId, clientId, tenantId);
-        log.info("👤 Customer info - Name: {}, Email: {}, Phone: {}", clientName, clientEmail, clientPhone);
-        
-        log.info("🔍 Checking for duplicate conversation ID...");
         // Check if this conversation ID already exists
         // if (chatRooms.containsKey(conversationId)) { // COMMENTED OUT - Using Redis instead
         ChatRoom existingRoom = null;
@@ -988,14 +954,10 @@ public class ChatModule {
                     existingRoom.getUserId(), existingRoom.getClientId(), existingRoom.isActive());
             return;
         }
-        log.info("✅ Conversation ID is unique, proceeding with assignment");
-        
-        log.info("💾 Starting database operations...");
+        log.info("✅ Conversation ID is unique, proceeding with assignment, Starting database operations...");
         
         // Store/Update client data in database
         try {
-            log.info("👤 Saving/updating client data in database...");
-            log.info("📝 Client data - ID: {}, Name: {}, Email: {}, Phone: {}", clientId, clientName, clientEmail, clientPhone);
             saveOrUpdateClientData(clientId, clientName, clientEmail, clientPhone);
             log.info("✅ Client data saved successfully for clientId: {}", clientId);
         } catch (Exception e) {
@@ -1008,17 +970,16 @@ public class ChatModule {
             log.info("🔍 Looking for available user - Current users: {}, Max clients per user: {}", totalOnlineUsers, MAX_CLIENTS_PER_USER);
         } catch (Exception e) {
             log.warn("⚠️ Could not get user count from Redis: {}", e.getMessage());
-            log.info("🔍 Looking for available user - Max clients per user: {}", MAX_CLIENTS_PER_USER);
         }
         
         // Debug: Log current system state
         // log.info("🔍 SYSTEM DEBUG - Current online users: {}", userMap.keySet()); // COMMENTED OUT - Using Redis instead
-        try {
-            Set<String> onlineUserIds = redisUserService.getAllUserIds();
-            log.info("🔍 SYSTEM DEBUG - Current online users: {}", onlineUserIds);
-        } catch (Exception e) {
-            log.warn("⚠️ Could not get online users from Redis: {}", e.getMessage());
-        }
+        // try {
+        //     Set<String> onlineUserIds = redisUserService.getAllUserIds();
+        //     log.info("🔍 SYSTEM DEBUG - Current online users: {}", onlineUserIds);
+        // } catch (Exception e) {
+        //     log.warn("⚠️ Could not get online users from Redis: {}", e.getMessage());
+        // }
         // log.info("🏢 TENANT POOLS DEBUG - Available tenant pools: {}", tenantUserPools.keySet()); // COMMENTED OUT - Using Redis instead
         // tenantUserPools.forEach((tenant, users) -> {
         //     log.info("   Tenant '{}' has {} users: {}", tenant, users.size(), users);
@@ -1038,7 +999,6 @@ public class ChatModule {
             log.warn("⚠️ Could not get tenant pools from Redis: {}", e.getMessage());
         }
         
-        log.info("🎯 Starting efficient tenant-aware user lookup...");
         // Use efficient tenant-aware assignment instead of blocking queue processing
         ChatUser user = findUserForTenantEfficiently(tenantId);
         
@@ -1062,7 +1022,7 @@ public class ChatModule {
                 userInfo.setClientLabel("");
                 
                 log.info("📤 Sending capacity exceeded response to chat module for client: {}", clientId);
-                socketClient.sendEvent(socketConfig.EVENT_AGENT_ACK, userInfo);
+                socketClient.sendEvent(SocketConfig.EVENT_AGENT_ACK, userInfo);
                 log.info("✅ Capacity exceeded response sent to chat module");
                 return;
             }
@@ -1072,7 +1032,7 @@ public class ChatModule {
             log.info("✅ Available user found for assignment");
             log.info("🎯 PHASE 1: Creating pending assignment for user {} to conversation {} (current clients: {}/{})", 
                     user.getUserId(), conversationId, user.getCurrentClientCount(), MAX_CLIENTS_PER_USER);
-            
+                    
             // Create pending assignment instead of direct assignment
             createPendingAssignment(socketClient, conversationId, clientId, user, tenantId, 
                                   summary, history, timestamp, clientName, clientEmail, clientPhone, clientLabel);
@@ -1083,7 +1043,7 @@ public class ChatModule {
             try {
                 boolean redisEmpty = redisUserService.getAllUserIds().isEmpty();
                 log.warn("💔 Assignment failed - Redis empty: {}, All users at capacity or offline", redisEmpty);
-            } catch (Exception e) {
+                    } catch (Exception e) {
                 log.warn("💔 Assignment failed - Could not check Redis status: {}", e.getMessage());
             }
             
@@ -1229,7 +1189,7 @@ public class ChatModule {
         // ChatRoom chatRoom = chatRooms.get(conversationId); // COMMENTED OUT - Using Redis instead
         try {
             ChatRoom chatRoom = redisUserService.getChatRoom(conversationId);
-            return chatRoom != null ? chatRoom.getUserId() : null;
+        return chatRoom != null ? chatRoom.getUserId() : null;
         } catch (Exception e) {
             log.warn("⚠️ Could not get chat room {} from Redis: {}", conversationId, e.getMessage());
             return null;
@@ -1243,7 +1203,7 @@ public class ChatModule {
             return redisUserService.getChatRoom(conversationId);
         } catch (Exception e) {
             log.warn("⚠️ Could not get chat room {} from Redis: {}", conversationId, e.getMessage());
-            return null;
+        return null;
         }
     }
     
@@ -1428,7 +1388,7 @@ public class ChatModule {
             Set<String> userIds = redisUserService.getAllUserIds();
             if (!userIds.isEmpty()) {
             log.info("   📊 LOAD BALANCING ANALYSIS:");
-
+            
             // COMMENTED OUT - Complex load balancing analysis requires refactoring for Redis
             /*
             // Calculate load distribution statistics
@@ -1626,10 +1586,10 @@ public class ChatModule {
                         if (nextCandidate.isPresent()) {
                             String candidateId = nextCandidate.get();
                             int candidateLoad = tenantUsers.get(candidateId).getCurrentClientCount();
-                            log.info("       🎯 Next assignment: User {} (load: {}/{})", candidateId, candidateLoad, MAX_CLIENTS_PER_USER);
-                        } else {
-                            log.info("       ❌ All users at capacity for tenant '{}'", tenantId);
-                        }
+                    log.info("       🎯 Next assignment: User {} (load: {}/{})", candidateId, candidateLoad, MAX_CLIENTS_PER_USER);
+                } else {
+                    log.info("       ❌ All users at capacity for tenant '{}'", tenantId);
+                }
                     } else {
                         log.info("       📭 No valid users found in Redis for tenant '{}'", tenantId);
                     }
@@ -1637,8 +1597,8 @@ public class ChatModule {
                     log.warn("       ⚠️ Error calculating tenant load distribution from Redis: {}", e.getMessage());
                 }
                 }
-            } else {
-                log.info("     No tenant pools configured");
+        } else {
+            log.info("     No tenant pools configured");
             }
         } catch (Exception e) {
             log.warn("   Could not get tenant pools from Redis: {}", e.getMessage());
@@ -1685,7 +1645,7 @@ public class ChatModule {
                     // Get complete conversation details from Redis
                     try {
                         ChatRoom chatRoom = redisUserService.getChatRoom(conversationId);
-                        if (chatRoom != null) {
+                    if (chatRoom != null) {
                             // Set complete conversation details for proper restoration
                             // restoreInfo.setClientId(chatRoom.getClientId());
                             // restoreInfo.setSummary(chatRoom.getSummary());
@@ -1708,8 +1668,8 @@ public class ChatModule {
                                     restoreInfo.setClientLabel("active");
                                 } else {
                                     // Fallback if client not found in database
-                                    restoreInfo.setClientName("Conversation Restored");
-                                    restoreInfo.setClientLabel("active");
+                        restoreInfo.setClientName("Conversation Restored");
+                        restoreInfo.setClientLabel("active");
                                 }
                             } catch (Exception e) {
                                 log.warn("⚠️ Could not get client details for restoration of conversation {}: {}", 
@@ -1719,7 +1679,7 @@ public class ChatModule {
                                 restoreInfo.setClientLabel("active");
                             }
                             
-                            userSocketClient.sendEvent(socketConfig.EVENT_NEW_CLIENT_REQ, restoreInfo);
+                        userSocketClient.sendEvent(socketConfig.EVENT_NEW_CLIENT_REQ, restoreInfo);
                             log.info("📤 Sent COMPLETE conversation restore notification to user {} for conversation {} with client {}", 
                                     userId, conversationId, chatRoom.getClientId());
                         } else {
@@ -1769,8 +1729,6 @@ public class ChatModule {
      * Handles nullable fields appropriately.
      */
     private void saveOrUpdateClientData(String clientId, String clientName, String clientEmail, String clientPhone) {
-        log.info("💾 SAVE_OR_UPDATE_CLIENT_DATA STARTED - Processing client data...");
-        log.info("📝 Client data received - ID: {}, Name: {}, Email: {}, Phone: {}", clientId, clientName, clientEmail, clientPhone);
         
         if (clientId == null || clientId.trim().isEmpty()) {
             log.warn("❌ VALIDATION FAILED - Cannot save client data: clientId is null or empty");
@@ -1783,7 +1741,6 @@ public class ChatModule {
             Client existingClient = clientRepository.findById(clientId).orElse(null);
             
             if (existingClient != null) {
-                log.info("✅ EXISTING CLIENT FOUND - Updating client data if needed...");
                 // Update existing client if new data is provided
                 boolean updated = false;
                 
@@ -1805,14 +1762,12 @@ public class ChatModule {
                 if (updated) {
                     log.info("💾 SAVING CLIENT UPDATES - Persisting updated client data...");
                     clientRepository.save(existingClient);
-                    log.info("✅ Updated existing client data for clientId: {}", clientId);
                 } else {
                     log.debug("ℹ️ No updates needed for existing client: {}", clientId);
                 }
             } else {
                 log.info("🆕 CREATING NEW CLIENT - No existing client found, creating new record...");
-                // Create new client
-                log.info("🏗️ BUILDING CLIENT OBJECT - Creating client with sanitized data...");
+
                 Client newClient = Client.builder()
                     .clientId(clientId)
                     .name(clientName != null && !clientName.trim().isEmpty() ? clientName.trim() : "Unknown")
@@ -1821,7 +1776,6 @@ public class ChatModule {
                     .isAssigned(true)
                     .build();
                 
-                log.info("💾 SAVING NEW CLIENT - Persisting new client to database...");
                 clientRepository.save(newClient);
                 log.info("Created new client with clientId: {}", clientId);
             }
@@ -1921,8 +1875,6 @@ public class ChatModule {
             log.warn("⚠️ Invalid tenant ID provided: '{}'", tenantId);
             return null;
         }
-        
-        log.info("🏢 Looking up tenant user pool...");
         // Set<String> tenantUsers = tenantUserPools.get(tenantId); // COMMENTED OUT - Using Redis instead
         Set<String> tenantUsers = null;
         try {
@@ -1937,8 +1889,6 @@ public class ChatModule {
             return null;
         }
         
-        log.info("⚖️ LOAD BALANCING: Finding user with minimum current clients...");
-        
         String bestUserId = null;
         int minClientCount = Integer.MAX_VALUE;
         
@@ -1948,11 +1898,11 @@ public class ChatModule {
         for (String userId : tenantUsers) {
             log.debug("⚡ Analyzing user load - User: {}", userId);
             
-            // Skip users that have been tried before for this assignment
-            if (excludeUserIds != null && excludeUserIds.contains(userId)) {
-                log.debug("⏭️ User {} skipped - Previously tried for this assignment", userId);
-                continue;
-            }
+            // // Skip users that have been tried before for this assignment
+            // if (excludeUserIds != null && excludeUserIds.contains(userId)) {
+            //     log.debug("⏭️ User {} skipped - Previously tried for this assignment", userId);
+            //     continue;
+            // }
             
             // AtomicInteger userCount = userClientCounts.get(userId); // COMMENTED OUT - Using Redis instead
             // int currentCount = userCount != null ? userCount.get() : 0;
@@ -1982,8 +1932,6 @@ public class ChatModule {
                     long timeSinceLastPing = currentTime - user.getLastPingTime();
                     boolean isRecentlyActive = timeSinceLastPing < userPingTimeoutMs; // Configurable timeout
                     
-                    log.debug("⏰ User {} ping status - Time since last ping: {}ms, Recently active: {}", 
-                             userId, timeSinceLastPing, isRecentlyActive);
                     
                     // Find user with minimum client count for best load balancing, but only if recently active
                     if (currentCount < minClientCount && isRecentlyActive && !user.isOfflineRequested()) {
@@ -2007,11 +1955,11 @@ public class ChatModule {
         }
         
         // Log load balancing decision details
-        log.info("📊 LOAD BALANCING ANALYSIS:");
-        userLoadMap.forEach((userId, count) -> {
-            String status = count >= MAX_CLIENTS_PER_USER ? "AT CAPACITY" : "AVAILABLE";
-            log.info("   User {} → {}/{} clients ({})", userId, count, MAX_CLIENTS_PER_USER, status);
-        });
+        // log.info("📊 LOAD BALANCING ANALYSIS:");
+        // userLoadMap.forEach((userId, count) -> {
+        //     String status = count >= MAX_CLIENTS_PER_USER ? "AT CAPACITY" : "AVAILABLE";
+        //     log.info("   User {} → {}/{} clients ({})", userId, count, MAX_CLIENTS_PER_USER, status);
+        // });
         
         if (bestUserId != null) {
             ChatUser selectedUser = null;
@@ -2024,11 +1972,9 @@ public class ChatModule {
             
             log.info("✅ OPTIMAL USER SELECTED - User: {}, Current load: {}/{} (minimum among available)", 
                     bestUserId, minClientCount, MAX_CLIENTS_PER_USER);
-            log.info("🎯 Load balancing successful - Selected user with lowest workload");
             return selectedUser;
         } else {
-            log.info("❌ NO AVAILABLE USERS - All users in tenant pool are at capacity");
-            log.info("💡 Consider adding more agents for tenant: {}", tenantId);
+            log.warn("❌ NO AVAILABLE USERS - All users in tenant pool are at capacity, Consider adding more agents for tenant: {}", tenantId);
             return null;
         }
     }
@@ -2096,7 +2042,7 @@ public class ChatModule {
         // userClientCounts.remove(userId); // COMMENTED OUT - Using Redis instead
         try {
             redisUserService.removeUserFromAllTenantPools(userId);
-            log.debug("Removed user {} from all tenant pools", userId);
+        log.debug("Removed user {} from all tenant pools", userId);
         } catch (Exception e) {
             log.warn("⚠️ Could not remove user {} from tenant pools in Redis: {}", userId, e.getMessage());
         }
@@ -2112,7 +2058,7 @@ public class ChatModule {
         try {
             redisUserService.incrementUserClientCount(userId);
             int newCount = redisUserService.getUserClientCount(userId);
-            log.debug("✅ User {} client count incremented to: {}", userId, newCount);
+        log.debug("✅ User {} client count incremented to: {}", userId, newCount);
         } catch (Exception e) {
             log.warn("⚠️ Could not increment client count for user {} in Redis: {}", userId, e.getMessage());
         }
@@ -2144,7 +2090,7 @@ public class ChatModule {
             if (client != null) {
                 log.info("🔌 Actively disconnecting client with socketId: {}", socketId);
                 client.disconnect();
-            } else {
+        } else {
                 log.warn("🔍 Client to disconnect not found for socketId: {}", socketId);
             }
         } catch (IllegalArgumentException e) {
@@ -2409,7 +2355,7 @@ public class ChatModule {
                 agentAck.setClientEmail(pendingAssignment.getClientEmail());
                 agentAck.setClientPhone(pendingAssignment.getClientPhone());
                 
-                chatModuleSocket.sendEvent(socketConfig.EVENT_AGENT_ACK, agentAck);
+                chatModuleSocket.sendEvent(SocketConfig.EVENT_AGENT_ACK, agentAck);
                 log.info("✅ AGENT_ACK sent to chat module successfully");
             } else {
                 log.error("❌ Chat module socket not found for sending agent_ack");
@@ -2438,7 +2384,7 @@ public class ChatModule {
                     log.debug("✅ Assignment still valid for conversation {}", conversationId);
                 }
             } else {
-                log.debug("ℹ️ Assignment already processed for conversation {}", conversationId);
+                log.debug("Assignment already processed for conversation {}", conversationId);
             }
         }, Instant.now().plusSeconds(agentAckTimeoutSeconds + 5)); // Add 5s buffer
     }
@@ -2456,7 +2402,7 @@ public class ChatModule {
         userInfo.setClientName("");
         userInfo.setClientLabel("");
         
-        socketClient.sendEvent(socketConfig.EVENT_AGENT_ACK, userInfo);
+        socketClient.sendEvent(SocketConfig.EVENT_AGENT_ACK, userInfo);
         log.info("✅ Unavailable response sent to chat module");
     }
 

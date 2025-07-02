@@ -2,7 +2,7 @@
 <configuration>
     
     <!-- Define log directory - can be overridden via environment variable -->
-    <property name="LOG_DIR" value="${LOG_DIR:-./logs}" />
+    <property name="LOG_DIR" value="${LOG_DIR:-/logs/agentManager}" />
     <property name="APP_NAME" value="Digicell" />
     
     <!-- Console Appender - for terminal output -->

@@ -54,9 +54,8 @@ public class SocketConnectionService {
     
     @PostConstruct
     public void init() {
-        log.info("🔧 Initializing SocketConnectionService with conversation preservation timeout: {} minutes", 
-                conversationPreservationTimeoutMinutes);
-        log.info("🔧 Cleanup interval: {} minutes", cleanupIntervalMinutes);
+        log.info("🔧 Initializing SocketConnectionService with conversation preservation timeout: {} minutes, Cleanup interval: {} minutes", 
+                conversationPreservationTimeoutMinutes, cleanupIntervalMinutes);
         
         // 🔄 RECOVERY: Rebuild conversation tracking from Redis after restart
         recoverConversationTrackingFromRedis();
@@ -709,8 +708,7 @@ public class SocketConnectionService {
                 return;
             }
             
-            log.info("🔄 RECOVERY: Found {} users with active conversations in Redis", redisUserConversations.size());
-            log.info("🔄 RECOVERY: Found {} total active conversations in Redis", redisConversationUserMap.size());
+            log.info("🔄 RECOVERY: Found {} users with active conversations in Redis and {} total active conversations in Redis", redisUserConversations.size(), redisConversationUserMap.size());
             
             // Rebuild userActiveConversations map
             userActiveConversations.clear();
@@ -724,8 +722,7 @@ public class SocketConnectionService {
             int totalRecoveredConversations = conversationToUserMap.size();
             int usersWithConversations = userActiveConversations.size();
             
-            log.info("✅ RECOVERY COMPLETED:");
-            log.info("   📊 Recovered {} active conversations", totalRecoveredConversations);
+            log.info("  ✅ RECOVERY COMPLETED, Recovered {} active conversations", totalRecoveredConversations);
             log.info("   👥 Recovered conversation tracking for {} users", usersWithConversations);
             
             // Log detailed recovery info
@@ -733,11 +730,9 @@ public class SocketConnectionService {
                 log.info("   🔄 User {} → {} conversations: {}", userId, conversations.size(), conversations);
             });
             
-            log.info("🎯 RECOVERY: Conversation tracking fully restored from Redis");
             
         } catch (Exception e) {
             log.error("❌ RECOVERY FAILED: Error recovering conversation tracking from Redis: {}", e.getMessage(), e);
-            log.warn("⚠️ RECOVERY: Application will continue with empty conversation tracking");
             log.warn("⚠️ RECOVERY: Users may need to reconnect to restore conversation tracking");
         }
     }
