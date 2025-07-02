@@ -2,7 +2,6 @@ package com.api.digicell.model;
 
 import lombok.Data;
 import java.io.Serializable;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 import org.slf4j.Logger;
@@ -136,17 +135,5 @@ public class ChatUser implements Serializable {
         
         log.debug("✅ Post-deserialization cleanup completed for user {}: {} active conversations", 
                 userId, activeConversations.size());
-    }
-
-    public static class UserComparator implements Comparator<ChatUser> {
-        @Override
-        public int compare(ChatUser a1, ChatUser a2) {
-            // First compare by offline request status
-            if (a1.isOfflineRequested() != a2.isOfflineRequested()) {
-                return a1.isOfflineRequested() ? 1 : -1;
-            }
-            // Then compare by current client count
-            return Integer.compare(a1.getCurrentClientCount(), a2.getCurrentClientCount());
-        }
     }
 } 

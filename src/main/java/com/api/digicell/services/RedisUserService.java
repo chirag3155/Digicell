@@ -19,9 +19,10 @@ import java.util.HashMap;
 public class RedisUserService {
 
     private static final String USER_KEY_PREFIX = "chat:user:";
-    private static final String USER_SOCKET_PREFIX = "chat:users:socket";
-    private static final String ROOM_KEY_PREFIX = "chat:room:";
-    private static final String TENANT_POOL_PREFIX = "chat:tenant:pool:";
+    private static final String USER_SOCKET_KEY_PREFIX = "chat:users:socket:";
+    private static final String CHAT_ROOM_KEY_PREFIX = "chat:room:";
+    private static final String TENANT_POOL_KEY_PREFIX = "chat:tenant:pool:";
+    private static final String PENDING_ASSIGNMENT_KEY_PREFIX = "chat:pending:assignment:";
     private static final long DEFAULT_TTL_HOURS = 24; // 24 hours TTL for user data
 
     @Autowired
@@ -352,7 +353,7 @@ public class RedisUserService {
      * Generate Redis key for user socket
      */
     private String getUserSocketKey(String userId) {
-        return USER_SOCKET_PREFIX + ":" + userId;
+        return USER_SOCKET_KEY_PREFIX + ":" + userId;
     }
 
     // ===== CHAT ROOM OPERATIONS =====
@@ -451,10 +452,10 @@ public class RedisUserService {
      */
     public Set<String> getAllChatRoomIds() {
         try {
-            Set<String> keys = redisTemplate.keys(ROOM_KEY_PREFIX + "*");
+            Set<String> keys = redisTemplate.keys(CHAT_ROOM_KEY_PREFIX + "*");
             if (keys != null) {
                 return keys.stream()
-                        .map(key -> key.substring(ROOM_KEY_PREFIX.length()))
+                        .map(key -> key.substring(CHAT_ROOM_KEY_PREFIX.length()))
                         .collect(Collectors.toSet());
             }
             return Set.of();
@@ -490,7 +491,7 @@ public class RedisUserService {
      * Generate Redis key for chat room
      */
     private String getRoomKey(String conversationId) {
-        return ROOM_KEY_PREFIX + conversationId;
+        return CHAT_ROOM_KEY_PREFIX + conversationId;
     }
 
     // ===== TENANT USER POOL OPERATIONS =====
@@ -590,10 +591,10 @@ public class RedisUserService {
      */
     public Set<String> getAllTenantIds() {
         try {
-            Set<String> keys = redisTemplate.keys(TENANT_POOL_PREFIX + "*");
+            Set<String> keys = redisTemplate.keys(TENANT_POOL_KEY_PREFIX + "*");
             if (keys != null) {
                 return keys.stream()
-                        .map(key -> key.substring(TENANT_POOL_PREFIX.length()))
+                        .map(key -> key.substring(TENANT_POOL_KEY_PREFIX.length()))
                         .collect(Collectors.toSet());
             }
             return Set.of();
@@ -640,10 +641,10 @@ public class RedisUserService {
     }
 
     /**
-     * Generate Redis key for tenant pool
+     * Get tenant pool key
      */
     private String getTenantPoolKey(String tenantId) {
-        return TENANT_POOL_PREFIX + tenantId;
+        return TENANT_POOL_KEY_PREFIX + tenantId;
     }
 
     // ===== USER CLIENT COUNT OPERATIONS (using user data) =====
@@ -832,5 +833,133 @@ public class RedisUserService {
             log.error("❌ Error checking if conversation {} is active: {}", conversationId, e.getMessage(), e);
             return false;
         }
+    }
+
+    // ============= PENDING ASSIGNMENT OPERATIONS =============
+    
+    /**
+     * Add pending assignment to Redis
+     */
+    public void addPendingAssignment(com.api.digicell.model.PendingAssignment assignment) {
+        if (assignment == null || assignment.getConversationId() == null) {
+            log.warn("❌ Cannot add null assignment or assignment with null conversationId");
+            return;
+        }
+
+        try {
+            String key = getPendingAssignmentKey(assignment.getConversationId());
+            redisTemplate.opsForValue().set(key, assignment, assignment.getMaxRetryLimit() * 60L, TimeUnit.SECONDS);
+            log.info("✅ Pending assignment added for conversation {} assigned to user {} with {}s timeout", 
+                    assignment.getConversationId(), assignment.getAssignedUserId(), 
+                    assignment.getTimeoutTime().minusSeconds(assignment.getAssignmentTime().getSecond()).getSecond());
+        } catch (Exception e) {
+            log.error("❌ Error adding pending assignment for conversation {} to Redis: {}", 
+                    assignment.getConversationId(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Get pending assignment from Redis
+     */
+    public com.api.digicell.model.PendingAssignment getPendingAssignment(String conversationId) {
+        if (conversationId == null || conversationId.trim().isEmpty()) {
+            log.warn("❌ Cannot get pending assignment with null or empty conversationId");
+            return null;
+        }
+
+        try {
+            String key = getPendingAssignmentKey(conversationId);
+            Object assignmentObj = redisTemplate.opsForValue().get(key);
+            
+            if (assignmentObj != null) {
+                if (assignmentObj instanceof com.api.digicell.model.PendingAssignment) {
+                    return (com.api.digicell.model.PendingAssignment) assignmentObj;
+                } else {
+                    log.warn("⚠️ Unexpected object type for pending assignment {}: {}", 
+                            conversationId, assignmentObj.getClass().getSimpleName());
+                    return null;
+                }
+            } else {
+                log.debug("📭 No pending assignment found for conversation {}", conversationId);
+                return null;
+            }
+        } catch (Exception e) {
+            log.error("❌ Error retrieving pending assignment for conversation {} from Redis: {}", 
+                    conversationId, e.getMessage(), e);
+            return null;
+        }
+    }
+
+    /**
+     * Update pending assignment in Redis
+     */
+    public void updatePendingAssignment(com.api.digicell.model.PendingAssignment assignment) {
+        if (assignment == null || assignment.getConversationId() == null) {
+            log.warn("❌ Cannot update null assignment or assignment with null conversationId");
+            return;
+        }
+
+        try {
+            String key = getPendingAssignmentKey(assignment.getConversationId());
+            redisTemplate.opsForValue().set(key, assignment, assignment.getMaxRetryLimit() * 60L, TimeUnit.SECONDS);
+            log.debug("✅ Pending assignment updated for conversation {} (status: {}, retry: {}/{})", 
+                    assignment.getConversationId(), assignment.getStatus(), 
+                    assignment.getCurrentRetryCount(), assignment.getMaxRetryLimit());
+        } catch (Exception e) {
+            log.error("❌ Error updating pending assignment for conversation {} in Redis: {}", 
+                    assignment.getConversationId(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Remove pending assignment from Redis
+     */
+    public boolean removePendingAssignment(String conversationId) {
+        if (conversationId == null || conversationId.trim().isEmpty()) {
+            log.warn("❌ Cannot remove pending assignment with null or empty conversationId");
+            return false;
+        }
+
+        try {
+            String key = getPendingAssignmentKey(conversationId);
+            Boolean deleted = redisTemplate.delete(key);
+            
+            if (Boolean.TRUE.equals(deleted)) {
+                log.info("✅ Pending assignment removed for conversation {}", conversationId);
+                return true;
+            } else {
+                log.debug("📭 No pending assignment found to remove for conversation {}", conversationId);
+                return false;
+            }
+        } catch (Exception e) {
+            log.error("❌ Error removing pending assignment for conversation {} from Redis: {}", 
+                    conversationId, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    /**
+     * Get all pending assignment conversation IDs
+     */
+    public Set<String> getAllPendingAssignmentIds() {
+        try {
+            Set<String> keys = redisTemplate.keys(PENDING_ASSIGNMENT_KEY_PREFIX + "*");
+            if (keys != null) {
+                return keys.stream()
+                        .map(key -> key.substring(PENDING_ASSIGNMENT_KEY_PREFIX.length()))
+                        .collect(Collectors.toSet());
+            }
+            return new HashSet<>();
+        } catch (Exception e) {
+            log.error("❌ Error getting all pending assignment IDs from Redis: {}", e.getMessage(), e);
+            return new HashSet<>();
+        }
+    }
+
+    /**
+     * Get pending assignment key
+     */
+    private String getPendingAssignmentKey(String conversationId) {
+        return PENDING_ASSIGNMENT_KEY_PREFIX + conversationId;
     }
 } 

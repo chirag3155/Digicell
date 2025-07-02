@@ -48,7 +48,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.function.Function;
-import java.util.Comparator;
+
 import java.util.Optional;
 import java.util.UUID;
 
@@ -71,6 +71,17 @@ public class ChatModule {
     private final ZendeskService zendeskService;
     private final RedisUserService redisUserService;
     
+    // User ping timeout configuration
+    @Value("${socket.user.ping.timeout:10000}")
+    private long userPingTimeoutMs;
+
+    // Agent assignment configuration
+    @Value("${socket.agent.ack.timeout:30}")
+    private int agentAckTimeoutSeconds;
+    
+    @Value("${socket.agent.assignment.retry.limit:3}")
+    private int agentAssignmentRetryLimit;
+    
     /*
      * NEW BUSINESS LOGIC RULES:
      * 1. ONE USER = ONE SOCKET ID (enforced in SocketConnectionService)
@@ -88,10 +99,6 @@ public class ChatModule {
     
     @Value("${socket.ssl.key-store-password:}")
     private String keyStorePassword;
-
-    // User ping timeout configuration
-    @Value("${socket.user.ping.timeout:10000}")
-    private long userPingTimeoutMs;
 
     // COMMENTED OUT - Using Redis instead
     // private final Map<String, Set<String>> tenantUserPools = new ConcurrentHashMap<>();
@@ -928,6 +935,49 @@ public class ChatModule {
                 log.error("❌ Error in EVENT_OFFLINE_REQ processing: {}", e.getMessage(), e);
             }
         });
+
+        // Handle acknowledgment from user for new client request
+        server.addEventListener("ack_new_client_req", Map.class, (socketClient, data, ackSender) -> {
+            log.info("✅ --------->  ACK_NEW_CLIENT_REQ RECEIVED - Starting acknowledgment processing...");
+            try {
+                if (data == null) {
+                    log.error("❌ ACK VALIDATION FAILED - Received null data object");
+                    return;
+                }
+
+                String conversationId = (String) data.get("conversationId");
+                String userId = (String) data.get("user_id");
+                String userName = (String) data.get("userName");
+                String userEmail = (String) data.get("userEmail");
+                String status = (String) data.get("status"); // "accepted" or "rejected"
+
+                if (conversationId == null || conversationId.trim().isEmpty()) {
+                    log.error("❌ ACK VALIDATION FAILED - Missing conversationId");
+                    return;
+                }
+
+                log.info("📋 ACK details - Conversation: {}, User: {}, Status: {}", conversationId, userId, status);
+
+                // Get pending assignment from Redis
+                com.api.digicell.model.PendingAssignment pendingAssignment = redisUserService.getPendingAssignment(conversationId);
+                if (pendingAssignment == null) {
+                    log.warn("⚠️ No pending assignment found for conversation {}, possibly already processed or timed out", conversationId);
+                    return;
+                }
+
+                if ("accepted".equalsIgnoreCase(status)) {
+                    log.info("✅ Assignment ACCEPTED by user {} for conversation {}", userId, conversationId);
+                    handleAssignmentAccepted(pendingAssignment, userId, userName, userEmail);
+                } else {
+                    log.info("❌ Assignment REJECTED by user {} for conversation {}", userId, conversationId);
+                    handleAssignmentRejected(pendingAssignment);
+                }
+
+                log.info("✅ ACK_NEW_CLIENT_REQ processing completed for conversation: {}", conversationId);
+            } catch (Exception e) {
+                log.error("❌ Error in ACK_NEW_CLIENT_REQ processing: {}", e.getMessage(), e);
+            }
+        });
     }
 
     private void handleUserRequest(SocketIOClient socketClient, String clientId, String conversationId, String summary, String history, String timestamp, String clientName, String clientEmail, String clientPhone, String clientLabel,String tenantId) {
@@ -1005,7 +1055,7 @@ public class ChatModule {
         // Use efficient tenant-aware assignment instead of blocking queue processing
         ChatUser user = findUserForTenantEfficiently(tenantId);
         
-        // NEW LOGIC: One user = One socket, Max 5 clients per user
+        // NEW LOGIC: Two-phase assignment with acknowledgment
         if (user != null) {
             int currentClientCount = user.getCurrentClientCount();
             log.info("🔍 USER CAPACITY CHECK - User: {}, Current clients: {}/{}", 
@@ -1033,144 +1083,24 @@ public class ChatModule {
             log.info("✅ USER HAS CAPACITY - User {} can accept new client ({}/{} slots used)", 
                     user.getUserId(), currentClientCount, MAX_CLIENTS_PER_USER);
             log.info("✅ Available user found for assignment");
-            log.info("🎯 Assigning user {} to conversation {} (current clients: {}/{})", 
+            log.info("🎯 PHASE 1: Creating pending assignment for user {} to conversation {} (current clients: {}/{})", 
                     user.getUserId(), conversationId, user.getCurrentClientCount(), MAX_CLIENTS_PER_USER);
-                    
-            log.info("🏠 Creating chat room for conversation...");
-            // Create and store the chat room using conversationId as the key
-            ChatRoom chatRoom = new ChatRoom(conversationId, user.getUserId(), clientId, summary, history);
-            // chatRooms.put(conversationId, chatRoom); // COMMENTED OUT - Using Redis instead
-            try {
-                redisUserService.addChatRoom(chatRoom);
-                log.info("✅ Chat room created and stored in Redis - Room ID: {}", conversationId);
-            } catch (Exception e) {
-                log.warn("⚠️ Could not store chat room {} in Redis: {}", conversationId, e.getMessage());
-            }
             
-            log.info("📊 Tracking conversation for user preservation...");
-            // Track this conversation for the user to preserve it during reconnections
-            connectionService.addUserConversation(user.getUserId(), conversationId);
-            log.info("✅ Conversation tracking added for user: {}", user.getUserId());
-
-            log.info("📈 Updating user client counts...");
-            // Add conversation to user's active conversations
-            user.addConversation(conversationId);
-            user.setCurrentClientCount(user.getCurrentClientCount() + 1);
-            
-                                // Update atomic client count for efficient tracking
-                    incrementUserClientCount(user.getUserId());
-                    
-                    // Update user in Redis after assignment
-                    try {
-                        redisUserService.updateUser(user);
-                        log.debug("✅ Updated user {} in Redis after client assignment", user.getUserId());
-                    } catch (Exception e) {
-                        log.warn("⚠️ Could not update user {} in Redis: {}", user.getUserId(), e.getMessage());
-                    }
-                    
-                    log.info("✅ User client count updated - User: {}, New count: {}, Maximum: {}", user.getUserId(), user.getCurrentClientCount(), MAX_CLIENTS_PER_USER);
-            
-            log.info("🔗 Looking up user socket for room joining...");
-            // Store socket ID mapping
-            // String userSocketId = connectionService.getUserSocketId(user.getUserId()); // COMMENTED OUT - Using Redis instead
-            String userSocketId = null;
-            try {
-                userSocketId = redisUserService.getUserSocket(user.getUserId());
-            } catch (Exception e) {
-                log.warn("⚠️ Could not get socket for user {} from Redis: {}", user.getUserId(), e.getMessage());
-            }
-            log.info("🔍 Socket mapping check - UserId: {}, SocketId: {}", user.getUserId(), userSocketId);
-            
-            if (userSocketId != null) {
-                log.info("🎯 Attempting to get socket client for user...");
-                SocketIOClient userSocketClient = server.getClient(UUID.fromString(userSocketId));
-                log.info("🔌 Socket client lookup result - SocketId: {}, Client found: {}", userSocketId, userSocketClient != null);
-                
-                if (userSocketClient != null) {
-                    log.info("🏠 Joining user to conversation room...");
-                    // Join the user to the conversation room for message routing
-                    userSocketClient.joinRoom(conversationId);
-                    log.info("✅ User {} joined room: {}", user.getUserId(), conversationId);
-                    
-                    log.info("📝 Preparing user info response...");
-                    // Prepare user info data
-                    ClientInfoResponse userInfo = new ClientInfoResponse();
-                    userInfo.setStatus("online");
-                    userInfo.setUserId(user.getUserId());
-                    userInfo.setUserName(user.getEmail());
-                    userInfo.setConversationId(conversationId);
-                    userInfo.setTenantId(tenantId);
-                    userInfo.setHistory(history);
-                    userInfo.setSummary(summary);
-                    userInfo.setClientId(clientId);
-                    userInfo.setClientName(clientName);
-                    userInfo.setClientLabel(clientLabel);
-                    userInfo.setClientEmail(clientEmail);
-                    userInfo.setClientPhone(clientPhone);
-            
-                    
-                
-                    // Send acknowledgment to chat module, user and zendesk WRAPPER
-                    log.info("📤 Sending acknowledgment to CHAT MODULE, USER and ZENDESK WRAPPER, {}", userInfo);
-                    socketClient.sendEvent(socketConfig.EVENT_AGENT_ACK, userInfo);
-            
-                    
-                
-    
-                    userSocketClient.sendEvent(socketConfig.EVENT_NEW_CLIENT_REQ, userInfo);
-                
-                     // Notify Zendesk
-                    if (user.getEmail() != null) {
-                        zendeskService.assignAgentToTicket(conversationId, user.getEmail(), summary, clientName, clientEmail, clientPhone)
-                            .subscribe(); // Subscribe to trigger the call
-                    } else {
-                        log.warn("User email is null for userId: {}. Cannot notify Zendesk.", user.getUserId());
-                    }
-
-                    log.info("📊 Current room statistics - Conversation {}: {} members, Total clients: {}", 
-                            conversationId, server.getRoomOperations(conversationId).getClients().size(), 
-                            server.getAllClients().size());
-                    
-                            
-                    // Store conversation data in database
-                    try {
-                        log.info("💾 Saving conversation data to database...");
-                        saveConversationData(conversationId, user.getUserId(), clientId);
-                        log.info("✅ Conversation data saved successfully");
-                    } catch (Exception e) {
-                        log.error("❌ Error saving conversation data for conversationId {}: {}", conversationId, e.getMessage(), e);
-                    }
-                    
-                    log.info("✅ User assignment completed successfully - User: {}, Conversation: {}", user.getUserId(), conversationId);
-                } else {
-                    log.error("❌ User socket client not found for socket ID: {}", userSocketId);
-                }
-            } else {
-                log.error("❌ No socket ID found for user: {}", user.getUserId());
-            }
+            // Create pending assignment instead of direct assignment
+            createPendingAssignment(socketClient, conversationId, clientId, user, tenantId, 
+                                  summary, history, timestamp, clientName, clientEmail, clientPhone, clientLabel);
         } else {
-            log.warn("❌ NO USER AVAILABLE for assignment");
-            // No user available
-            // log.warn("💔 Assignment failed - Queue empty: {}, User limit reached: {}", userMap.isEmpty(), user != null ? "Yes (current: " + user.getCurrentClientCount() + ")" : "N/A"); // COMMENTED OUT - Using Redis instead
+            log.warn("❌ NO USER AVAILABLE for assignment - Will send unavailable response");
+            // No user available - send unavailable response immediately
+            // (Retry logic will be handled in timeout scenarios)
             try {
                 boolean redisEmpty = redisUserService.getAllUserIds().isEmpty();
-                log.warn("💔 Assignment failed - Redis empty: {}, User limit reached: {}", 
-                        redisEmpty, user != null ? "Yes (current: " + user.getCurrentClientCount() + ")" : "N/A");
+                log.warn("💔 Assignment failed - Redis empty: {}, All users at capacity or offline", redisEmpty);
             } catch (Exception e) {
                 log.warn("💔 Assignment failed - Could not check Redis status: {}", e.getMessage());
             }
             
-            log.info("📝 Preparing unavailable response...");
-            ClientInfoResponse userInfo = new ClientInfoResponse();
-            userInfo.setStatus("unavailable");
-            userInfo.setUserId("");
-            userInfo.setConversationId(conversationId);
-            userInfo.setClientName("");
-            userInfo.setClientLabel("");
-            
-            log.info("📤 Sending unavailable response to chat module for client: {}", clientId);
-            socketClient.sendEvent(socketConfig.EVENT_AGENT_ACK, userInfo);
-            log.info("✅ Unavailable response sent to chat module");
+            sendUnavailableResponse(socketClient, conversationId, clientId);
         }
         log.info("✅ HANDLE_USER_REQUEST COMPLETED for conversation: {}", conversationId);
     }
@@ -1227,6 +1157,14 @@ public class ChatModule {
                 log.info("✅ NO ACTIVE CHATS - User can go offline safely");
                 
                 log.info("📊 UPDATING USER STATUS - Setting status to OFFLINE...");
+
+                user.setOfflineRequested(true);
+                try {
+                    redisUserService.updateUser(user);
+                    log.info("✅ Updated user {} offlineRequested flag to true in Redis", userId);
+                } catch (Exception e) {
+                    log.warn("⚠️ Could not update user {} offlineRequested flag in Redis: {}", userId, e.getMessage());
+                }
                 // No active chats, can go offline
                 updateUserStatus(userId, UserAccountStatus.OFFLINE);
                 
@@ -1242,7 +1180,16 @@ public class ChatModule {
             } else {
                 log.warn("⚠️ OFFLINE REQUEST REJECTED - User {} has {} active chats, cannot go offline yet", userId, activeConversations.size());
                 log.info("📋 Active conversations: {}", activeConversations);
-                // TODO: Implement notification to user UI about pending chats
+                
+                // ✅ NEW: Set offlineRequested = true in Redis to indicate user wants to go offline
+                log.info("🔄 SETTING OFFLINE REQUESTED FLAG - Marking user as wanting to go offline...");
+                user.setOfflineRequested(true);
+                try {
+                    redisUserService.updateUser(user);
+                    log.info("✅ Updated user {} offlineRequested flag to true in Redis", userId);
+                } catch (Exception e) {
+                    log.warn("⚠️ Could not update user {} offlineRequested flag in Redis: {}", userId, e.getMessage());
+                }
                 
                 // Send response to user about pending chats
                 Map<String, Object> response = Map.of(
@@ -1971,7 +1918,17 @@ public class ChatModule {
      * Ensures even distribution of workload across available agents
      */
     private ChatUser findUserForTenantEfficiently(String tenantId) {
-        log.info("🔍 FINDING USER FOR TENANT WITH LOAD BALANCING - Tenant: {}", tenantId);
+        return findUserForTenantEfficiently(tenantId, null);
+    }
+    
+    /**
+     * Find user for tenant with MINIMUM CLIENT COUNT load balancing
+     * Ensures even distribution of workload across available agents
+     * Enhanced to exclude previously tried users for pending assignments
+     */
+    private ChatUser findUserForTenantEfficiently(String tenantId, Set<String> excludeUserIds) {
+        log.info("🔍 FINDING USER FOR TENANT WITH LOAD BALANCING - Tenant: {}, Exclude: {}", 
+                tenantId, excludeUserIds != null ? excludeUserIds.size() + " users" : "none");
         
         if (tenantId == null || tenantId.trim().isEmpty()) {
             log.warn("⚠️ Invalid tenant ID provided: '{}'", tenantId);
@@ -2003,6 +1960,13 @@ public class ChatModule {
         
         for (String userId : tenantUsers) {
             log.debug("⚡ Analyzing user load - User: {}", userId);
+            
+            // Skip users that have been tried before for this assignment
+            if (excludeUserIds != null && excludeUserIds.contains(userId)) {
+                log.debug("⏭️ User {} skipped - Previously tried for this assignment", userId);
+                continue;
+            }
+            
             // AtomicInteger userCount = userClientCounts.get(userId); // COMMENTED OUT - Using Redis instead
             // int currentCount = userCount != null ? userCount.get() : 0;
             int currentCount = 0;
@@ -2035,7 +1999,7 @@ public class ChatModule {
                              userId, timeSinceLastPing, isRecentlyActive);
                     
                     // Find user with minimum client count for best load balancing, but only if recently active
-                    if (currentCount < minClientCount && isRecentlyActive) {
+                    if (currentCount < minClientCount && isRecentlyActive && !user.isOfflineRequested()) {
                         minClientCount = currentCount;
                         bestUserId = userId;
                         log.debug("🎯 New best candidate - User: {}, Load: {}/{}, Recently active: {}ms ago", 
@@ -2043,6 +2007,9 @@ public class ChatModule {
                     } else if (!isRecentlyActive) {
                         log.debug("⏰ User {} skipped - Last ping {}ms ago (over 7 second threshold)", 
                                  userId, timeSinceLastPing);
+                    }
+                    else if (user.isOfflineRequested()) {
+                        log.debug("⏰ User {} skipped - Offline requested", userId);
                     }
                 } else {
                     log.warn("⚠️ User object not found in Redis for userId: {}", userId);
@@ -2195,6 +2162,331 @@ public class ChatModule {
             }
         } catch (IllegalArgumentException e) {
             log.error("❌ Invalid format for socketId UUID: {}", socketId, e);
+        }
+    }
+
+    // ============= TWO-PHASE ASSIGNMENT METHODS =============
+
+    /**
+     * Create pending assignment and send new_client_req to user
+     */
+    private void createPendingAssignment(SocketIOClient chatModuleSocket, String conversationId, String clientId, 
+                                       ChatUser user, String tenantId, String summary, String history, 
+                                       String timestamp, String clientName, String clientEmail, 
+                                       String clientPhone, String clientLabel) {
+        log.info("🎯 CREATING PENDING ASSIGNMENT - Conversation: {}, User: {}", conversationId, user.getUserId());
+        
+        // Create pending assignment
+        com.api.digicell.model.PendingAssignment pendingAssignment = new com.api.digicell.model.PendingAssignment(
+                conversationId, clientId, user.getUserId(), tenantId, 
+                agentAckTimeoutSeconds, agentAssignmentRetryLimit, 
+                chatModuleSocket.getSessionId().toString());
+        
+        // Set request details
+        pendingAssignment.setSummary(summary);
+        pendingAssignment.setHistory(history);
+        pendingAssignment.setTimestamp(timestamp);
+        pendingAssignment.setClientName(clientName);
+        pendingAssignment.setClientEmail(clientEmail);
+        pendingAssignment.setClientPhone(clientPhone);
+        pendingAssignment.setClientLabel(clientLabel);
+        pendingAssignment.setAssignedUserName(user.getUserName());
+        pendingAssignment.setAssignedUserEmail(user.getEmail());
+        
+        // Track this user as tried
+        pendingAssignment.addTriedUser(user.getUserId());
+        
+        // Store in Redis
+        redisUserService.addPendingAssignment(pendingAssignment);
+        log.info("✅ Pending assignment stored in Redis");
+        
+        // Send new_client_req to user
+        sendNewClientRequest(user, pendingAssignment);
+        
+        // Schedule timeout check
+        scheduleAssignmentTimeout(conversationId);
+        
+        log.info("✅ Pending assignment created successfully - Waiting for user acknowledgment");
+    }
+
+    /**
+     * Send new_client_req event to the assigned user
+     */
+    private void sendNewClientRequest(ChatUser user, com.api.digicell.model.PendingAssignment pendingAssignment) {
+        log.info("📤 SENDING NEW_CLIENT_REQ to user {} for conversation {}", 
+                user.getUserId(), pendingAssignment.getConversationId());
+        
+        try {
+            String userSocketId = redisUserService.getUserSocket(user.getUserId());
+            if (userSocketId != null) {
+                SocketIOClient userSocketClient = server.getClient(UUID.fromString(userSocketId));
+                if (userSocketClient != null) {
+                    // Prepare new client request data
+                    ClientInfoResponse newClientReq = new ClientInfoResponse();
+                    newClientReq.setStatus("pending");
+                    newClientReq.setUserId(user.getUserId());
+                    newClientReq.setUserName(user.getUserName());
+                    newClientReq.setConversationId(pendingAssignment.getConversationId());
+                    newClientReq.setTenantId(pendingAssignment.getTenantId());
+                    newClientReq.setHistory(pendingAssignment.getHistory());
+                    newClientReq.setSummary(pendingAssignment.getSummary());
+                    newClientReq.setClientId(pendingAssignment.getClientId());
+                    newClientReq.setClientName(pendingAssignment.getClientName());
+                    newClientReq.setClientLabel(pendingAssignment.getClientLabel());
+                    newClientReq.setClientEmail(pendingAssignment.getClientEmail());
+                    newClientReq.setClientPhone(pendingAssignment.getClientPhone());
+                    
+                    userSocketClient.sendEvent(socketConfig.EVENT_NEW_CLIENT_REQ, newClientReq);
+                    log.info("✅ NEW_CLIENT_REQ sent to user {} - Timeout: {}s", 
+                            user.getUserId(), agentAckTimeoutSeconds);
+                } else {
+                    log.error("❌ User socket client not found for socket ID: {}", userSocketId);
+                    handleAssignmentRejected(pendingAssignment);
+                }
+            } else {
+                log.error("❌ No socket ID found for user: {}", user.getUserId());
+                handleAssignmentRejected(pendingAssignment);
+            }
+        } catch (Exception e) {
+            log.error("❌ Error sending new_client_req to user {}: {}", user.getUserId(), e.getMessage(), e);
+            handleAssignmentRejected(pendingAssignment);
+        }
+    }
+
+    /**
+     * Handle assignment acceptance from user
+     */
+    private void handleAssignmentAccepted(com.api.digicell.model.PendingAssignment pendingAssignment, 
+                                        String userId, String userName, String userEmail) {
+        log.info("✅ ASSIGNMENT ACCEPTED - User: {}, Conversation: {}", userId, pendingAssignment.getConversationId());
+        
+        try {
+            // Update assignment status
+            pendingAssignment.setStatus("ACKNOWLEDGED");
+            pendingAssignment.setAssignedUserName(userName);
+            pendingAssignment.setAssignedUserEmail(userEmail);
+            redisUserService.updatePendingAssignment(pendingAssignment);
+            
+            // Complete the assignment
+            completeAssignment(pendingAssignment);
+            
+        } catch (Exception e) {
+            log.error("❌ Error handling assignment acceptance: {}", e.getMessage(), e);
+            handleAssignmentRejected(pendingAssignment);
+        }
+    }
+
+    /**
+     * Handle assignment rejection or timeout
+     */
+    private void handleAssignmentRejected(com.api.digicell.model.PendingAssignment pendingAssignment) {
+        log.warn("❌ ASSIGNMENT REJECTED/TIMEOUT - Conversation: {}, User: {}, Retry: {}/{}", 
+                pendingAssignment.getConversationId(), pendingAssignment.getAssignedUserId(),
+                pendingAssignment.getCurrentRetryCount(), pendingAssignment.getMaxRetryLimit());
+        
+        if (pendingAssignment.canRetry()) {
+            log.info("🔄 RETRYING ASSIGNMENT - Attempt {} of {}", 
+                    pendingAssignment.getCurrentRetryCount() + 1, pendingAssignment.getMaxRetryLimit());
+            
+            pendingAssignment.incrementRetry();
+            pendingAssignment.setStatus("PENDING");
+            
+            // Find another user for the same tenant, excluding previously tried users
+            ChatUser newUser = findUserForTenantEfficiently(pendingAssignment.getTenantId(), 
+                                                           pendingAssignment.getTriedUserIds());
+            if (newUser != null) {
+                log.info("🎯 FOUND NEW USER for retry - User: {} (excluding {} previously tried)", 
+                        newUser.getUserId(), pendingAssignment.getTriedUserIds().size());
+                
+                // Update assignment with new user
+                pendingAssignment.setAssignedUserId(newUser.getUserId());
+                pendingAssignment.setAssignedUserName(newUser.getUserName());
+                pendingAssignment.setAssignedUserEmail(newUser.getEmail());
+                pendingAssignment.updateTimeout(agentAckTimeoutSeconds);
+                
+                // Track this new user as tried
+                pendingAssignment.addTriedUser(newUser.getUserId());
+                
+                redisUserService.updatePendingAssignment(pendingAssignment);
+                
+                // Send new request to new user
+                sendNewClientRequest(newUser, pendingAssignment);
+                scheduleAssignmentTimeout(pendingAssignment.getConversationId());
+                
+            } else {
+                log.warn("❌ NO OTHER USER AVAILABLE for retry - Sending unavailable response");
+                sendUnavailableResponseFromAssignment(pendingAssignment);
+                redisUserService.removePendingAssignment(pendingAssignment.getConversationId());
+            }
+        } else {
+            log.error("❌ ALL RETRIES EXHAUSTED - No agents available for conversation {}", 
+                    pendingAssignment.getConversationId());
+            sendUnavailableResponseFromAssignment(pendingAssignment);
+            redisUserService.removePendingAssignment(pendingAssignment.getConversationId());
+        }
+    }
+
+    /**
+     * Complete the assignment after user acceptance
+     */
+    private void completeAssignment(com.api.digicell.model.PendingAssignment pendingAssignment) {
+        log.info("🎯 COMPLETING ASSIGNMENT - Conversation: {}, User: {}", 
+                pendingAssignment.getConversationId(), pendingAssignment.getAssignedUserId());
+        
+        try {
+            // Get the user
+            ChatUser user = redisUserService.getUser(pendingAssignment.getAssignedUserId());
+            if (user == null) {
+                log.error("❌ User {} not found during assignment completion", pendingAssignment.getAssignedUserId());
+                handleAssignmentRejected(pendingAssignment);
+                return;
+            }
+            
+            String conversationId = pendingAssignment.getConversationId();
+            String clientId = pendingAssignment.getClientId();
+            
+            // Create and store the chat room
+            ChatRoom chatRoom = new ChatRoom(conversationId, user.getUserId(), clientId, 
+                                           pendingAssignment.getSummary(), pendingAssignment.getHistory());
+            redisUserService.addChatRoom(chatRoom);
+            log.info("✅ Chat room created and stored in Redis - Room ID: {}", conversationId);
+            
+            // Track conversation for user preservation
+            connectionService.addUserConversation(user.getUserId(), conversationId);
+            log.info("✅ Conversation tracking added for user: {}", user.getUserId());
+            
+            // Update user client counts
+            user.addConversation(conversationId);
+            user.setCurrentClientCount(user.getCurrentClientCount() + 1);
+            incrementUserClientCount(user.getUserId());
+            redisUserService.updateUser(user);
+            log.info("✅ User client count updated - User: {}, New count: {}/{}", 
+                    user.getUserId(), user.getCurrentClientCount(), MAX_CLIENTS_PER_USER);
+            
+            // Join user to conversation room
+            String userSocketId = redisUserService.getUserSocket(user.getUserId());
+            if (userSocketId != null) {
+                SocketIOClient userSocketClient = server.getClient(UUID.fromString(userSocketId));
+                if (userSocketClient != null) {
+                    userSocketClient.joinRoom(conversationId);
+                    log.info("✅ User {} joined room: {}", user.getUserId(), conversationId);
+                }
+            }
+            
+            // Send agent_ack to chat module
+            sendAgentAckToModule(pendingAssignment, user);
+            
+            // Notify Zendesk
+            if (user.getEmail() != null) {
+                zendeskService.assignAgentToTicket(conversationId, user.getEmail(), 
+                                                 pendingAssignment.getSummary(), pendingAssignment.getClientName(), 
+                                                 pendingAssignment.getClientEmail(), pendingAssignment.getClientPhone())
+                        .subscribe();
+            }
+            
+            // Save conversation data in database
+            saveConversationData(conversationId, user.getUserId(), clientId);
+            
+            // Remove pending assignment
+            redisUserService.removePendingAssignment(conversationId);
+            
+            log.info("✅ ASSIGNMENT COMPLETED SUCCESSFULLY - User: {}, Conversation: {}", 
+                    user.getUserId(), conversationId);
+            
+        } catch (Exception e) {
+            log.error("❌ Error completing assignment: {}", e.getMessage(), e);
+            handleAssignmentRejected(pendingAssignment);
+        }
+    }
+
+    /**
+     * Send agent_ack to chat module
+     */
+    private void sendAgentAckToModule(com.api.digicell.model.PendingAssignment pendingAssignment, ChatUser user) {
+        log.info("📤 SENDING AGENT_ACK to chat module for conversation {}", pendingAssignment.getConversationId());
+        
+        try {
+            SocketIOClient chatModuleSocket = server.getClient(UUID.fromString(pendingAssignment.getSocketClientId()));
+            if (chatModuleSocket != null) {
+                ClientInfoResponse agentAck = new ClientInfoResponse();
+                agentAck.setStatus("online");
+                agentAck.setUserId(user.getUserId());
+                agentAck.setUserName(user.getUserName());
+                agentAck.setConversationId(pendingAssignment.getConversationId());
+                agentAck.setTenantId(pendingAssignment.getTenantId());
+                agentAck.setHistory(pendingAssignment.getHistory());
+                agentAck.setSummary(pendingAssignment.getSummary());
+                agentAck.setClientId(pendingAssignment.getClientId());
+                agentAck.setClientName(pendingAssignment.getClientName());
+                agentAck.setClientLabel(pendingAssignment.getClientLabel());
+                agentAck.setClientEmail(pendingAssignment.getClientEmail());
+                agentAck.setClientPhone(pendingAssignment.getClientPhone());
+                
+                chatModuleSocket.sendEvent(socketConfig.EVENT_AGENT_ACK, agentAck);
+                log.info("✅ AGENT_ACK sent to chat module successfully");
+            } else {
+                log.error("❌ Chat module socket not found for sending agent_ack");
+            }
+        } catch (Exception e) {
+            log.error("❌ Error sending agent_ack to chat module: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Schedule assignment timeout check
+     */
+    private void scheduleAssignmentTimeout(String conversationId) {
+        log.info("⏰ SCHEDULING TIMEOUT CHECK for conversation {} in {}s", conversationId, agentAckTimeoutSeconds);
+        
+        taskScheduler.schedule(() -> {
+            log.info("⏰ EXECUTING TIMEOUT CHECK for conversation {}", conversationId);
+            
+            com.api.digicell.model.PendingAssignment pendingAssignment = redisUserService.getPendingAssignment(conversationId);
+            if (pendingAssignment != null && "PENDING".equals(pendingAssignment.getStatus())) {
+                if (pendingAssignment.isTimedOut()) {
+                    log.warn("⏰ ASSIGNMENT TIMEOUT - Conversation: {}, User: {}", 
+                            conversationId, pendingAssignment.getAssignedUserId());
+                    handleAssignmentRejected(pendingAssignment);
+                } else {
+                    log.debug("✅ Assignment still valid for conversation {}", conversationId);
+                }
+            } else {
+                log.debug("ℹ️ Assignment already processed for conversation {}", conversationId);
+            }
+        }, Instant.now().plusSeconds(agentAckTimeoutSeconds + 5)); // Add 5s buffer
+    }
+
+    /**
+     * Send unavailable response to chat module
+     */
+    private void sendUnavailableResponse(SocketIOClient socketClient, String conversationId, String clientId) {
+        log.info("📤 SENDING UNAVAILABLE RESPONSE to chat module for conversation {}", conversationId);
+        
+        ClientInfoResponse userInfo = new ClientInfoResponse();
+        userInfo.setStatus("unavailable");
+        userInfo.setUserId("");
+        userInfo.setConversationId(conversationId);
+        userInfo.setClientName("");
+        userInfo.setClientLabel("");
+        
+        socketClient.sendEvent(socketConfig.EVENT_AGENT_ACK, userInfo);
+        log.info("✅ Unavailable response sent to chat module");
+    }
+
+    /**
+     * Send unavailable response from pending assignment
+     */
+    private void sendUnavailableResponseFromAssignment(com.api.digicell.model.PendingAssignment pendingAssignment) {
+        try {
+            SocketIOClient chatModuleSocket = server.getClient(UUID.fromString(pendingAssignment.getSocketClientId()));
+            if (chatModuleSocket != null) {
+                sendUnavailableResponse(chatModuleSocket, pendingAssignment.getConversationId(), 
+                                      pendingAssignment.getClientId());
+            } else {
+                log.error("❌ Chat module socket not found for sending unavailable response");
+            }
+        } catch (Exception e) {
+            log.error("❌ Error sending unavailable response: {}", e.getMessage(), e);
         }
     }
 } 
