@@ -101,54 +101,41 @@ public class SocketConnectionService {
         String remoteAddress = socketClient.getRemoteAddress().toString();
         String sessionId = socketClient.getSessionId().toString();
         
-        log.info("🔗 SOCKET CONNECTION ATTEMPT - Starting connection validation...");
-        log.info("📡 Connection details - IP: {}, SessionId: {}, ClientType: '{}', UserId: '{}'", 
+        log.debug("🔗 Connection attempt - IP: {}, SessionId: {}, ClientType: '{}', UserId: '{}'", 
                 remoteAddress, sessionId, clientType, userId);
-        
-        // Debug: Log all received parameters
-        log.info("🔍 ALL URL PARAMETERS RECEIVED:");
-        socketClient.getHandshakeData().getUrlParams().forEach((key, values) -> {
-            log.info("   {} = {}", key, values);
-        });
         
         // Reject connection if no parameters are provided
         if (clientType == null || clientType.trim().isEmpty()) {
-            log.warn("❌ CONNECTION REJECTED - No clientType parameter. IP: {}, SessionId: {}", remoteAddress, sessionId);
+            log.warn("❌ Connection rejected - No clientType parameter. IP: {}, SessionId: {}", remoteAddress, sessionId);
             socketClient.disconnect();
             return;
         }
-
-        log.info("🔀 ROUTING CONNECTION - Determining connection type...");
         
         if (socketConfig.PARAM_CHAT_MODULE.equals(clientType)) {
-            log.info("📱 CHAT MODULE CONNECTION - Routing to chat module handler");
+            log.debug("📱 Chat module connection");
             handleChatModuleConnection(socketClient);
         } else if (socketConfig.PARAM_AGENT.equals(clientType)) {
-            log.info("👤 AGENT CONNECTION - Routing to user connection handler");
+            log.debug("👤 Agent connection");
             handleUserConnection(socketClient, clientType);
         } else {
-            log.warn("❌ INVALID CLIENT TYPE - Rejecting connection");
-            log.warn("   Received clientType: '{}'", clientType);
-            log.warn("   Expected: '{}' or '{}'", socketConfig.PARAM_CHAT_MODULE, socketConfig.PARAM_AGENT);
-            log.warn("Connection rejected: Invalid clientType: '{}'. IP: {}, SessionId: {}", clientType, remoteAddress, sessionId);
+            log.warn("❌ Invalid client type: '{}'. IP: {}, SessionId: {}", clientType, remoteAddress, sessionId);
             socketClient.disconnect();
         }
     }
 
     private void handleChatModuleConnection(SocketIOClient socketClient) {
         String newSocketId = socketClient.getSessionId().toString();
-        log.info("Chat module connection attempt. Previous socketId: {}, New socketId: {}", chatModuleSocketId, newSocketId);
         
         // If there's an existing connection, check if it's the same socket client reconnecting
         if (chatModuleSocketId != null) {
             // If it's the same socket client (same socket ID), just update the connection
             if (chatModuleSocketId.equals(newSocketId)) {
-                log.info("Chat module reconnected with same socket ID: {}", newSocketId);
+                log.debug("Chat module reconnected with same socket ID: {}", newSocketId);
                 return;
             }
             
             // If it's a different socket client, reject the new connection
-            log.warn("Chat module already connected with different socket ID. Rejecting new connection. Previous: {}, New: {}", 
+            log.warn("Chat module already connected. Rejecting new connection. Previous: {}, New: {}", 
                     chatModuleSocketId, newSocketId);
             socketClient.disconnect();
             return;
@@ -156,7 +143,7 @@ public class SocketConnectionService {
 
         // New connection
         chatModuleSocketId = newSocketId;
-        log.info("Chat module connected successfully. SocketId: {}", chatModuleSocketId);
+        log.info("Chat module connected. SocketId: {}", chatModuleSocketId);
     }
 
     private void handleUserConnection(SocketIOClient socketClient, String clientType) {
@@ -170,7 +157,6 @@ public class SocketConnectionService {
         String newSocketId = socketClient.getSessionId().toString();
         
         // Check if user mapping exists (indicates reconnection attempt)
-        // String existingSocketId = userSocketIds.get(userId); // COMMENTED OUT - Using Redis instead
         String existingSocketId = null;
         try {
             existingSocketId = redisUserService.getUserSocket(userId);
@@ -180,11 +166,10 @@ public class SocketConnectionService {
         
         if (existingSocketId != null) {
             // User mapping exists - enforce ONE SOCKET PER USER rule
-            log.info("🔄 User {} reconnection detected. Old SocketId: {}, New SocketId: {}", 
-                    userId, existingSocketId, newSocketId);
+            log.debug("🔄 User {} reconnection - Old: {}, New: {}", userId, existingSocketId, newSocketId);
             
             if (!existingSocketId.equals(newSocketId)) {
-                log.info("🚪 ENFORCING ONE SOCKET PER USER - Disconnecting old socket: {}", existingSocketId);
+                log.debug("🚪 Disconnecting old socket: {}", existingSocketId);
                 
                 // Try to disconnect the old socket if it still exists
                 try {
@@ -195,77 +180,40 @@ public class SocketConnectionService {
             }
             
             // Update socket ID for this user (ONE socket per user)
-            log.info("🔄 Updating user {} socket mapping in Redis: {} → {}", userId, existingSocketId, newSocketId);
-            // userSocketIds.put(userId, newSocketId); // COMMENTED OUT - Using Redis instead
-            
-            // REDIS IMPLEMENTATION - Update socket mapping in Redis
-
             try {
                 redisUserService.updateUserSocket(userId, newSocketId);
-                log.info("✅ REDIS: Socket mapping updated for user {} → {}", userId, newSocketId);
+                log.debug("✅ Socket mapping updated for user {} → {}", userId, newSocketId);
             } catch (Exception redisError) {
-                log.warn("⚠️ REDIS: Failed to update socket mapping in Redis: {}", redisError.getMessage());
+                log.warn("⚠️ Failed to update socket mapping in Redis: {}", redisError.getMessage());
             }
             
             // Remove disconnection timestamp as user is now connected
             LocalDateTime disconnectionTime = userDisconnectionTime.remove(userId);
             if (disconnectionTime != null) {
-                log.info("🔄 User {} reconnected within preservation window. Was disconnected at: {}", 
-                        userId, disconnectionTime);
+                log.debug("🔄 User {} reconnected within preservation window", userId);
                 
                 // Log preserved conversations for this user
                 Set<String> preservedConversations = userActiveConversations.get(userId);
                 if (preservedConversations != null && !preservedConversations.isEmpty()) {
-                    log.info("🔄 Found {} preserved conversations for reconnecting user {}: {}", 
+                    log.debug("🔄 Found {} preserved conversations for user {}: {}", 
                             preservedConversations.size(), userId, preservedConversations);
-                    
-                    // Mark user as having reconnected with preserved conversations
-                    log.info("🏷️ Marking user {} as reconnected with preserved conversations", userId);
                     markUserAsReconnectedWithConversations(userId);
                 }
             }
             
-            log.info("User reconnected successfully. SocketId: {}, UserId: {}, Type: {}", 
-                    newSocketId, userId, clientType);
+            log.info("User reconnected. SocketId: {}, UserId: {}", newSocketId, userId);
         } else {
             // No user mapping exists - this is a new user connection
-            log.info("👤 NEW USER CONNECTION - Creating socket mapping...Connection details - SocketId: {}, UserId: {}, Type: {}", newSocketId, userId, clientType);
-          
-            
-            log.info("🗂️ CREATING SOCKET MAPPING IN REDIS (ONE SOCKET PER USER)...");
-            // userSocketIds.put(userId, newSocketId); // COMMENTED OUT - Using Redis instead
+            log.debug("👤 New user connection - SocketId: {}, UserId: {}", newSocketId, userId);
             
             try {
                 redisUserService.addUserSocket(userId, newSocketId);
-                log.info("✅ REDIS: Socket mapping added for user {} → {}", userId, newSocketId);
+                log.debug("✅ Socket mapping added for user {} → {}", userId, newSocketId);
             } catch (Exception redisError) {
-                log.warn("⚠️ REDIS: Failed to add socket mapping to Redis: {}", redisError.getMessage());
+                log.warn("⚠️ Failed to add socket mapping to Redis: {}", redisError.getMessage());
             }
             
-            log.info("✅ SOCKET MAPPING CREATED IN REDIS:");
-            log.info("   Redis socket mapping: User '{}' → Socket '{}'", userId, newSocketId);
-            log.info("   📋 USER RULE: One user can have only ONE active socket");
-            log.info("   📋 CLIENT RULE: One user can chat with max {} clients simultaneously", 5);
-            
-            // Verify mapping was created
-            // String verifySocketId = userSocketIds.get(userId); // COMMENTED OUT - Using Redis instead
-            String verifySocketId = null;
-            try {
-                verifySocketId = redisUserService.getUserSocket(userId);
-            } catch (Exception e) {
-                log.warn("⚠️ Could not verify socket mapping in Redis for user {}: {}", userId, e.getMessage());
-            }
-            
-            log.info(" 🔍 MAPPING VERIFICATION:  Redis getUserSocket('{}') = '{}'", userId, verifySocketId);
-            
-            if (newSocketId.equals(verifySocketId)) {
-                log.info("✅ MAPPING VERIFICATION PASSED");
-            } else {
-                log.error("❌ MAPPING VERIFICATION FAILED - Expected: {}, Got: {}", newSocketId, verifySocketId);
-            }
-            
-            log.info("✅ NEW USER CONNECTION COMPLETED - SocketId: {}, UserId: {}, Type: {}", 
-                    newSocketId, userId, clientType);
+            log.info("New user connected. SocketId: {}, UserId: {}", newSocketId, userId);
         }
     }
 
@@ -274,16 +222,6 @@ public class SocketConnectionService {
     }
 
     public String getUserIdBySocketId(String socketId) {
-        // COMMENTED OUT - Using Redis instead
-        // // Reverse lookup: find userId where userSocketIds[userId] == socketId
-        // String result = null;
-        // for (Map.Entry<String, String> entry : userSocketIds.entrySet()) {
-        //     if (socketId.equals(entry.getValue())) {
-        //         result = entry.getKey();
-        //         break;
-        //     }
-        // }
-        
         // REDIS IMPLEMENTATION - Reverse lookup in Redis
         String result = null;
         try {
@@ -299,7 +237,7 @@ public class SocketConnectionService {
             log.warn("⚠️ Could not perform reverse socket lookup in Redis: {}", e.getMessage());
         }
         
-        log.info("🔍 getUserIdBySocketId('{}') = '{}' (Redis lookup)", socketId, result);
+        log.debug("🔍 getUserIdBySocketId('{}') = '{}'", socketId, result);
         return result;
     }
 
@@ -317,22 +255,17 @@ public class SocketConnectionService {
                 // Record disconnection time for cleanup scheduling
                 userDisconnectionTime.put(userId, LocalDateTime.now());
                 
-                log.info("User disconnected. SocketId: {}, UserId: {} (user mapping preserved for {} minutes)", 
+                log.debug("User disconnected. SocketId: {}, UserId: {} (preserved for {} minutes)", 
                         socketId, userId, conversationPreservationTimeoutMinutes);
                 
                 // Log active conversations that are being preserved
                 Set<String> activeConversations = userActiveConversations.get(userId);
                 if (activeConversations != null && !activeConversations.isEmpty()) {
-                    LocalDateTime expirationTime = LocalDateTime.now().plusMinutes(conversationPreservationTimeoutMinutes);
-                    log.info("💾 User mapping and {} conversations preserved for user {} until {}: {}", 
-                            activeConversations.size(), userId, expirationTime, activeConversations);
+                    log.debug("💾 Preserving {} conversations for user {}: {}", 
+                            activeConversations.size(), userId, activeConversations);
                     
                     // Notify chat module about user disconnection for active conversations
                     notifyAboutUserDisconnection(userId, activeConversations);
-                } else {
-                    LocalDateTime expirationTime = LocalDateTime.now().plusMinutes(conversationPreservationTimeoutMinutes);
-                    log.info("💾 User mapping preserved for user {} until {} (no active conversations)", 
-                            userId, expirationTime);
                 }
                 
                 // Schedule cleanup for this specific user after timeout

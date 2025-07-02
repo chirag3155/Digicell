@@ -226,43 +226,30 @@ public class ChatModule {
         log.info("🔧 Initializing socket event listeners...");
         
         server.addConnectListener(socketClient -> {
-            log.info("📥 NEW CONNECTION ATTEMPT - Starting connection handling...");
             String remoteAddress = socketClient.getRemoteAddress().toString();
             String sessionId = socketClient.getSessionId().toString();
-            boolean isSecure = socketClient.getHandshakeData().getUrl().startsWith("https://") || 
-                              socketClient.getHandshakeData().getUrl().startsWith("wss://");
             
-            log.info("📡 Connection details captured - IP: {}, SessionId: {}, Secure: {}", remoteAddress, sessionId, isSecure);
-            log.info("🔄 Delegating to SocketConnectionService for connection validation...");
+            log.debug("📥 ---------> New connection - IP: {}, SessionId: {}", remoteAddress, sessionId);
             connectionService.handleConnection(socketClient);
-            log.info("✅ Connection handling completed for session: {}", sessionId);
         });
 
         server.addDisconnectListener(socketClient -> {
-            log.info("📤 DISCONNECTION EVENT - Starting disconnect handling...");
             String socketId = socketClient.getSessionId().toString();
-            log.info("🔍 Looking up user for disconnecting socket: {}", socketId);
             String userId = connectionService.getUserIdBySocketId(socketId);
             
-            // Check if this is a user disconnection with active conversations
             if (userId != null) {
-                log.info("👤 User {} identified for disconnection, checking active conversations...", userId);
+                log.debug("📤 ---------> User {} disconnecting", userId);
                 Set<String> activeConversations = connectionService.getUserActiveConversations(userId);
                 if (activeConversations != null && !activeConversations.isEmpty()) {
-                    log.info("🔔 User {} has {} active conversations, scheduling disconnection notifications...", 
+                    log.info("🔔 User {} has {} active conversations, scheduling notifications", 
                             userId, activeConversations.size());
-                    // Send notifications after a short delay to allow for immediate reconnection
                     scheduleDisconnectionNotifications(userId, activeConversations);
-                } else {
-                    log.info("📭 User {} has no active conversations, no notifications needed", userId);
                 }
             } else {
-                log.info("❓ No user found for disconnecting socket: {}. This is expected if the user reconnected with a new socket.", socketId);
+                log.warn("📤 Socket {} disconnected (no user mapping)", socketId);
             }
             
-            log.info("🔄 Delegating to SocketConnectionService for connection cleanup...");
             connectionService.removeConnection(socketId);
-            log.info("✅ Disconnect handling completed for socket: {}", socketId);
         });
 
         server.addEventListener(socketConfig.EVENT_AGENT_REQUEST, Map.class, (socketClient, data, ackSender) -> {
