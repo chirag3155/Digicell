@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digicell Chat Test Client</title>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .log-section {
+            grid-column: 1 / -1;
+            height: 300px;
+            overflow-y: auto;
+            background: #1e1e1e;
+            color: #fff;
+            padding: 10px;
+            font-family: monospace;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-bottom: 1px solid #333;
+        }
+
+        .log-entry.error {
+            color: #ff6b6b;
+        }
+
+        .log-entry.success {
+            color: #51cf66;
+        }
+
+        .log-entry.info {
+            color: #339af0;
+        }
+
+        button {
+            background: #339af0;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #228be6;
+        }
+
+        button:disabled {
+            background: #adb5bd;
+            cursor: not-allowed;
+        }
+
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+
+        .status.connected {
+            background: #d3f9d8;
+        }
+
+        .status.disconnected {
+            background: #ffe3e3;
+        }
+
+        .message-container {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            background: white;
+        }
+
+        .message {
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .message.sent {
+            background: #e7f5ff;
+        }
+
+        .message.received {
+            background: #f8f9fa;
+        }
+
+        .break-button {
+            background: #ff6b6b;
+        }
+
+        .break-button:hover {
+            background: #fa5252;
+        }
+
+        .available-button {
+            background: #51cf66;
+        }
+
+        .available-button:hover {
+            background: #40c057;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Digicell Chat Test Client</h1>
+
+    <div class="section">
+        <h2>Connection Status</h2>
+        <div id="connectionStatus" class="status disconnected">Disconnected</div>
+        <button onclick="connect()">Connect</button>
+        <button onclick="disconnect()">Disconnect</button>
+    </div>
+
+    <div class="container">
+        <div class="section">
+            <h2>Agent Management</h2>
+            <input type="text" id="agentId" placeholder="Agent ID">
+            <button onclick="requestBreak()" class="break-button">Request Break</button>
+            <button onclick="markAvailable()" class="available-button">Mark Available</button>
+        </div>
+
+        <div class="section">
+            <h2>Client Management</h2>
+            <input type="text" id="clientId" placeholder="Client ID">
+            <button onclick="requestAgent()">Request Agent</button>
+        </div>
+
+        <div class="section">
+            <h2>Send Message</h2>
+            <input type="text" id="messageText" placeholder="Message">
+            <button onclick="sendMessage()">Send</button>
+            <div id="messageContainer" class="message-container"></div>
+        </div>
+
+        <div class="section">
+            <h2>Feedback</h2>
+            <input type="text" id="feedbackText" placeholder="Feedback">
+            <button onclick="submitFeedback()">Submit Feedback</button>
+            <button onclick="closeChat()">Close Chat</button>
+        </div>
+    </div>
+
+    <div class="log-section" id="logContainer"></div>
+
+    <script>
+        let socket;
+        let currentRoomId = null;
+        let currentAgentId = null;
+        let currentClientId = null;
+
+        function connect() {
+            // Determine protocol and port based on environment
+            const protocol = window.location.protocol === 'https:' ? 'https' : 'http';
+            const port = window.location.port || '8080'; // Use actual server port
+            const serverUrl = `${protocol}://${window.location.hostname}:${port}`;
+
+            log(`Connecting to: ${serverUrl}`, 'info');
+            socket = io(serverUrl, {
+                transports: ['websocket', 'polling'],
+                query: {
+                    clientType: 'agent',  // Required parameter for agent connections
+                    userId: 211  // Generate a test user ID
+                }
+            });
+
+            socket.on('connect', () => {
+                log('Connected to server', 'success');
+                document.getElementById('connectionStatus').className = 'status connected';
+                document.getElementById('connectionStatus').textContent = 'Connected';
+            });
+
+            socket.on('disconnect', () => {
+                log('Disconnected from server', 'error');
+                document.getElementById('connectionStatus').className = 'status disconnected';
+                document.getElementById('connectionStatus').textContent = 'Disconnected';
+                currentRoomId = null;
+                currentAgentId = null;
+            });
+
+            socket.on('agent_assigned', (data) => {
+                currentRoomId = data.roomId;
+                currentAgentId = data.agentId;
+                log(`Agent ${currentAgentId} assigned to room ${currentRoomId}`, 'success');
+            });
+
+            socket.on('no_agent_available', () => {
+                log('No agent available at the moment', 'error');
+            });
+
+            socket.on('message', (message) => {
+                log(`Message received: ${message.content}`, 'info');
+                addMessage(message.content, 'received');
+            });
+
+            socket.on('request_feedback', () => {
+                log('Please provide feedback for the chat', 'info');
+            });
+
+            socket.on('error', (error) => {
+                log(`Error: ${error}`, 'error');
+            });
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.disconnect();
+            }
+        }
+
+        function requestAgent() {
+            const clientId = document.getElementById('clientId').value;
+            if (!clientId) {
+                log('Please enter a client ID', 'error');
+                return;
+            }
+            currentClientId = clientId;
+            socket.emit('request_agent', clientId);
+            log(`Requesting agent for client ${clientId}`, 'info');
+        }
+
+        function sendMessage() {
+            if (!currentRoomId) {
+                log('No active chat room', 'error');
+                return;
+            }
+            const content = document.getElementById('messageText').value;
+            if (!content) {
+                log('Please enter a message', 'error');
+                return;
+            }
+            const message = {
+                roomId: currentRoomId,
+                content: content,
+                senderId: currentClientId || 'client',
+                timestamp: new Date().toISOString()
+            };
+            socket.emit('message', message);
+            addMessage(content, 'sent');
+            document.getElementById('messageText').value = '';
+            log(`Message sent: ${content}`, 'info');
+        }
+
+        function submitFeedback() {
+            if (!currentRoomId || !currentAgentId) {
+                log('No active chat to provide feedback for', 'error');
+                return;
+            }
+            const feedback = {
+                roomId: currentRoomId,
+                agentId: currentAgentId,
+                clientId: currentClientId,
+                content: document.getElementById('feedbackText').value,
+                timestamp: new Date().toISOString()
+            };
+            socket.emit('submit_feedback', feedback);
+            log('Feedback submitted', 'success');
+            document.getElementById('feedbackText').value = '';
+        }
+
+        function closeChat() {
+            if (!currentRoomId) {
+                log('No active chat to close', 'error');
+                return;
+            }
+            socket.emit('close_chat', currentRoomId);
+            log('Chat closed', 'info');
+        }
+
+        function requestBreak() {
+            const agentId = document.getElementById('agentId').value;
+            if (!agentId) {
+                log('Please enter an agent ID', 'error');
+                return;
+            }
+            socket.emit('request_break', agentId);
+            log(`Break requested for agent ${agentId}`, 'info');
+        }
+
+        function markAvailable() {
+            const agentId = document.getElementById('agentId').value;
+            if (!agentId) {
+                log('Please enter an agent ID', 'error');
+                return;
+            }
+            socket.emit('agent_available', agentId);
+            log(`Agent ${agentId} marked as available`, 'info');
+        }
+
+        function addMessage(content, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = content;
+            document.getElementById('messageContainer').appendChild(messageDiv);
+            messageDiv.scrollIntoView();
+        }
+
+        function log(message, type = 'info') {
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            document.getElementById('logContainer').appendChild(logEntry);
+            logEntry.scrollIntoView();
+        }
+    </script>
+</body>
+
+</html>

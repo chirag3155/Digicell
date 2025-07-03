@@ -1,0 +1,49 @@
+2025-06-08 14:39:39,582 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-8] Unexpected error: No static resource actuator/metrics.
+2025-06-08 14:39:44,371 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-9] Unexpected error: No static resource actuator/metrics.
+2025-06-08 14:39:45,496 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-10] Unexpected error: No static resource actuator/metrics.
+2025-06-08 14:42:20,669 ERROR o.s.b.d.LoggingFailureAnalysisReporter [main] 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Parameter 0 of constructor in com.api.digicell.aspect.ApiMetricsAspect required a bean of type 'io.micrometer.core.instrument.Timer' that could not be found.
+
+
+Action:
+
+Consider defining a bean of type 'io.micrometer.core.instrument.Timer' in your configuration.
+
+2025-06-08 14:43:44,205 ERROR o.s.b.d.LoggingFailureAnalysisReporter [main] 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Parameter 0 of constructor in com.api.digicell.aspect.ApiMetricsAspect required a bean of type 'io.micrometer.core.instrument.Timer' that could not be found.
+
+
+Action:
+
+Consider defining a bean of type 'io.micrometer.core.instrument.Timer' in your configuration.
+
+2025-06-08 14:47:00,139 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-8] Unexpected error: No static resource actuator/httptrace.
+2025-06-08 14:47:02,853 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-9] Unexpected error: No static resource actuator/httptrace.
+2025-06-08 14:48:32,157 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-1] Unexpected error: No static resource actuator/httptrace.
+2025-06-08 14:48:41,301 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-3] Unexpected error: No static resource actuator/httptrace.
+2025-06-08 14:50:36,088 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-1] Unexpected error: No static resource actuator/httptrace.
+2025-06-08 14:51:52,509 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-1] Unexpected error: No static resource actuator/metrics.
+2025-06-08 14:51:56,032 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-2] Unexpected error: No static resource actuator/metrics.
+2025-06-08 14:51:56,270 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-3] Unexpected error: No static resource actuator/metrics.
+2025-06-08 14:51:57,022 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-6] Unexpected error: No static resource actuator/metrics.
+2025-06-08 14:51:57,231 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-5] Unexpected error: No static resource actuator/metrics.
+2025-06-08 14:52:15,279 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-4] Unexpected error: No static resource actuator/metrics.
+2025-06-08 14:53:33,807 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-1] Unexpected error: No static resource actuator/health.
+2025-06-08 14:57:25,105 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-1] Unexpected error: No static resource actuator/health.
+2025-06-08 14:57:31,023 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-2] Unexpected error: No static resource actuator/health.
+2025-06-08 14:58:57,787 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-1] Unexpected error: No static resource actuator/health.
+2025-06-08 14:59:55,921 ERROR c.a.d.e.GlobalExceptionHandler [http-nio-8080-exec-2] Unexpected error: No static resource actuator/health.

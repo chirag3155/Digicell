@@ -1,0 +1,175 @@
+{
+  "session_id": "sess_account_004",
+  "tenant_id": "tenant_digicell_004", 
+  "assistant_id": "assist_account_v1",
+  "user_info": {
+    "id": "user_jamaica_004",
+    "name": "Robert Clarke",
+    "mobile": "+1876-555-4004",
+    "email": "robert.clarke@business.com"
+  },
+  "convesation_id": "conv_account_004_2024",
+  "convesation_start_time": "2024-01-15T16:00:00.000Z",
+  "connection_establish_time": "2024-01-15T16:00:01.500Z",
+  "connection_establish": true,
+  "channel_info": {
+    "type": "phone",
+    "provider": "digicell",
+    "interface_id": "business_line_004",
+    "direction": "inbound",
+    "additional_info": {
+      "call_type": "business",
+      "priority": "high",
+      "originating_number": "+1876-555-4004"
+    },
+    "protocol": "SIP"
+  },
+  "request_info": {
+    "ip_address": "198.51.100.20",
+    "isp": "Digicel Business Solutions",
+    "country": "Jamaica",
+    "region": "Ocho Rios",
+    "city": "Ocho Rios",
+    "network_type": "Fiber",
+    "device_info": {
+      "device_type": "desk_phone",
+      "os": "N/A",
+      "model": "Cisco IP Phone"
+    },
+    "msc_ip": "10.100.200.300",
+    "short_code": "4004"
+  },
+  "messages": [
+    {
+      "correlation_id": "msg_account_004",
+      "user_messsage": {
+        "text": "I want to upgrade my business plan to include more international minutes",
+        "audio_duration": 4.5,
+        "confidence_score": 0.97
+      },
+      "content": "I want to upgrade my business plan to include more international minutes",
+      "request_time": "2024-01-15T16:00:08.000Z",
+      "response_time": "2024-01-15T16:00:30.000Z",
+      "system_response": [
+        {
+          "sys_query_time": "2024-01-15T16:00:08.200Z",
+          "sys_response_time": "2024-01-15T16:00:30.000Z",
+          "type": "Real Agent",
+          "sys_response": "Good afternoon Mr. Clarke! I'm Amanda, your dedicated business account manager. I see you're on our Premium Business plan. Let me show you our new Enterprise package with unlimited international minutes to 50+ countries.",
+          "first_chunk_time": "2024-01-15T16:00:15.000Z",
+          "llm_duration": null,
+          "llm_failure": null,
+          "tools": [
+            {
+              "tool_id": "business_plan_analyzer",
+              "tool_version": 1.5,
+              "tool_name": "Business Account Analyzer",
+              "tool_result": "Current: Premium Business ($150/month), Recommended: Enterprise ($220/month), Savings: $0.15/min international",
+              "tool_failure": null,
+              "start_time": "2024-01-15T16:00:10.000Z",
+              "end_time": "2024-01-15T16:00:20.000Z"
+            },
+            {
+              "tool_id": "plan_upgrade_tool",
+              "tool_version": 2.3,
+              "tool_name": "Business Plan Upgrade System",
+              "tool_result": "Upgrade scheduled for next billing cycle. Prorated billing applied.",
+              "tool_failure": null,
+              "start_time": "2024-01-15T16:00:22.000Z",
+              "end_time": "2024-01-15T16:00:28.000Z"
+            }
+          ],
+          "work_flow": {
+            "id": "business_upgrade_workflow",
+            "version": "1.7.0",
+            "status": "completed",
+            "custom_attribues": {
+              "account_type": "business",
+              "upgrade_type": "plan_enhancement",
+              "effective_date": "next_billing_cycle"
+            }
+          },
+          "input_tokens": null,
+          "output_tokens": null,
+          "cached_tokens": null,
+          "real_agent_details": {
+            "agent_id": 22222,
+            "agent_name": "Amanda Foster",
+            "department": "Business Account Management",
+            "experience_level": "senior",
+            "specialization": "enterprise_solutions",
+            "languages": ["en"],
+            "start_time": "2024-01-15T16:00:10.000Z",
+            "certification": "Certified Business Solutions Specialist"
+          }
+        }
+      ],
+      "language": {
+        "language": "English",
+        "code": "en",
+        "region": "JM"
+      },
+      "props_llm": {
+        "provider": null,
+        "model": null,
+        "version": null,
+        "request_time": null,
+        "response_time": null,
+        "temprature*": null
+      },
+      "props_asr": {
+        "cached_tokens": {
+          "acoustic_model": "v2.8_business",
+          "language_model": "v1.9_professional"
+        },
+        "vendor": "Google Speech Enterprise",
+        "lang_code": "en-JM",
+        "lang_name": "English (Jamaica)",
+        "delay*": 0.8,
+        "language": "English",
+        "code": "en"
+      },
+      "props_tts": {
+        "start_time": "2024-01-15T16:00:30.000Z",
+        "end_time": "2024-01-15T16:00:38.000Z",
+        "lang_code": "en-JM",
+        "voice_name": "Business-Professional",
+        "speed": 1.0,
+        "response_format": "mp3",
+        "style": "professional",
+        "duration": 8.0
+      },
+      "analysis": {
+        "sentiment": "positive",
+        "emotion": "interested",
+        "purpose": "plan_upgrade",
+        "accuracy *": 0.97,
+        "sentiment_score*": 0.4,
+        "Satifcation_score*": 0.9,
+        "moderation": {
+          "inappropriate_content": false,
+          "toxicity_score": 0.00
+        },
+        "additional_attribues": {
+          "urgency_level": "low",
+          "topic_category": "business_upgrade",
+          "customer_type": "business"
+        }
+      }
+    }
+  ],
+  "conversaton_end_time": "2024-01-15T16:12:00.000Z",
+  "conversation_end_info": {
+    "end_reason": "upgrade_completed",
+    "satisfaction_rating": 5,
+    "resolution_status": "resolved",
+    "follow_up_required": true,
+    "total_duration": 720.0
+  },
+  "type (user/system)": "user",
+  "conversation_analysis": {
+    "intent": ["plan_upgrade", "business_enhancement", "international_calling"],
+    "summary": "Business customer requested plan upgrade for international minutes. Account manager Amanda analyzed current usage, recommended Enterprise plan with unlimited international calling, and completed the upgrade process.",
+    "languages": ["en-JM"]
+  }
+} 

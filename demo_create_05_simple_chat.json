@@ -1,0 +1,147 @@
+{
+  "session_id": "sess_chat_005",
+  "tenant_id": "tenant_005",
+  "assistant_id": "assist_chat_v1",
+  "user_info": {
+    "id": "user_005",
+    "name": "Lisa Martin",
+    "mobile": "+1876-555-5005",
+    "email": "lisa.martin@gmail.com"
+  },
+  "convesation_id": "conv_chat_005",
+  "convesation_start_time": "2024-01-15T12:00:00.000Z",
+  "connection_establish_time": "2024-01-15T12:00:01.000Z",
+  "connection_establish": true,
+  "channel_info": {
+    "type": "chat",
+    "provider": "digicell",
+    "interface_id": "mobile_app_005",
+    "direction": "inbound",
+    "additional_info": {
+      "app_version": "v2.1.0",
+      "platform": "mobile_app"
+    },
+    "protocol": "HTTPS"
+  },
+  "request_info": {
+    "ip_address": "192.168.1.50",
+    "isp": "Digicel Mobile",
+    "country": "Jamaica",
+    "region": "Portmore",
+    "city": "Portmore",
+    "network_type": "4G",
+    "device_info": {
+      "device_type": "smartphone",
+      "os": "iOS 17.1",
+      "model": "iPhone 14"
+    },
+    "msc_ip": "10.5.10.15",
+    "short_code": "5005"
+  },
+  "messages": [
+    {
+      "correlation_id": "msg_chat_005",
+      "user_messsage": {
+        "text": "How do I check my remaining data?"
+      },
+      "content": "How do I check my remaining data?",
+      "request_time": "2024-01-15T12:00:05.000Z",
+      "response_time": "2024-01-15T12:00:15.000Z",
+      "system_response": [
+        {
+          "sys_query_time": "2024-01-15T12:00:05.100Z",
+          "sys_response_time": "2024-01-15T12:00:15.000Z",
+          "type": "Real Agent",
+          "sys_response": "Hi Lisa! You can check your data balance by dialing *128# or using the MyDigicel app. Would you like me to send your current balance via SMS?",
+          "first_chunk_time": "2024-01-15T12:00:08.000Z",
+          "llm_duration": null,
+          "llm_failure": null,
+          "tools": [],
+          "work_flow": {
+            "id": "data_inquiry_workflow",
+            "version": "1.0.0",
+            "status": "active",
+            "custom_attribues": {
+              "inquiry_type": "data_balance"
+            }
+          },
+          "input_tokens": null,
+          "output_tokens": null,
+          "cached_tokens": null,
+          "real_agent_details": {
+            "agent_id": 33333,
+            "agent_name": "Kevin Williams",
+            "department": "Customer Support",
+            "experience_level": "junior",
+            "specialization": "general_support",
+            "languages": ["en"],
+            "start_time": "2024-01-15T12:00:06.000Z",
+            "certification": "Customer Service Representative"
+          }
+        }
+      ],
+      "language": {
+        "language": "English",
+        "code": "en",
+        "region": "JM"
+      },
+      "props_llm": {
+        "provider": null,
+        "model": null,
+        "version": null,
+        "request_time": null,
+        "response_time": null,
+        "temprature*": null
+      },
+      "props_asr": {
+        "cached_tokens": {},
+        "vendor": "N/A",
+        "lang_code": "en-JM",
+        "lang_name": "English (Jamaica)",
+        "delay*": 0.0,
+        "language": "English",
+        "code": "en"
+      },
+      "props_tts": {
+        "start_time": null,
+        "end_time": null,
+        "lang_code": "en-JM",
+        "voice_name": "N/A",
+        "speed": 1.0,
+        "response_format": "text",
+        "style": "friendly",
+        "duration": 0.0
+      },
+      "analysis": {
+        "sentiment": "neutral",
+        "emotion": "curious",
+        "purpose": "information_request",
+        "accuracy *": 0.95,
+        "sentiment_score*": 0.0,
+        "Satifcation_score*": 0.8,
+        "moderation": {
+          "inappropriate_content": false,
+          "toxicity_score": 0.00
+        },
+        "additional_attribues": {
+          "urgency_level": "low",
+          "topic_category": "data_inquiry"
+        }
+      }
+    }
+  ],
+  "conversaton_end_time": "2024-01-15T12:03:00.000Z",
+  "conversation_end_info": {
+    "end_reason": "information_provided",
+    "satisfaction_rating": 4,
+    "resolution_status": "resolved",
+    "follow_up_required": false,
+    "total_duration": 180.0
+  },
+  "type (user/system)": "user",
+  "conversation_analysis": {
+    "intent": ["data_inquiry", "balance_check"],
+    "summary": "Customer asked how to check data balance. Agent provided multiple options including USSD code and mobile app.",
+    "languages": ["en"]
+  }
+} 

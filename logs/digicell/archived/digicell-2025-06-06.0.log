@@ -1,0 +1,237 @@
+2025-06-06 18:24:38,320 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
+2025-06-06 18:24:38,599 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplication using Java 17.0.12 with PID 28888 (C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
+2025-06-06 18:24:38,604 DEBUG o.s.b.StartupInfoLogger [main] Running with Spring Boot v3.2.5, Spring v6.1.6
+2025-06-06 18:24:38,608 INFO o.s.b.SpringApplication [main] The following 1 profile is active: "dev"
+2025-06-06 18:24:44,234 INFO o.s.d.r.c.RepositoryConfigurationDelegate [main] Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-06-06 18:24:44,627 WARN o.s.c.s.AbstractApplicationContext [main] Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.support.BeanDefinitionOverrideException: Invalid bean definition with name 'agentRepository' defined in com.api.digicell.repositories.AgentRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration: Cannot register bean definition [Root bean: class [org.springframework.data.jpa.repository.support.JpaRepositoryFactoryBean]; scope=; abstract=false; lazyInit=false; autowireMode=0; dependencyCheck=0; autowireCandidate=true; primary=false; factoryBeanName=null; factoryMethodName=null; initMethodNames=null; destroyMethodNames=null; defined in com.api.digicell.repositories.AgentRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration] for bean 'agentRepository' since there is already [Root bean: class [org.springframework.data.jpa.repository.support.JpaRepositoryFactoryBean]; scope=; abstract=false; lazyInit=false; autowireMode=0; dependencyCheck=0; autowireCandidate=true; primary=false; factoryBeanName=null; factoryMethodName=null; initMethodNames=null; destroyMethodNames=null; defined in com.api.digicell.repository.AgentRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration] bound.
+2025-06-06 18:24:44,684 INFO o.s.b.a.l.ConditionEvaluationReportLogger [main] 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-06-06 18:24:44,761 ERROR o.s.b.d.LoggingFailureAnalysisReporter [main] 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+The bean 'agentRepository', defined in com.api.digicell.repositories.AgentRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration, could not be registered. A bean with that name has already been defined in com.api.digicell.repository.AgentRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration and overriding is disabled.
+
+Action:
+
+Consider renaming one of the beans or enabling overriding by setting spring.main.allow-bean-definition-overriding=true
+
+2025-06-06 18:25:10,938 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
+2025-06-06 18:25:11,105 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplication using Java 17.0.12 with PID 31136 (C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
+2025-06-06 18:25:11,110 DEBUG o.s.b.StartupInfoLogger [main] Running with Spring Boot v3.2.5, Spring v6.1.6
+2025-06-06 18:25:11,113 INFO o.s.b.SpringApplication [main] The following 1 profile is active: "local"
+2025-06-06 18:25:16,187 INFO o.s.d.r.c.RepositoryConfigurationDelegate [main] Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-06-06 18:25:16,444 WARN o.s.c.s.AbstractApplicationContext [main] Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.support.BeanDefinitionOverrideException: Invalid bean definition with name 'agentRepository' defined in com.api.digicell.repositories.AgentRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration: Cannot register bean definition [Root bean: class [org.springframework.data.jpa.repository.support.JpaRepositoryFactoryBean]; scope=; abstract=false; lazyInit=false; autowireMode=0; dependencyCheck=0; autowireCandidate=true; primary=false; factoryBeanName=null; factoryMethodName=null; initMethodNames=null; destroyMethodNames=null; defined in com.api.digicell.repositories.AgentRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration] for bean 'agentRepository' since there is already [Root bean: class [org.springframework.data.jpa.repository.support.JpaRepositoryFactoryBean]; scope=; abstract=false; lazyInit=false; autowireMode=0; dependencyCheck=0; autowireCandidate=true; primary=false; factoryBeanName=null; factoryMethodName=null; initMethodNames=null; destroyMethodNames=null; defined in com.api.digicell.repository.AgentRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration] bound.
+2025-06-06 18:25:16,469 INFO o.s.b.a.l.ConditionEvaluationReportLogger [main] 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-06-06 18:25:16,523 ERROR o.s.b.d.LoggingFailureAnalysisReporter [main] 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+The bean 'agentRepository', defined in com.api.digicell.repositories.AgentRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration, could not be registered. A bean with that name has already been defined in com.api.digicell.repository.AgentRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration and overriding is disabled.
+
+Action:
+
+Consider renaming one of the beans or enabling overriding by setting spring.main.allow-bean-definition-overriding=true
+
+2025-06-06 18:26:14,582 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
+2025-06-06 18:26:14,717 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplication using Java 17.0.12 with PID 13608 (C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
+2025-06-06 18:26:14,719 DEBUG o.s.b.StartupInfoLogger [main] Running with Spring Boot v3.2.5, Spring v6.1.6
+2025-06-06 18:26:14,722 INFO o.s.b.SpringApplication [main] The following 1 profile is active: "local"
+2025-06-06 18:26:19,165 INFO o.s.d.r.c.RepositoryConfigurationDelegate [main] Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-06-06 18:26:19,352 INFO o.s.d.r.c.RepositoryConfigurationDelegate [main] Finished Spring Data repository scanning in 160 ms. Found 4 JPA repository interfaces.
+2025-06-06 18:26:23,033 INFO o.s.b.w.e.t.TomcatWebServer [main] Tomcat initialized with port 8080 (http)
+2025-06-06 18:26:23,072 INFO o.a.j.l.DirectJDKLog [main] Initializing ProtocolHandler ["http-nio-8080"]
+2025-06-06 18:26:23,091 INFO o.a.j.l.DirectJDKLog [main] Starting service [Tomcat]
+2025-06-06 18:26:23,094 INFO o.a.j.l.DirectJDKLog [main] Starting Servlet engine: [Apache Tomcat/10.1.20]
+2025-06-06 18:26:23,613 INFO o.a.j.l.DirectJDKLog [main] Initializing Spring embedded WebApplicationContext
+2025-06-06 18:26:23,622 INFO o.s.b.w.s.c.ServletWebServerApplicationContext [main] Root WebApplicationContext: initialization completed in 8721 ms
+2025-06-06 18:26:24,265 INFO c.z.h.HikariDataSource [main] HikariPool-1 - Starting...
+2025-06-06 18:26:25,630 INFO c.z.h.p.HikariPool [main] HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@19ae36f4
+2025-06-06 18:26:25,636 INFO c.z.h.HikariDataSource [main] HikariPool-1 - Start completed.
+2025-06-06 18:26:26,190 INFO o.h.j.i.u.LogHelper [main] HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-06-06 18:26:27,167 INFO o.h.Version [main] HHH000412: Hibernate ORM core version 6.4.4.Final
+2025-06-06 18:26:27,342 INFO o.h.c.i.RegionFactoryInitiator [main] HHH000026: Second-level cache disabled
+2025-06-06 18:26:28,553 INFO o.s.o.j.p.SpringPersistenceUnitInfo [main] No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-06-06 18:26:28,751 WARN o.h.e.j.d.i.DialectFactoryImpl [main] HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-06-06 18:26:28,754 WARN o.h.e.j.d.i.DialectFactoryImpl [main] HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-06-06 18:26:32,203 INFO o.h.e.t.j.p.i.JtaPlatformInitiator [main] HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-06-06 18:26:32,393 INFO o.s.o.j.AbstractEntityManagerFactoryBean [main] Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-06-06 18:26:34,161 INFO o.s.d.j.r.q.QueryEnhancerFactory [main] Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-06-06 18:26:36,617 WARN o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration [main] spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-06-06 18:26:39,482 WARN o.s.b.a.s.s.UserDetailsServiceAutoConfiguration [main] 
+
+Using generated security password: 7ad078d3-9b7c-4373-8cb9-d97a60fc5e69
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-06-06 18:26:39,992 INFO o.s.s.w.DefaultSecurityFilterChain [main] Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@bc70176, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@eba64a9, org.springframework.security.web.context.SecurityContextHolderFilter@193e65d5, org.springframework.security.web.header.HeaderWriterFilter@65dac812, org.springframework.web.filter.CorsFilter@739e8b96, org.springframework.security.web.csrf.CsrfFilter@2175111e, org.springframework.security.web.authentication.logout.LogoutFilter@60ee1a29, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter@5c863996, org.springframework.security.web.authentication.ui.DefaultLoginPageGeneratingFilter@6701fbf3, org.springframework.security.web.authentication.ui.DefaultLogoutPageGeneratingFilter@53e1cd6b, org.springframework.security.web.authentication.www.BasicAuthenticationFilter@6b5dc4bb, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@250fc0d1, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@7ddf193a, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@7ceb432c, org.springframework.security.web.access.ExceptionTranslationFilter@3938e876, org.springframework.security.web.access.intercept.AuthorizationFilter@75fb04ee]
+2025-06-06 18:26:40,346 INFO o.a.j.l.DirectJDKLog [main] Starting ProtocolHandler ["http-nio-8080"]
+2025-06-06 18:26:40,484 INFO o.s.b.w.e.t.TomcatWebServer [main] Tomcat started on port 8080 (http) with context path ''
+2025-06-06 18:26:40,524 INFO o.s.b.StartupInfoLogger [main] Started DigicellApplication in 27.49 seconds (process running for 28.348)
+2025-06-06 18:26:46,824 INFO o.a.j.l.DirectJDKLog [http-nio-8080-exec-1] Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-06-06 18:26:46,827 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Initializing Servlet 'dispatcherServlet'
+2025-06-06 18:26:46,834 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Completed initialization in 5 ms
+2025-06-06 18:26:47,111 WARN o.a.j.l.DirectJDKLog [http-nio-8080-exec-1] Creation of SecureRandom instance for session ID generation using [SHA1PRNG] took [162] milliseconds.
+2025-06-06 18:27:45,565 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
+2025-06-06 18:27:45,698 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplication using Java 17.0.12 with PID 32904 (C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
+2025-06-06 18:27:45,701 DEBUG o.s.b.StartupInfoLogger [main] Running with Spring Boot v3.2.5, Spring v6.1.6
+2025-06-06 18:27:45,704 INFO o.s.b.SpringApplication [main] The following 1 profile is active: "local"
+2025-06-06 18:27:50,886 INFO o.s.d.r.c.RepositoryConfigurationDelegate [main] Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-06-06 18:27:51,252 INFO o.s.d.r.c.RepositoryConfigurationDelegate [main] Finished Spring Data repository scanning in 320 ms. Found 4 JPA repository interfaces.
+2025-06-06 18:27:56,452 INFO o.s.b.w.e.t.TomcatWebServer [main] Tomcat initialized with port 8080 (http)
+2025-06-06 18:27:56,494 INFO o.a.j.l.DirectJDKLog [main] Initializing ProtocolHandler ["http-nio-8080"]
+2025-06-06 18:27:56,504 INFO o.a.j.l.DirectJDKLog [main] Starting service [Tomcat]
+2025-06-06 18:27:56,506 INFO o.a.j.l.DirectJDKLog [main] Starting Servlet engine: [Apache Tomcat/10.1.20]
+2025-06-06 18:27:56,924 INFO o.a.j.l.DirectJDKLog [main] Initializing Spring embedded WebApplicationContext
+2025-06-06 18:27:56,933 INFO o.s.b.w.s.c.ServletWebServerApplicationContext [main] Root WebApplicationContext: initialization completed in 11089 ms
+2025-06-06 18:27:57,601 INFO c.z.h.HikariDataSource [main] HikariPool-1 - Starting...
+2025-06-06 18:27:59,008 INFO c.z.h.p.HikariPool [main] HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@69a373fd
+2025-06-06 18:27:59,021 INFO c.z.h.HikariDataSource [main] HikariPool-1 - Start completed.
+2025-06-06 18:27:59,904 INFO o.h.j.i.u.LogHelper [main] HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-06-06 18:28:00,081 INFO o.h.Version [main] HHH000412: Hibernate ORM core version 6.4.4.Final
+2025-06-06 18:28:00,184 INFO o.h.c.i.RegionFactoryInitiator [main] HHH000026: Second-level cache disabled
+2025-06-06 18:28:00,743 INFO o.s.o.j.p.SpringPersistenceUnitInfo [main] No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-06-06 18:28:00,920 WARN o.h.e.j.d.i.DialectFactoryImpl [main] HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-06-06 18:28:00,923 WARN o.h.e.j.d.i.DialectFactoryImpl [main] HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-06-06 18:28:03,410 INFO o.h.e.t.j.p.i.JtaPlatformInitiator [main] HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-06-06 18:28:03,626 INFO o.s.o.j.AbstractEntityManagerFactoryBean [main] Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-06-06 18:28:05,345 INFO o.s.d.j.r.q.QueryEnhancerFactory [main] Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-06-06 18:28:07,594 WARN o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration [main] spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-06-06 18:28:10,538 WARN o.s.b.a.s.s.UserDetailsServiceAutoConfiguration [main] 
+
+Using generated security password: a2a460d0-65bd-45d5-a115-62a8ec3362ed
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-06-06 18:28:11,681 INFO o.s.s.w.DefaultSecurityFilterChain [main] Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@64a9719a, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@bc70176, org.springframework.security.web.context.SecurityContextHolderFilter@7de4bd8f, org.springframework.security.web.header.HeaderWriterFilter@70b2819f, org.springframework.web.filter.CorsFilter@10980560, org.springframework.security.web.csrf.CsrfFilter@22d82fe8, org.springframework.security.web.authentication.logout.LogoutFilter@747e0a31, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter@75fb04ee, org.springframework.security.web.authentication.ui.DefaultLoginPageGeneratingFilter@5ec10ab1, org.springframework.security.web.authentication.ui.DefaultLogoutPageGeneratingFilter@eba64a9, org.springframework.security.web.authentication.www.BasicAuthenticationFilter@25e95d04, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@2a97b4b8, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@250fc0d1, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@53e1cd6b, org.springframework.security.web.access.ExceptionTranslationFilter@52268f73, org.springframework.security.web.access.intercept.AuthorizationFilter@5080c40e]
+2025-06-06 18:28:12,088 INFO o.a.j.l.DirectJDKLog [main] Starting ProtocolHandler ["http-nio-8080"]
+2025-06-06 18:28:12,224 INFO o.s.b.w.e.t.TomcatWebServer [main] Tomcat started on port 8080 (http) with context path ''
+2025-06-06 18:28:12,252 INFO o.s.b.StartupInfoLogger [main] Started DigicellApplication in 28.026 seconds (process running for 28.843)
+2025-06-06 18:28:17,174 INFO o.a.j.l.DirectJDKLog [http-nio-8080-exec-1] Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-06-06 18:28:17,175 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Initializing Servlet 'dispatcherServlet'
+2025-06-06 18:28:17,179 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Completed initialization in 2 ms
+2025-06-06 18:28:17,406 WARN o.a.j.l.DirectJDKLog [http-nio-8080-exec-1] Creation of SecureRandom instance for session ID generation using [SHA1PRNG] took [155] milliseconds.
+2025-06-06 18:33:42,471 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
+2025-06-06 18:33:42,560 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplication using Java 17.0.12 with PID 26984 (C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
+2025-06-06 18:33:42,562 DEBUG o.s.b.StartupInfoLogger [main] Running with Spring Boot v3.2.5, Spring v6.1.6
+2025-06-06 18:33:42,564 INFO o.s.b.SpringApplication [main] The following 1 profile is active: "local"
+2025-06-06 18:33:46,188 INFO o.s.d.r.c.RepositoryConfigurationDelegate [main] Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-06-06 18:33:46,590 INFO o.s.d.r.c.RepositoryConfigurationDelegate [main] Finished Spring Data repository scanning in 347 ms. Found 4 JPA repository interfaces.
+2025-06-06 18:33:49,674 INFO o.s.b.w.e.t.TomcatWebServer [main] Tomcat initialized with port 8080 (http)
+2025-06-06 18:33:49,762 INFO o.a.j.l.DirectJDKLog [main] Initializing ProtocolHandler ["http-nio-8080"]
+2025-06-06 18:33:49,782 INFO o.a.j.l.DirectJDKLog [main] Starting service [Tomcat]
+2025-06-06 18:33:49,785 INFO o.a.j.l.DirectJDKLog [main] Starting Servlet engine: [Apache Tomcat/10.1.20]
+2025-06-06 18:33:50,269 INFO o.a.j.l.DirectJDKLog [main] Initializing Spring embedded WebApplicationContext
+2025-06-06 18:33:50,277 INFO o.s.b.w.s.c.ServletWebServerApplicationContext [main] Root WebApplicationContext: initialization completed in 7563 ms
+2025-06-06 18:33:50,810 INFO c.z.h.HikariDataSource [main] HikariPool-1 - Starting...
+2025-06-06 18:33:52,424 INFO c.z.h.p.HikariPool [main] HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@256589a1
+2025-06-06 18:33:52,430 INFO c.z.h.HikariDataSource [main] HikariPool-1 - Start completed.
+2025-06-06 18:33:52,854 INFO o.h.j.i.u.LogHelper [main] HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-06-06 18:33:53,321 INFO o.h.Version [main] HHH000412: Hibernate ORM core version 6.4.4.Final
+2025-06-06 18:33:53,602 INFO o.h.c.i.RegionFactoryInitiator [main] HHH000026: Second-level cache disabled
+2025-06-06 18:33:55,220 INFO o.s.o.j.p.SpringPersistenceUnitInfo [main] No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-06-06 18:33:55,611 WARN o.h.e.j.d.i.DialectFactoryImpl [main] HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-06-06 18:33:55,620 WARN o.h.e.j.d.i.DialectFactoryImpl [main] HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-06-06 18:33:58,540 INFO o.h.e.t.j.p.i.JtaPlatformInitiator [main] HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-06-06 18:33:58,724 INFO o.s.o.j.AbstractEntityManagerFactoryBean [main] Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-06-06 18:34:00,479 INFO o.s.d.j.r.q.QueryEnhancerFactory [main] Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-06-06 18:34:03,381 WARN o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration [main] spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-06-06 18:34:05,950 INFO o.a.j.l.DirectJDKLog [main] Starting ProtocolHandler ["http-nio-8080"]
+2025-06-06 18:34:06,067 INFO o.s.b.w.e.t.TomcatWebServer [main] Tomcat started on port 8080 (http) with context path ''
+2025-06-06 18:34:06,100 INFO o.s.b.StartupInfoLogger [main] Started DigicellApplication in 24.74 seconds (process running for 25.377)
+2025-06-06 18:34:55,268 INFO o.a.j.l.DirectJDKLog [http-nio-8080-exec-2] Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-06-06 18:34:55,272 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-2] Initializing Servlet 'dispatcherServlet'
+2025-06-06 18:34:55,277 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-2] Completed initialization in 2 ms
+2025-06-06 18:35:04,200 INFO o.s.a.AbstractOpenApiResource [http-nio-8080-exec-4] Init duration for springdoc-openapi is: 8259 ms
+2025-06-06 18:36:13,488 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
+2025-06-06 18:36:13,622 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplication using Java 17.0.12 with PID 29532 (C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell\target\classes started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
+2025-06-06 18:36:13,626 DEBUG o.s.b.StartupInfoLogger [main] Running with Spring Boot v3.2.5, Spring v6.1.6
+2025-06-06 18:36:13,629 INFO o.s.b.SpringApplication [main] The following 1 profile is active: "local"
+2025-06-06 18:36:17,945 INFO o.s.d.r.c.RepositoryConfigurationDelegate [main] Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-06-06 18:36:18,288 INFO o.s.d.r.c.RepositoryConfigurationDelegate [main] Finished Spring Data repository scanning in 308 ms. Found 4 JPA repository interfaces.
+2025-06-06 18:36:23,144 INFO o.s.b.w.e.t.TomcatWebServer [main] Tomcat initialized with port 8080 (http)
+2025-06-06 18:36:23,212 INFO o.a.j.l.DirectJDKLog [main] Initializing ProtocolHandler ["http-nio-8080"]
+2025-06-06 18:36:23,233 INFO o.a.j.l.DirectJDKLog [main] Starting service [Tomcat]
+2025-06-06 18:36:23,238 INFO o.a.j.l.DirectJDKLog [main] Starting Servlet engine: [Apache Tomcat/10.1.20]
+2025-06-06 18:36:23,940 INFO o.a.j.l.DirectJDKLog [main] Initializing Spring embedded WebApplicationContext
+2025-06-06 18:36:23,950 INFO o.s.b.w.s.c.ServletWebServerApplicationContext [main] Root WebApplicationContext: initialization completed in 10117 ms
+2025-06-06 18:36:24,601 INFO c.z.h.HikariDataSource [main] HikariPool-1 - Starting...
+2025-06-06 18:36:26,757 INFO c.z.h.p.HikariPool [main] HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@ca7e37f
+2025-06-06 18:36:26,765 INFO c.z.h.HikariDataSource [main] HikariPool-1 - Start completed.
+2025-06-06 18:36:27,107 INFO o.h.j.i.u.LogHelper [main] HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-06-06 18:36:27,591 INFO o.h.Version [main] HHH000412: Hibernate ORM core version 6.4.4.Final
+2025-06-06 18:36:27,857 INFO o.h.c.i.RegionFactoryInitiator [main] HHH000026: Second-level cache disabled
+2025-06-06 18:36:28,666 INFO o.s.o.j.p.SpringPersistenceUnitInfo [main] No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-06-06 18:36:28,867 WARN o.h.e.j.d.i.DialectFactoryImpl [main] HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-06-06 18:36:28,873 WARN o.h.e.j.d.i.DialectFactoryImpl [main] HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-06-06 18:36:31,133 INFO o.h.e.t.j.p.i.JtaPlatformInitiator [main] HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-06-06 18:36:31,310 INFO o.s.o.j.AbstractEntityManagerFactoryBean [main] Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-06-06 18:36:32,391 INFO o.s.d.j.r.q.QueryEnhancerFactory [main] Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-06-06 18:36:34,520 WARN o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration [main] spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-06-06 18:36:36,158 INFO o.a.j.l.DirectJDKLog [main] Starting ProtocolHandler ["http-nio-8080"]
+2025-06-06 18:36:36,255 INFO o.s.b.w.e.t.TomcatWebServer [main] Tomcat started on port 8080 (http) with context path ''
+2025-06-06 18:36:36,302 INFO o.s.b.StartupInfoLogger [main] Started DigicellApplication in 24.955 seconds (process running for 26.345)
+2025-06-06 18:36:41,484 INFO o.a.j.l.DirectJDKLog [http-nio-8080-exec-1] Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-06-06 18:36:41,486 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Initializing Servlet 'dispatcherServlet'
+2025-06-06 18:36:41,491 INFO o.s.w.s.FrameworkServlet [http-nio-8080-exec-1] Completed initialization in 5 ms
+2025-06-06 18:36:45,074 INFO o.s.a.AbstractOpenApiResource [http-nio-8080-exec-4] Init duration for springdoc-openapi is: 2667 ms
+2025-06-06 18:36:50,559 INFO c.a.d.c.AgentController [http-nio-8080-exec-7] Received request to get details for userAccount: 1
+2025-06-06 18:36:50,585 INFO c.a.d.s.AgentService [http-nio-8080-exec-7] Fetching userAccount details for id: 1
+2025-06-06 18:36:51,035 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-7] Converting JSON to chat history
+2025-06-06 18:36:51,044 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-7] Converting chat history with 1 sessions to JSON
+2025-06-06 18:36:51,051 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-7] Converting JSON to chat history
+2025-06-06 18:36:51,060 INFO c.a.d.s.AgentService [http-nio-8080-exec-7] Found 1 conversations for userAccount 1
+2025-06-06 18:36:51,063 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-7] Agent conversations details - id: 1, conversation count: 1, conversation ids: [12]
+2025-06-06 18:36:51,066 INFO c.a.d.s.AgentService [http-nio-8080-exec-7] Successfully fetched userAccount details for id: 1
+2025-06-06 18:36:51,069 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-7] Agent details response - id: 1, name: Alice, status: LOGOUT, conversation count: 1
+2025-06-06 18:37:16,848 INFO c.a.d.c.AgentController [http-nio-8080-exec-5] Received request to get details for userAccount: 10
+2025-06-06 18:37:16,854 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Fetching userAccount details for id: 10
+2025-06-06 18:37:16,870 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting JSON to chat history
+2025-06-06 18:37:16,873 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting chat history with 1 sessions to JSON
+2025-06-06 18:37:16,875 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-5] Converting JSON to chat history
+2025-06-06 18:37:16,878 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Found 1 conversations for userAccount 10
+2025-06-06 18:37:16,880 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-5] Agent conversations details - id: 10, conversation count: 1, conversation ids: [14]
+2025-06-06 18:37:16,881 INFO c.a.d.s.AgentService [http-nio-8080-exec-5] Successfully fetched userAccount details for id: 10
+2025-06-06 18:37:16,882 DEBUG c.a.d.s.AgentService [http-nio-8080-exec-5] Agent details response - id: 10, name: Judy Agent, status: AVAILABLE, conversation count: 1
+2025-06-06 18:37:33,763 INFO c.a.d.c.UserController [http-nio-8080-exec-1] Received request to get details for client: 1
+2025-06-06 18:37:33,764 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Fetching client details for id: 1
+2025-06-06 18:37:33,799 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
+2025-06-06 18:37:33,806 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting chat history with 1 sessions to JSON
+2025-06-06 18:37:33,811 DEBUG c.a.d.c.ChatHistoryConverter [http-nio-8080-exec-1] Converting JSON to chat history
+2025-06-06 18:37:33,813 DEBUG c.a.d.s.UserService [http-nio-8080-exec-1] Found 1 conversations for client 1
+2025-06-06 18:37:33,819 INFO c.a.d.s.UserService [http-nio-8080-exec-1] Successfully fetched client details for id: 1
+2025-06-06 18:37:33,822 DEBUG c.a.d.c.UserController [http-nio-8080-exec-1] Successfully fetched details for client: 1
+2025-06-06 18:39:49,890 INFO o.h.v.i.u.Version [background-preinit] HV000001: Hibernate Validator 8.0.1.Final
+2025-06-06 18:39:50,037 INFO o.s.b.StartupInfoLogger [main] Starting DigicellApplicationTests using Java 17.0.12 with PID 29340 (started by chira in C:\Users\chira\OneDrive\Desktop\Eva-Backend\Digicell)
+2025-06-06 18:39:50,044 DEBUG o.s.b.StartupInfoLogger [main] Running with Spring Boot v3.2.5, Spring v6.1.6
+2025-06-06 18:39:50,052 INFO o.s.b.SpringApplication [main] The following 1 profile is active: "dev"
+2025-06-06 18:39:54,852 INFO o.s.d.r.c.RepositoryConfigurationDelegate [main] Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-06-06 18:39:55,303 INFO o.s.d.r.c.RepositoryConfigurationDelegate [main] Finished Spring Data repository scanning in 404 ms. Found 4 JPA repository interfaces.
+2025-06-06 18:39:57,956 INFO c.z.h.HikariDataSource [main] HikariPool-1 - Starting...
+2025-06-06 18:39:59,116 INFO c.z.h.p.HikariPool [main] HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@34a20f16
+2025-06-06 18:39:59,131 INFO c.z.h.HikariDataSource [main] HikariPool-1 - Start completed.
+2025-06-06 18:39:59,721 INFO o.h.j.i.u.LogHelper [main] HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-06-06 18:40:00,199 INFO o.h.Version [main] HHH000412: Hibernate ORM core version 6.4.4.Final
+2025-06-06 18:40:00,608 INFO o.h.c.i.RegionFactoryInitiator [main] HHH000026: Second-level cache disabled
+2025-06-06 18:40:02,425 INFO o.s.o.j.p.SpringPersistenceUnitInfo [main] No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-06-06 18:40:02,908 WARN o.h.e.j.d.i.DialectFactoryImpl [main] HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-06-06 18:40:02,917 WARN o.h.e.j.d.i.DialectFactoryImpl [main] HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-06-06 18:40:10,911 INFO o.h.e.t.j.p.i.JtaPlatformInitiator [main] HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-06-06 18:40:11,335 INFO o.s.o.j.AbstractEntityManagerFactoryBean [main] Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-06-06 18:40:12,466 INFO o.s.d.j.r.q.QueryEnhancerFactory [main] Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-06-06 18:40:15,483 WARN o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration [main] spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-06-06 18:40:17,264 INFO o.s.b.StartupInfoLogger [main] Started DigicellApplicationTests in 28.959 seconds (process running for 33.262)
+2025-06-06 18:40:19,005 INFO o.s.o.j.AbstractEntityManagerFactoryBean [SpringApplicationShutdownHook] Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-06-06 18:40:19,011 INFO c.z.h.HikariDataSource [SpringApplicationShutdownHook] HikariPool-1 - Shutdown initiated...
+2025-06-06 18:40:19,039 INFO c.z.h.HikariDataSource [SpringApplicationShutdownHook] HikariPool-1 - Shutdown completed.

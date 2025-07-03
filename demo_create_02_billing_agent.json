@@ -1,0 +1,159 @@
+{
+  "session_id": "sess_billing_002",
+  "tenant_id": "tenant_digicell_002",
+  "assistant_id": "assist_billing_v1",
+  "user_info": {
+    "id": "user_jamaica_002",
+    "name": "Michael Brown",
+    "mobile": "+1876-555-2002",
+    "email": "michael.brown@email.com"
+  },
+  "convesation_id": "conv_billing_002_2024",
+  "convesation_start_time": "2024-01-15T11:30:00.000Z",
+  "connection_establish_time": "2024-01-15T11:30:01.800Z",
+  "connection_establish": true,
+  "channel_info": {
+    "type": "chat",
+    "provider": "digicell",
+    "interface_id": "web_chat_002",
+    "direction": "inbound",
+    "additional_info": {
+      "platform": "customer_portal",
+      "session_type": "authenticated"
+    },
+    "protocol": "HTTPS"
+  },
+  "request_info": {
+    "ip_address": "203.45.67.89",
+    "isp": "Flow Jamaica",
+    "country": "Jamaica",
+    "region": "Spanish Town",
+    "city": "Spanish Town",
+    "network_type": "WiFi",
+    "device_info": {
+      "device_type": "desktop",
+      "os": "Windows 11",
+      "browser": "Chrome 120.0"
+    },
+    "msc_ip": "10.80.90.100",
+    "short_code": "2002"
+  },
+  "messages": [
+    {
+      "correlation_id": "msg_billing_002",
+      "user_messsage": {
+        "text": "My bill is wrong, I was charged twice for roaming"
+      },
+      "content": "My bill is wrong, I was charged twice for roaming",
+      "request_time": "2024-01-15T11:30:15.000Z",
+      "response_time": "2024-01-15T11:30:35.000Z",
+      "system_response": [
+        {
+          "sys_query_time": "2024-01-15T11:30:15.100Z",
+          "sys_response_time": "2024-01-15T11:30:35.000Z",
+          "type": "Real Agent",
+          "sys_response": "Hi Michael, I'm Lisa from the billing department. I see the duplicate roaming charges on your account. Let me fix this immediately and issue a refund.",
+          "first_chunk_time": "2024-01-15T11:30:20.000Z",
+          "llm_duration": null,
+          "llm_failure": null,
+          "tools": [
+            {
+              "tool_id": "billing_adjustment_tool",
+              "tool_version": 3.1,
+              "tool_name": "Billing Correction System",
+              "tool_result": "Duplicate charge removed. Refund of $45.00 processed.",
+              "tool_failure": null,
+              "start_time": "2024-01-15T11:30:18.000Z",
+              "end_time": "2024-01-15T11:30:28.000Z"
+            }
+          ],
+          "work_flow": {
+            "id": "billing_dispute_resolution",
+            "version": "1.9.0",
+            "status": "completed",
+            "custom_attribues": {
+              "dispute_type": "duplicate_charge",
+              "refund_amount": 45.00,
+              "resolution_time": "immediate"
+            }
+          },
+          "input_tokens": null,
+          "output_tokens": null,
+          "cached_tokens": null,
+          "real_agent_details": {
+            "agent_id": 67890,
+            "agent_name": "Lisa Thompson",
+            "department": "Billing Support",
+            "experience_level": "expert",
+            "specialization": "billing_disputes",
+            "languages": ["en"],
+            "start_time": "2024-01-15T11:30:16.000Z",
+            "certification": "Certified Billing Specialist"
+          }
+        }
+      ],
+      "language": {
+        "language": "English",
+        "code": "en",
+        "region": "JM"
+      },
+      "props_llm": {
+        "provider": null,
+        "model": null,
+        "version": null,
+        "request_time": null,
+        "response_time": null,
+        "temprature*": null
+      },
+      "props_asr": {
+        "cached_tokens": {},
+        "vendor": "N/A",
+        "lang_code": "en-JM",
+        "lang_name": "English (Jamaica)",
+        "delay*": 0.0,
+        "language": "English",
+        "code": "en"
+      },
+      "props_tts": {
+        "start_time": null,
+        "end_time": null,
+        "lang_code": "en-JM",
+        "voice_name": "N/A",
+        "speed": 1.0,
+        "response_format": "text",
+        "style": "professional",
+        "duration": 0.0
+      },
+      "analysis": {
+        "sentiment": "negative",
+        "emotion": "frustrated",
+        "purpose": "billing_dispute",
+        "accuracy *": 0.98,
+        "sentiment_score*": -0.6,
+        "Satifcation_score*": 0.95,
+        "moderation": {
+          "inappropriate_content": false,
+          "toxicity_score": 0.05
+        },
+        "additional_attribues": {
+          "urgency_level": "high",
+          "topic_category": "billing_error"
+        }
+      }
+    }
+  ],
+  "conversaton_end_time": "2024-01-15T11:35:00.000Z",
+  "conversation_end_info": {
+    "end_reason": "issue_resolved",
+    "satisfaction_rating": 5,
+    "resolution_status": "resolved",
+    "follow_up_required": false,
+    "total_duration": 300.0
+  },
+  "type (user/system)": "user",
+  "conversation_analysis": {
+    "intent": ["billing_dispute", "refund_request", "roaming_charges"],
+    "summary": "Customer reported duplicate roaming charges. Billing specialist Lisa quickly identified the error, removed duplicate charges, and processed immediate refund.",
+    "languages": ["en-JM"]
+  }
+} 

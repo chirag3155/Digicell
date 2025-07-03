@@ -1,0 +1,115 @@
+{
+  "session_id": "sess_simple_001",
+  "tenant_id": "tenant_001",
+  "assistant_id": "ai_assistant_001",
+  "user_info": {
+    "id": "user_001",
+    "name": "Jane Doe",
+    "mobile": "+1876-555-0100",
+    "email": "jane.doe@example.com"
+  },
+  "convesation_id": "conv_simple_001",
+  "convesation_start_time": "2024-01-15T10:00:00.000Z",
+  "connection_establish_time": "2024-01-15T10:00:01.000Z",
+  "connection_establish": true,
+  "channel_info": {
+    "type": "chat",
+    "provider": "digicell",
+    "interface_id": "web_chat_001",
+    "direction": "inbound",
+    "additional_info": {},
+    "protocol": "HTTPS"
+  },
+  "request_info": {
+    "ip_address": "192.168.1.10",
+    "isp": "Digicel",
+    "country": "Jamaica",
+    "region": "Kingston",
+    "city": "Kingston",
+    "network_type": "WiFi",
+    "device_info": {},
+    "msc_ip": "10.10.1.1",
+    "short_code": "100"
+  },
+  "messages": [
+    {
+      "correlation_id": "msg_simple_001",
+      "user_messsage": {},
+      "content": "Hello, how can I check my data balance?",
+      "request_time": "2024-01-15T10:00:05.000Z",
+      "response_time": "2024-01-15T10:00:07.000Z",
+      "system_response": [
+        {
+          "sys_query_time": "2024-01-15T10:00:05.100Z",
+          "sys_response_time": "2024-01-15T10:00:06.500Z",
+          "type": "system",
+          "sys_response": "You can check your data balance by dialing *128# or through the MyDigicel app.",
+          "first_chunk_time": "2024-01-15T10:00:06.000Z",
+          "llm_duration": 1.0,
+          "llm_failure": null,
+          "tools": [],
+          "work_flow": {
+            "id": "data_balance_workflow",
+            "version": "1.0.0",
+            "status": "completed",
+            "custom_attribues": {}
+          },
+          "input_tokens": 50,
+          "output_tokens": 30,
+          "cached_tokens": 10,
+          "real_agent_details": null
+        }
+      ],
+      "language": {
+        "language": "English",
+        "code": "en",
+        "region": "JM"
+      },
+      "props_llm": {
+        "provider": "OpenAI",
+        "model": "gpt-3.5-turbo",
+        "version": "2024-01-01",
+        "request_time": "2024-01-15T10:00:05.100Z",
+        "response_time": "2024-01-15T10:00:06.500Z",
+        "temprature*": 0.5
+      },
+      "props_asr": {
+        "cached_tokens": {},
+        "vendor": "Azure Speech",
+        "lang_code": "en-US",
+        "lang_name": "English",
+        "delay*": 0.5,
+        "language": "English",
+        "code": "en"
+      },
+      "props_tts": {
+        "start_time": "2024-01-15T10:00:06.500Z",
+        "end_time": "2024-01-15T10:00:08.000Z",
+        "lang_code": "en-US",
+        "voice_name": "Standard",
+        "speed": 1.0,
+        "response_format": "mp3",
+        "style": "neutral",
+        "duration": 1.5
+      },
+      "analysis": {
+        "sentiment": "neutral",
+        "emotion": "curious",
+        "purpose": "information_request",
+        "accuracy *": 0.95,
+        "sentiment_score*": 0.0,
+        "Satifcation_score*": 0.9,
+        "moderation": {},
+        "additional_attribues": {}
+      }
+    }
+  ],
+  "conversaton_end_time": "2024-01-15T10:00:10.000Z",
+  "conversation_end_info": {},
+  "type (user/system)": "user",
+  "conversation_analysis": {
+    "intent": ["data_balance_inquiry"],
+    "summary": "Customer asked about checking data balance. AI provided standard instructions.",
+    "languages": ["en"]
+  }
+} 
