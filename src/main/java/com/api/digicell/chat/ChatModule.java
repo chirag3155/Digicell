@@ -518,6 +518,31 @@ public class ChatModule {
                     }
 
                     log.info("Chat room removed - User {} now has {} active clients", userId, user.getCurrentClientCount());
+                    
+                    // Send close acknowledgment notification to the user
+                    String userSocketId = null;
+                    try {
+                        userSocketId = redisUserService.getUserSocket(userId);
+                    } catch (Exception e) {
+                        log.warn("⚠️ Could not get socket for user {} from Redis: {}", userId, e.getMessage());
+                    }
+                    
+                    if (userSocketId != null) {
+                        SocketIOClient userSocketClient = server.getClient(UUID.fromString(userSocketId));
+                        if (userSocketClient != null) {
+                            UserCloseNotification closeInfo = new UserCloseNotification();
+                            closeInfo.setConversationId(conversationId);
+                            closeInfo.setClientId(clientId);
+                            
+                            userSocketClient.sendEvent(SocketConfig.EVENT_CLOSE, closeInfo);
+                            log.info("✅ Sent close acknowledgment to user {} for conversation {} - Chat closed successfully", userId, conversationId);
+                        } else {
+                            log.warn("⚠️ User socket client not found for close acknowledgment - UserId: {}", userId);
+                        }
+                    } else {
+                        log.warn("⚠️ No socket ID found for user {} - Cannot send close acknowledgment", userId);
+                    }
+                    
                 } else {
                     // log.warn("User {} not found in userMap", userId); // COMMENTED OUT - Using Redis instead
                     log.warn("User {} not found in Redis", userId);

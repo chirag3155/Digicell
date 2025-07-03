@@ -9,13 +9,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserCloseRequest {
-    @JsonProperty("user_id")
+    @JsonProperty("userId")
     private String userId;
     
-    @JsonProperty("conversation_id")
+    @JsonProperty("conversationId")
     private String conversationId;
     
-    @JsonProperty("client_id")
+    @JsonProperty("clientId")
     private String clientId;
     
     private String timestamp;
