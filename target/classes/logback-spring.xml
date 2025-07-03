@@ -143,10 +143,19 @@
         <appender-ref ref="ASYNC_FILE_INFO"/>
     </logger>
     
-    <!-- SQL Logging (if you want to see SQL queries in files too) -->
-    <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="ASYNC_FILE_DEBUG"/>
+    <!-- Hibernate SQL Logging - DISABLED -->
+    <logger name="org.hibernate.SQL" level="WARN" additivity="false">
+        <appender-ref ref="ASYNC_FILE_ALL"/>
+    </logger>
+    
+    <!-- Hibernate Parameter Binding - DISABLED -->
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="WARN" additivity="false">
+        <appender-ref ref="ASYNC_FILE_ALL"/>
+    </logger>
+    
+    <!-- Hibernate Statistics - DISABLED -->
+    <logger name="org.hibernate.stat" level="WARN" additivity="false">
+        <appender-ref ref="ASYNC_FILE_ALL"/>
     </logger>
     
     <!-- Socket.IO loggers -->

@@ -257,6 +257,20 @@ public class ChatModule {
                 log.info("📊 Basic request data extracted - Client: {}, Conversation: {}, Assistant: {}, Tenant: {}", 
                         clientId, conversationId, assistantId, tenantId);
                 
+                // Check if there's already a pending assignment for this conversation
+                try {
+                    com.api.digicell.model.PendingAssignment existingAssignment = redisUserService.getPendingAssignment(conversationId);
+                    if (existingAssignment != null) {
+                        log.warn("🚫 DUPLICATE AGENT REQUEST REJECTED - Conversation {} already has a pending assignment with user {} (status: {}, retry: {}/{})", 
+                                conversationId, existingAssignment.getAssignedUserId(), existingAssignment.getStatus(), 
+                                existingAssignment.getCurrentRetryCount(), existingAssignment.getMaxRetryLimit());
+                        log.warn("🚫 Ignoring duplicate agent request to prevent multiple assignments for the same conversation");
+                        return;
+                    }
+                } catch (Exception e) {
+                    log.warn("⚠️ Could not check for existing pending assignment for conversation {}: {}", conversationId, e.getMessage());
+                }
+                
                 // Extract customer details from nested object
                 Map<String, Object> customerDetails = null;
                 if (data.get("customer_details") instanceof Map) {
@@ -838,7 +852,6 @@ public class ChatModule {
                     log.info("💾 Updating user status to ONLINE in database...");
                     Long userIdLong = Long.parseLong(userId);
                     userAccountService.setUserONLINE(userIdLong);
-                    log.info("✅ User {} status set to ONLINE in database", userId);
                 } catch (NumberFormatException e) {
                     log.error("❌ Invalid user ID format for database update: {}", userId);
                 } catch (Exception e) {
@@ -2026,23 +2039,19 @@ public class ChatModule {
                 
                 log.info("🏢 Processing tenant associations...");
                 for (String tenantId : tenantIds) {
-                    log.info("🔗 Adding user {} to tenant pool: {}", userId, tenantId);
-                    
                     // tenantUserPools.computeIfAbsent(tenantId, k -> ConcurrentHashMap.newKeySet()).add(userId); // COMMENTED OUT - Using Redis instead
                     try {
                         redisUserService.addUserToTenantPool(tenantId, userId);
                         long poolSize = redisUserService.getTenantPoolSize(tenantId);
-                        log.info("✅ User added to tenant pool - Tenant: {}, Pool size now: {}", tenantId, poolSize);
+                        log.info("✅ User {} added to tenant pool - Tenant: {}, Pool size now: {}", userId, tenantId, poolSize);
                     } catch (Exception e) {
                         log.warn("⚠️ Could not add user {} to tenant pool {} in Redis: {}", userId, tenantId, e.getMessage());
                     }
                 }
                 
-                log.info("📊 Initializing client count tracking for user: {}", userId);
                 // Initialize client count tracking
                 // userClientCounts.put(userId, new AtomicInteger(0)); // COMMENTED OUT - Using Redis instead
                 // Client count is now managed in the ChatUser object in Redis
-                log.info("✅ Client count tracking initialized for user: {} (managed in Redis)", userId);
                 
             } else {
                 log.warn("❌ User account not found for userId: {}", userId);

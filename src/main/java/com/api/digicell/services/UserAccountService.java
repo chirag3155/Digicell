@@ -186,7 +186,6 @@ public class UserAccountService {
      */
     @Transactional
     public UserAccount setUserONLINE(Long id) {
-        logger.info("Setting user with id: {} to ONLINE", id);
         UserAccount userAccount = userRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("user not found with id: {}", id);
@@ -197,7 +196,6 @@ public class UserAccountService {
         userAccount.setStatus(UserAccountStatus.ONLINE);
         userAccount.setUpdatedAt(LocalDateTime.now());
         UserAccount updatedUserAccount = userRepository.save(userAccount);
-        logger.info("Successfully set user status to ONLINE for user id: {}", id);
         logger.debug("Updated user status details - id: {}, old status: {}, new status: {}, updatedAt: {}", 
             id, userAccount.getStatus(), updatedUserAccount.getStatus(), updatedUserAccount.getUpdatedAt());
         return updatedUserAccount;
