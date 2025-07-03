@@ -921,6 +921,14 @@ public class ChatModule {
                     return;
                 }
 
+                // Validate that the user sending the acknowledgment is the currently assigned user
+                if (!userId.equals(pendingAssignment.getAssignedUserId())) {
+                    log.warn("⚠️ ACK REJECTED - User {} is not the currently assigned user for conversation {}. Currently assigned: {}", 
+                            userId, conversationId, pendingAssignment.getAssignedUserId());
+                    log.warn("⚠️ This acknowledgment is from a previously timed-out user and will be ignored");
+                    return;
+                }
+
                 if ("accepted".equalsIgnoreCase(status)) {
                     log.info("✅ Assignment ACCEPTED by user {} for conversation {}", userId, conversationId);
                     handleAssignmentAccepted(pendingAssignment, userId, userName, userEmail);
