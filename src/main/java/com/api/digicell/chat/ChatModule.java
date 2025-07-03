@@ -220,7 +220,7 @@ public class ChatModule {
             String remoteAddress = socketClient.getRemoteAddress().toString();
             String sessionId = socketClient.getSessionId().toString();
             
-            log.debug("📥 ---------> New connection - IP: {}, SessionId: {}", remoteAddress, sessionId);
+            log.debug("**CONNECTION DATA** 📥 ---------> New connection - IP: {}, SessionId: {}", remoteAddress, sessionId);
             connectionService.handleConnection(socketClient);
         });
 
@@ -229,7 +229,7 @@ public class ChatModule {
             String userId = connectionService.getUserIdBySocketId(socketId);
             
             if (userId != null) {
-                log.debug("📤 ---------> User {} disconnecting", userId);
+                log.debug("**CONNECTION DATA** 📤 ---------> User {} disconnecting", userId);
                 Set<String> activeConversations = connectionService.getUserActiveConversations(userId);
                 if (activeConversations != null && !activeConversations.isEmpty()) {
                     log.info("🔔 User {} has {} active conversations, scheduling notifications", 
@@ -244,7 +244,7 @@ public class ChatModule {
         });
 
         server.addEventListener(SocketConfig.EVENT_AGENT_REQUEST, Map.class, (socketClient, data, ackSender) -> {
-            log.info("🎯 --------->  EVENT_AGENT_REQUEST RECEIVED - Starting request processing...");
+            log.info("**MESSAGE DATA** 🎯 --------->  EVENT_AGENT_REQUEST RECEIVED - Starting request processing...");
             try {
                 String clientId = (String) data.get("client_id");
                 String conversationId = (String) data.get("conversation_id");
@@ -307,7 +307,7 @@ public class ChatModule {
         });
 
         server.addEventListener(SocketConfig.EVENT_MESSAGE_REQ, ChatMessageRequest.class, (socketClient, messageRequest, ackSender) -> {
-            log.info("💬 --------->  EVENT_MESSAGE_REQ RECEIVED - Starting message processing...");
+            log.info("**MESSAGE DATA** 💬 --------->  EVENT_MESSAGE_REQ RECEIVED - Starting message processing...");
             String conversationId = messageRequest.getConversationId();
         
             log.info("📝 Message request details - Conversation: {}, Client: {}, Content length: {}, Timestamp: {}", 
@@ -388,7 +388,7 @@ public class ChatModule {
         server.addEventListener(SocketConfig.EVENT_MESSAGE_RESP_AGENT, UserMessageResponse.class, (socketClient, userResponse, ackSender) -> {
             String conversationId = userResponse.getConversationId();
             
-            log.info(" --------->  EVENT_MESSAGE_RESP_AGENT - User Response Details - Client: {}, Message: {}, Timestamp: {}", 
+            log.info("**MESSAGE DATA** 📬 --------->  EVENT_MESSAGE_RESP_AGENT - User Response Details - Client: {}, Message: {}, Timestamp: {}", 
                     userResponse.getClientId(),
                     userResponse.getMessage() != null ? userResponse.getMessage().substring(0, Math.min(100, userResponse.getMessage().length())) + "..." : "null",
                     userResponse.getTimestamp());
@@ -471,7 +471,7 @@ public class ChatModule {
             String clientId = closeRequest.getClientId();
             String timestamp = closeRequest.getTimestamp();
             
-            log.info(" --------->  EVENT_CLOSE_AGENT - User: {}, Conversation: {}, Client: {}", userId, conversationId, clientId);
+            log.info("**MESSAGE DATA** 🔒 --------->  EVENT_CLOSE_AGENT - User: {}, Conversation: {}, Client: {}", userId, conversationId, clientId);
             
             // Find the chat room
             ChatRoom chatRoom = findChatRoomByConversationId(conversationId);
@@ -550,7 +550,7 @@ public class ChatModule {
 
         // Listen for client close/disconnect events
         server.addEventListener(SocketConfig.EVENT_CLIENT_CLOSE, Map.class, (socketClient, data, ackSender) -> {
-            log.info(" --------->  EVENT_CLIENT_CLOSE - Client close event received");
+            log.info("**MESSAGE DATA** 🔒 --------->  EVENT_CLIENT_CLOSE - Client close event received");
             String conversationId = null;
             String clientId = null;
             try {
@@ -634,7 +634,7 @@ public class ChatModule {
 
         // Handle ping from user
         server.addEventListener(SocketConfig.EVENT_PING, UserPingRequest.class, (socketClient, pingRequest, ackSender) -> {
-            log.info("🏓 --------->  EVENT_PING RECEIVED - Starting ping processing...");
+            log.info("**CONNECTION DATA PING** 🏓 --------->  EVENT_PING RECEIVED - Starting ping processing...");
             try {
                 String userId = pingRequest.getUserId();
                 String socketId = socketClient.getSessionId().toString();
@@ -783,7 +783,7 @@ public class ChatModule {
         });
 
         server.addEventListener("go_online", Map.class, (socketClient, data, ackSender) -> {
-            log.info("👋 --------->  EVENT_GO_ONLINE RECEIVED - Starting online request processing...");
+            log.info("**CONNECTION DATA** 👋 --------->  EVENT_GO_ONLINE RECEIVED - Starting online request processing...");
             try {
                 if (data == null) {
                     log.error("❌ GO_ONLINE VALIDATION FAILED - Received null data object");
@@ -884,7 +884,7 @@ public class ChatModule {
         });
 
         server.addEventListener(SocketConfig.EVENT_OFFLINE_REQ, UserPingRequest.class, (socketClient, offlineRequest, ackSender) -> {
-            log.info("📴 --------->  EVENT_OFFLINE_REQ RECEIVED - Starting offline request processing...");
+            log.info("**CONNECTION DATA** 📴 --------->  EVENT_OFFLINE_REQ RECEIVED - Starting offline request processing...");
             try {
                 if (offlineRequest == null) {
                     log.error("❌ OFFLINE REQUEST VALIDATION FAILED - Received null offline request object");
@@ -907,7 +907,7 @@ public class ChatModule {
 
         // Handle acknowledgment from user for new client request
         server.addEventListener("ack_new_client_req", Map.class, (socketClient, data, ackSender) -> {
-            log.info("✅ --------->  ACK_NEW_CLIENT_REQ RECEIVED - Starting acknowledgment processing...");
+            log.info("**MESSAGE DATA** ✅ --------->  ACK_NEW_CLIENT_REQ RECEIVED - Starting acknowledgment processing...");
             try {
                 if (data == null) {
                     log.error("❌ ACK VALIDATION FAILED - Received null data object");
