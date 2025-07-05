@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Response DTO for tenant information including tenant ID and quickation items
@@ -25,10 +26,18 @@ public class TenantInfoResponse {
     private String tenantId;
     
     @JsonProperty("options")
-    private List<String> options;
+    private Map<String, String> options;
     
     // Alternative constructor for backward compatibility
-    public TenantInfoResponse(String tenantId, List<String> options) {
+    public TenantInfoResponse(String tenantId, Map<String, String> options) {
+        this.tenantId = tenantId;
+        this.options = options;
+    }
+    
+    // Constructor with all fields using Map
+    public TenantInfoResponse(Integer assistantId, String name, String tenantId, Map<String, String> options) {
+        this.assistantId = assistantId;
+        this.name = name;
         this.tenantId = tenantId;
         this.options = options;
     }

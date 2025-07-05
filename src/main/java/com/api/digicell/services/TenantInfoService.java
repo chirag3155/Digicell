@@ -14,6 +14,8 @@ import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -52,7 +54,7 @@ public class TenantInfoService {
         logger.debug("Found assistant: name={}, tenantId={} for assistantId={}", assistantName, tenantId, assistantId);
         
         // Try to get options from assistant_options table
-        List<String> options = getOptionsWithFallback(assistantId);
+        Map<String, String> options = getOptionsWithFallback(assistantId);
         
         return new TenantInfoResponse(assistantId, assistantName, tenantId, options);
     }
@@ -61,18 +63,18 @@ public class TenantInfoService {
      * Get options with fallback mechanism:
      * 1. Try to get from assistant_options table by assistant_id
      * 2. If not found, use property file values
-     * 3. If property file is empty, return empty list
+     * 3. If property file is empty, return empty map
      * 
      * @param assistantId the assistant ID
-     * @return List of options or empty list
+     * @return Map of options with questions or empty map
      */
-    private List<String> getOptionsWithFallback(Integer assistantId) {
+    private Map<String, String> getOptionsWithFallback(Integer assistantId) {
         logger.debug("Getting options for assistantId={}", assistantId);
         
         // Step 1: Try to find by assistant_id
         Optional<AssistantOptions> optionsById = assistantOptionsRepository.findByAssistantId(assistantId);
         if (optionsById.isPresent()) {
-            List<String> options = optionsById.get().getOptionsAsList();
+            Map<String, String> options = optionsById.get().getOptionsAsMap();
             logger.debug("Found options from DB by assistantId: {} options", options.size());
             
             // If options exist and are not empty, return them
@@ -84,15 +86,15 @@ public class TenantInfoService {
         }
         
         // Step 2: Fall back to property file values
-        List<String> propertyOptions = getQuickationItems();
+        Map<String, String> propertyOptions = getQuickationItemsAsMap();
         if (!propertyOptions.isEmpty()) {
             logger.debug("Using options from property file: {} options", propertyOptions.size());
             return propertyOptions;
         }
         
-        // Step 3: Return empty list if nothing found
-        logger.debug("No options found anywhere, returning empty list");
-        return List.of();
+        // Step 3: Return empty map if nothing found
+        logger.debug("No options found anywhere, returning empty map");
+        return new LinkedHashMap<>();
     }
     
     /**
@@ -110,5 +112,26 @@ public class TenantInfoService {
                 .map(String::trim)
                 .filter(item -> !item.isEmpty())
                 .collect(Collectors.toList());
+    }
+    
+    /**
+     * Parse quickation items from configuration and return as Map
+     * Since property file contains only keys, we'll use the key as both key and value
+     * 
+     * @return Map of quickation items
+     */
+    private Map<String, String> getQuickationItemsAsMap() {
+        if (quickationItemsConfig == null || quickationItemsConfig.trim().isEmpty()) {
+            logger.debug("Property app.quickation.items is null or empty");
+            return new LinkedHashMap<>();
+        }
+        
+        Map<String, String> optionsMap = new LinkedHashMap<>();
+        Arrays.stream(quickationItemsConfig.split(","))
+                .map(String::trim)
+                .filter(item -> !item.isEmpty())
+                .forEach(item -> optionsMap.put(item, item));
+        
+        return optionsMap;
     }
 } 

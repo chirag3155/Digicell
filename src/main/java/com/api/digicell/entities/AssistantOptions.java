@@ -23,7 +23,10 @@ import jakarta.persistence.PreUpdate;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.ArrayList;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 @Entity
 @Table(name = "assistant_options")
@@ -114,15 +117,42 @@ public class AssistantOptions {
     // Helper methods for JSON conversion
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * Get options as a List (backward compatibility)
+     * This method now returns keys from the Map for consistency
+     */
     public List<String> getOptionsAsList() {
+        Map<String, String> optionsMap = getOptionsAsMap();
+        return new ArrayList<>(optionsMap.keySet());
+    }
+
+    /**
+     * Get options as a Map (key-value pairs) directly from the database JSON
+     * This method tries to parse the JSON as an object first, then falls back to array format
+     */
+    public Map<String, String> getOptionsAsMap() {
         if (optionsJson == null || optionsJson.trim().isEmpty()) {
-            return List.of();
+            return new LinkedHashMap<>();
         }
+        
         try {
+            // Try to parse as Map first (new object format from DB)
             return objectMapper.readValue(optionsJson, 
-                objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
+                new TypeReference<LinkedHashMap<String, String>>() {});
         } catch (JsonProcessingException e) {
-            return List.of();
+            // Fallback: Parse as array and convert keys to Map (backward compatibility)
+            try {
+                List<String> optionsList = objectMapper.readValue(optionsJson, 
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
+                // Convert list to map with keys as both key and value for backward compatibility
+                Map<String, String> optionsMap = new LinkedHashMap<>();
+                for (String option : optionsList) {
+                    optionsMap.put(option, option);
+                }
+                return optionsMap;
+            } catch (JsonProcessingException ex) {
+                return new LinkedHashMap<>();
+            }
         }
     }
 
@@ -131,6 +161,17 @@ public class AssistantOptions {
             this.optionsJson = objectMapper.writeValueAsString(options);
         } catch (JsonProcessingException e) {
             this.optionsJson = "[]";
+        }
+    }
+
+    /**
+     * Set options from a Map (key-value pairs)
+     */
+    public void setOptionsFromMap(Map<String, String> optionsMap) {
+        try {
+            this.optionsJson = objectMapper.writeValueAsString(optionsMap);
+        } catch (JsonProcessingException e) {
+            this.optionsJson = "{}";
         }
     }
 
@@ -143,28 +184,34 @@ public class AssistantOptions {
         this.assistantConfiguration = assistantConfiguration;
     }
 
-    // Utility methods
+    // Utility methods - Updated to work with Map format
     public boolean hasOption(String option) {
-        List<String> options = getOptionsAsList();
-        return options.contains(option);
+        Map<String, String> options = getOptionsAsMap();
+        return options.containsKey(option);
     }
 
-    public void addOption(String option) {
-        List<String> options = getOptionsAsList();
-        if (!options.contains(option)) {
-            options = new ArrayList<>(options);
-            options.add(option);
-            setOptionsFromList(options);
-        }
+    public void addOption(String option, String question) {
+        Map<String, String> options = getOptionsAsMap();
+        options.put(option, question);
+        setOptionsFromMap(options);
     }
 
     public void removeOption(String option) {
-        List<String> options = getOptionsAsList();
-        if (options.contains(option)) {
-            options = new ArrayList<>(options);
+        Map<String, String> options = getOptionsAsMap();
+        if (options.containsKey(option)) {
             options.remove(option);
-            setOptionsFromList(options);
+            setOptionsFromMap(options);
         }
+    }
+
+    // Backward compatibility methods
+    public void addOption(String option) {
+        addOption(option, "Tell me about " + option.toLowerCase() + "?");
+    }
+
+    public String getQuestionForOption(String option) {
+        Map<String, String> options = getOptionsAsMap();
+        return options.get(option);
     }
 
     @Override
@@ -174,7 +221,7 @@ public class AssistantOptions {
                 ", assistantId=" + assistantId +
                 ", name='" + name + '\'' +
                 ", tenantId='" + tenantId + '\'' +
-                ", optionsCount=" + getOptionsAsList().size() +
+                ", optionsCount=" + getOptionsAsMap().size() +
                 '}';
     }
 
